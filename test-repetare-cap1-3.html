@@ -21,6 +21,7 @@ input[type=text]{font:inherit;padding:6px 8px;border:1px solid var(--line);borde
 .exp{display:none;margin-top:8px;padding:8px 10px;border-left:3px solid var(--acc);background:var(--bg);font-size:14px}
 .done .exp{display:block}
 button{font:inherit;padding:10px 18px;border:0;border-radius:8px;background:var(--acc);color:#fff;cursor:pointer}
+.qcheck{padding:6px 12px;font-size:13px;margin-top:8px}
 .bar{position:sticky;bottom:0;background:var(--card);border-top:1px solid var(--line);padding:10px 16px;display:flex;gap:10px;align-items:center;flex-wrap:wrap}
 pre{background:var(--bg);padding:8px;border-radius:6px;font-size:13px;overflow:auto}
 #score{font-weight:600}
@@ -94,16 +95,20 @@ function build(){
   cur.forEach((q,k)=>{const d=document.createElement('div');d.className='q';
     d.innerHTML=`<h3>${k+1}. ${q.q}<span class="tag">cap. ${q.c}</span></h3>`+
       (q.t==='mc'?q.oo.map(o=>`<label><input type="radio" name="q${k}" value="${o.i}"> ${o.t}</label>`).join(''):
-       `<input type="text" name="q${k}" placeholder="răspuns">`)+`<div class="exp">${q.e}</div>`;
+       `<input type="text" name="q${k}" placeholder="răspuns">`)+
+      `<div><button type="button" class="qcheck" data-k="${k}">Verifică</button></div>`+
+      `<div class="exp">${q.e}</div>`;
     el.appendChild(d)});
+  document.querySelectorAll('.qcheck').forEach(b=>b.onclick=()=>checkOne(+b.dataset.k));
   document.getElementById('score').textContent='';scrollTo(0,0);
 }
+function checkOne(k){const q=cur[k],d=document.querySelectorAll('.q')[k];d.classList.add('done');let good;
+  if(q.t==='mc'){const s=d.querySelector('input:checked');good=s&&+s.value===q.a;
+    d.querySelectorAll('label').forEach(l=>{const v=+l.querySelector('input').value;l.className=v===q.a?'ok':(l.querySelector('input').checked?'bad':'')})}
+  else{const inp=d.querySelector('input');good=q.a.includes(inp.value.trim().toLowerCase());inp.className=good?'ok':'bad';if(!good)d.querySelector('.exp').innerHTML='<b>Răspuns: '+q.a[0]+'.</b> '+q.e}
+  return good}
 document.getElementById('check').onclick=()=>{let ok=0;
-  cur.forEach((q,k)=>{const d=document.querySelectorAll('.q')[k];d.classList.add('done');let good;
-    if(q.t==='mc'){const s=d.querySelector('input:checked');good=s&&+s.value===q.a;
-      d.querySelectorAll('label').forEach(l=>{const v=+l.querySelector('input').value;l.className=v===q.a?'ok':(l.querySelector('input').checked?'bad':'')})}
-    else{const inp=d.querySelector('input');good=q.a.includes(inp.value.trim().toLowerCase());inp.className=good?'ok':'bad';if(!good)d.querySelector('.exp').innerHTML='<b>Răspuns: '+q.a[0]+'.</b> '+q.e}
-    if(good)ok++});
+  cur.forEach((q,k)=>{if(checkOne(k))ok++});
   const p=Math.round(ok/cur.length*100);
   document.getElementById('score').textContent=`Scor: ${ok}/${cur.length} (${p}%) — nota ≈ ${Math.max(1,(p/10)).toFixed(1)}`};
 document.getElementById('reset').onclick=build;
