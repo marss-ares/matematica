@@ -1,0 +1,253 @@
+<!DOCTYPE html>
+<html lang="ro">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Editor de grafuri</title>
+<style>
+:root{--bg:#f4f5f7;--panel:#fff;--ink:#1d2330;--mut:#667;--line:#d8dbe2;--acc:#2f6fed;--v:#2f6fed;--e:#556;--hl:#e8590c;--ok:#2b8a3e}
+@media (prefers-color-scheme:dark){:root{--bg:#15171c;--panel:#1f232b;--ink:#e6e8ee;--mut:#9aa;--line:#343a46;--acc:#6b9bff;--v:#4f86ff;--e:#9aa3b5;--hl:#ff8a3d;--ok:#51cf66}}
+*{box-sizing:border-box}
+body{margin:0;font:14px/1.4 system-ui,Segoe UI,Roboto,sans-serif;background:var(--bg);color:var(--ink)}
+header{padding:10px 16px;display:flex;flex-wrap:wrap;gap:6px;align-items:center;border-bottom:1px solid var(--line);background:var(--panel)}
+header h1{font-size:17px;margin:0 12px 0 0}
+button,select{font:inherit;padding:6px 10px;border:1px solid var(--line);background:var(--panel);color:var(--ink);border-radius:6px;cursor:pointer}
+button:hover{border-color:var(--acc)}
+button.on{background:var(--acc);color:#fff;border-color:var(--acc)}
+main{display:grid;grid-template-columns:1fr 420px;gap:12px;padding:12px}
+@media (max-width:900px){main{grid-template-columns:1fr}}
+.card{background:var(--panel);border:1px solid var(--line);border-radius:10px;padding:12px;min-width:0}
+canvas{width:100%;height:560px;display:block;border-radius:8px;background:var(--bg);touch-action:none}
+h2{font-size:15px;margin:0 0 8px}
+table{border-collapse:collapse;font-family:ui-monospace,Consolas,monospace;font-size:12px}
+td,th{border:1px solid var(--line);padding:2px 5px;text-align:center}
+th{background:var(--bg)}
+.scroll{overflow:auto;max-height:320px}
+textarea{width:100%;height:130px;font-family:ui-monospace,Consolas,monospace;font-size:12px;background:var(--bg);color:var(--ink);border:1px solid var(--line);border-radius:6px;padding:6px}
+.stats{display:grid;grid-template-columns:auto 1fr;gap:3px 10px;font-size:13px}
+.stats b{color:var(--mut);font-weight:500}
+.hint{color:var(--mut);font-size:12px}
+.row{display:flex;gap:6px;flex-wrap:wrap;margin:6px 0}
+.tabs button{border-radius:6px 6px 0 0}
+</style>
+</head>
+<body>
+<header>
+  <h1>Editor de grafuri</h1>
+  <button id="mAdd" class="on" title="Click pe gol = vârf nou; click pe vârf apoi alt vârf = muchie">✚ Desenează</button>
+  <button id="mMove" title="Trage vârfurile">✋ Mută</button>
+  <button id="mDel" title="Click pe vârf/muchie pentru ștergere">🗑 Șterge</button>
+  <button id="bAuto">✨ Aranjare automată</button>
+  <button id="bCircle">◯ Cerc</button>
+  <label><input type="checkbox" id="cDir"> Orientat</label>
+  <button id="bComp">Complementar</button>
+  <button id="bClear">Golește</button>
+  <select id="sEx"><option value="">Exemple…</option><option>C5</option><option>K4</option><option>Petersen</option><option>K3,3</option><option>Arbore</option><option>Cub Q3</option></select>
+</header>
+<main>
+  <div class="card">
+    <canvas id="cv"></canvas>
+    <p class="hint">Mod <b>Desenează</b>: click pe spațiu gol → vârf nou; click pe un vârf, apoi pe altul → muchie (arc). Trage cu mouse-ul un vârf ca să-l muți în orice mod. Selectează un vârf ca să vezi excentricitatea și distanțele lui. Mod <b>Șterge</b>: click pe vârf sau muchie.</p>
+    <div class="card" style="margin-top:8px">
+      <h2>Mulțimi (capitolul 3)</h2>
+      <div class="row">
+        <button data-hl="stab">Mulțime stabilă maximă α(G)</button>
+        <button data-hl="clq">Clică maximă ω(G)</button>
+        <button data-hl="dom">Mulțime dominantă minimă</button>
+        <button data-hl="ctr">Centru</button>
+        <button data-hl="per">Periferie</button>
+        <button data-hl="">Fără evidențiere</button>
+      </div>
+      <div id="allStab" class="hint"></div>
+    </div>
+  </div>
+  <div>
+    <div class="card"><h2>Caracteristici</h2><div id="stats" class="stats"></div></div>
+    <div class="card" style="margin-top:12px">
+      <div class="row tabs">
+        <button data-t="adj" class="on">Adiacență</button>
+        <button data-t="dist">Distanțe</button>
+        <button data-t="inc">Incidență</button>
+      </div>
+      <div id="mat" class="scroll"></div>
+    </div>
+    <div class="card" style="margin-top:12px">
+      <h2>Inserează matrice de adiacență</h2>
+      <textarea id="ta" placeholder="0 1 1 0&#10;1 0 1 1&#10;1 1 0 1&#10;0 1 1 0"></textarea>
+      <div class="row"><button id="bLoad">Desenează din matrice</button><button id="bCopy">Copiază matricea curentă</button></div>
+      <p class="hint">Separatori acceptați: spațiu, virgulă, tab, ;. Dacă matricea nu e simetrică, graful devine orientat automat. Valori &gt;1 = muchii multiple (se desenează ca una).</p>
+    </div>
+  </div>
+</main>
+<script>
+const cv=document.getElementById('cv'),ctx=cv.getContext('2d');
+let V=[],E=[],dir=false,mode='add',sel=null,drag=null,hl=new Set(),hlE=new Set(),hlKind='',tab='adj',moved=false;
+const R=16;
+function css(v){return getComputedStyle(document.documentElement).getPropertyValue(v).trim()}
+function resize(){const r=cv.getBoundingClientRect(),d=devicePixelRatio||1;cv.width=r.width*d;cv.height=r.height*d;ctx.setTransform(d,0,0,d,0,0);draw()}
+function W(){return cv.getBoundingClientRect().width}function H(){return cv.getBoundingClientRect().height}
+function n(){return V.length}
+function adj(){const a=Array.from({length:n()},()=>Array(n()).fill(0));for(const[u,v]of E){a[u][v]++;if(!dir&&u!==v)a[v][u]++}return a}
+function nb(){const a=Array.from({length:n()},()=>new Set());for(const[u,v]of E){a[u].add(v);a[v].add(u)}return a} // neorientat (pt. conexitate, stabilitate)
+function outNb(){const a=Array.from({length:n()},()=>[]);for(const[u,v]of E){a[u].push(v);if(!dir)a[v].push(u)}return a}
+function lbl(i){return String(i+1)}
+function hasEdge(u,v){return E.some(([a,b])=>(a===u&&b===v)||(!dir&&a===v&&b===u))}
+
+function draw(){
+  const w=W(),h=H();ctx.clearRect(0,0,w,h);
+  const cE=css('--e'),cV=css('--v'),cH=css('--hl'),ink=css('--ink');
+  E.forEach(([u,v],i)=>{
+    const a=V[u],b=V[v];ctx.strokeStyle=hlE.has(i)?cH:cE;ctx.lineWidth=hlE.has(i)?3.5:2;
+    if(u===v){ctx.beginPath();ctx.arc(a.x,a.y-R-8,10,0,7);ctx.stroke();return}
+    const rev=dir&&E.some(([x,y])=>x===v&&y===u);
+    const dx=b.x-a.x,dy=b.y-a.y,L=Math.hypot(dx,dy)||1,ox=-dy/L*(rev?14:0),oy=dx/L*(rev?14:0);
+    const mx=(a.x+b.x)/2+ox,my=(a.y+b.y)/2+oy;
+    ctx.beginPath();ctx.moveTo(a.x,a.y);ctx.quadraticCurveTo(mx,my,b.x,b.y);ctx.stroke();
+    if(dir){const tx=b.x-mx,ty=b.y-my,tl=Math.hypot(tx,ty)||1,ux=tx/tl,uy=ty/tl,px=b.x-ux*R,py=b.y-uy*R;
+      ctx.fillStyle=ctx.strokeStyle;ctx.beginPath();ctx.moveTo(px,py);ctx.lineTo(px-ux*11-uy*5,py-uy*11+ux*5);ctx.lineTo(px-ux*11+uy*5,py-uy*11-ux*5);ctx.fill()}
+  });
+  let D=null;if(sel!==null)D=bfs(sel);
+  V.forEach((p,i)=>{
+    ctx.beginPath();ctx.arc(p.x,p.y,R,0,7);ctx.fillStyle=hl.has(i)?cH:cV;ctx.fill();
+    if(i===sel){ctx.lineWidth=3;ctx.strokeStyle=ink;ctx.stroke()}
+    ctx.fillStyle='#fff';ctx.font='bold 13px system-ui';ctx.textAlign='center';ctx.textBaseline='middle';ctx.fillText(lbl(i),p.x,p.y);
+    if(D&&i!==sel){ctx.fillStyle=cH;ctx.font='11px system-ui';ctx.fillText('d='+(D[i]===Infinity?'∞':D[i]),p.x,p.y+R+9)}
+  });
+}
+function vAt(x,y){for(let i=n()-1;i>=0;i--)if(Math.hypot(V[i].x-x,V[i].y-y)<=R+3)return i;return null}
+function eAt(x,y){for(let i=0;i<E.length;i++){const a=V[E[i][0]],b=V[E[i][1]];const dx=b.x-a.x,dy=b.y-a.y,L2=dx*dx+dy*dy||1;let t=((x-a.x)*dx+(y-a.y)*dy)/L2;t=Math.max(0,Math.min(1,t));if(Math.hypot(a.x+t*dx-x,a.y+t*dy-y)<6)return i}return null}
+function pos(e){const r=cv.getBoundingClientRect();return{x:e.clientX-r.left,y:e.clientY-r.top}}
+cv.addEventListener('pointerdown',e=>{const{x,y}=pos(e),v=vAt(x,y);moved=false;
+  if(mode==='del'){if(v!==null){E=E.filter(([a,b])=>a!==v&&b!==v).map(([a,b])=>[a>v?a-1:a,b>v?b-1:b]);V.splice(v,1);sel=null}else{const k=eAt(x,y);if(k!==null)E.splice(k,1)}return update()}
+  if(v!==null){drag=v;cv.setPointerCapture(e.pointerId);return}
+  if(mode==='add'){V.push({x,y});sel=null;update()}else{sel=null;draw()}
+});
+cv.addEventListener('pointermove',e=>{if(drag===null)return;const{x,y}=pos(e);V[drag].x=x;V[drag].y=y;moved=true;draw()});
+cv.addEventListener('pointerup',e=>{if(drag===null)return;const v=drag;drag=null;if(moved)return;
+  if(mode==='add'&&sel!==null&&sel!==v){if(!hasEdge(sel,v))E.push([sel,v]);sel=null;update()}
+  else{sel=sel===v?null:v;update()}
+});
+
+// ---------- algoritmi ----------
+function bfs(s){const d=Array(n()).fill(Infinity),g=outNb();d[s]=0;const q=[s];while(q.length){const u=q.shift();for(const v of g[u])if(d[v]===Infinity){d[v]=d[u]+1;q.push(v)}}return d}
+function comps(){const g=nb(),c=Array(n()).fill(-1);let k=0;for(let s=0;s<n();s++)if(c[s]<0){const st=[s];c[s]=k;while(st.length){const u=st.pop();for(const v of g[u])if(c[v]<0){c[v]=k;st.push(v)}}k++}return{k,c}}
+function bip(){const g=nb(),c=Array(n()).fill(-1);for(let s=0;s<n();s++)if(c[s]<0){c[s]=0;const q=[s];while(q.length){const u=q.shift();for(const v of g[u]){if(v===u)return null;if(c[v]<0){c[v]=1-c[u];q.push(v)}else if(c[v]===c[u])return null}}}return c}
+function girth(){const g=nb();let best=Infinity;if(E.some(([a,b])=>a===b))return 1;for(let s=0;s<n();s++){const d=Array(n()).fill(-1),p=Array(n()).fill(-1);d[s]=0;const q=[s];while(q.length){const u=q.shift();for(const v of g[u]){if(d[v]<0){d[v]=d[u]+1;p[v]=u;q.push(v)}else if(p[u]!==v)best=Math.min(best,d[u]+d[v]+1)}}}return best}
+// multimi stabile maximale (Bron–Kerbosch pe complement) — toate
+function maximalCliques(g){const res=[];const N=n();function bk(Rs,P,X){if(!P.length&&!X.length){res.push(Rs);return}if(res.length>5000)return;const piv=[...P,...X][0];for(const v of P.filter(v=>!g[piv].has(v))){bk([...Rs,v],P.filter(u=>g[v].has(u)),X.filter(u=>g[v].has(u)));P=P.filter(u=>u!==v);X=[...X,v]}}bk([],[...Array(N).keys()],[]);return res}
+function compNb(){const g=nb();return Array.from({length:n()},(_,i)=>new Set([...Array(n()).keys()].filter(j=>j!==i&&!g[i].has(j))))}
+function cleanNb(){const g=nb();g.forEach((s,i)=>s.delete(i));return g}
+function minDom(){const N=n();if(N>22)return null;const g=nb(),m=g.map((s,i)=>{let b=1<<i;s.forEach(j=>b|=1<<j);return b}),full=(1<<N)-1;
+  for(let k=1;k<=N;k++){const r=rec(0,k,0);if(r)return r}
+  function rec(start,k,cov,ch=[]){if(cov===full)return ch;if(!k)return null;for(let i=start;i<N;i++){const r=rec(i+1,k-1,cov|m[i],[...ch,i]);if(r)return r}return null}}
+function update(){
+  const N=n(),m=E.length,A=adj(),S=document.getElementById('stats');
+  let html='';const add=(k,v)=>html+=`<b>${k}</b><span>${v}</span>`;
+  add('Ordin n (vârfuri)',N);add(dir?'Arce m':'Muchii m',m);
+  if(N){
+    const deg=A.map((r,i)=>dir?null:r.reduce((a,b)=>a+b,0)+(A[i][i]?A[i][i]:0));
+    if(dir){const out=A.map(r=>r.reduce((a,b)=>a+b,0)),inn=A[0].map((_,j)=>A.reduce((s,r)=>s+r[j],0));
+      add('Grad exterior d⁺',out.map((d,i)=>`${lbl(i)}:${d}`).join(' '));add('Grad interior d⁻',inn.map((d,i)=>`${lbl(i)}:${d}`).join(' '));}
+    else{add('Grade',deg.map((d,i)=>`${lbl(i)}:${d}`).join(' '));
+      add('Șir grade (desc.)',[...deg].sort((a,b)=>b-a).join(', '));
+      add('Σ grade = 2m',deg.reduce((a,b)=>a+b,0)+' = 2·'+m);
+      add('δ(G) / Δ(G)',Math.min(...deg)+' / '+Math.max(...deg));
+      const r=deg.every(d=>d===deg[0]);add('Regulat',r?`da, ${deg[0]}-regulat`:'nu');
+      add('Vârfuri izolate / terminale',(deg.map((d,i)=>d===0?lbl(i):null).filter(x=>x).join(',')||'—')+' / '+(deg.map((d,i)=>d===1?lbl(i):null).filter(x=>x).join(',')||'—'));
+    }
+    const{k,c}=comps();add('Componente conexe p',k);
+    add('Conex',k===1?'da':'nu');
+    const complet=!dir&&m===N*(N-1)/2&&!E.some(([a,b])=>a===b);add('Complet',complet?'da (K'+N+')':'nu');
+    add('Număr ciclomatic ν = m − n + p',m-N+k);
+    add('Arbore / pădure',!dir&&m-N+k===0?(k===1?'arbore':'pădure'):'nu');
+    const bp=bip();add('Bipartit',bp?'da  ('+bp.map((x,i)=>x?null:lbl(i)).filter(x=>x).join(',')+' | '+bp.map((x,i)=>x?lbl(i):null).filter(x=>x).join(',')+')':'nu (are ciclu impar)');
+    const gi=girth();add('Girth (cel mai scurt ciclu)',gi===Infinity?'∞ (aciclic)':gi);
+    const D=V.map((_,i)=>bfs(i)),ecc=D.map(r=>Math.max(...r));
+    add('Excentricități e(v)',ecc.map((e,i)=>`${lbl(i)}:${e===Infinity?'∞':e}`).join(' '));
+    const rad=Math.min(...ecc),dia=Math.max(...ecc);
+    add('Raza r(G)',rad===Infinity?'∞':rad);add('Diametrul d(G)',dia===Infinity?'∞ (neconex)':dia);
+    add('Centru',ecc.map((e,i)=>e===rad?lbl(i):null).filter(x=>x).join(', '));
+    add('Periferie',ecc.map((e,i)=>e===dia?lbl(i):null).filter(x=>x).join(', '));
+    const odd=dir?[]:deg.filter(d=>d%2).length;
+    if(!dir)add('Eulerian',k===1||E.length===0?(odd===0?'da (ciclu eulerian)':odd===2?'semi-eulerian (lanț eulerian)':'nu'):'nu (neconex)');
+    add('Densitate',N>1?(2*m/(N*(N-1))/(dir?2:1)).toFixed(3):'—');
+    if(N<=40){
+      const st=maximalCliques(compNb()),cl=maximalCliques(cleanNb());
+      const a=Math.max(...st.map(s=>s.length)),w=Math.max(...cl.map(s=>s.length));
+      add('Nr. stabilitate internă α(G)',a);add('Nr. de clică ω(G)',w);
+      add('Nr. mulțimi stabile maximale',st.length);
+      const dm=minDom();add('Nr. stabilitate externă β(G)',dm?dm.length:'(n prea mare)');
+      window._st=st;window._cl=cl;window._dm=dm;
+    }
+  }
+  S.innerHTML=html;applyHl();renderMat();draw();
+}
+function applyHl(){hl=new Set();hlE=new Set();const N=n();if(!N){document.getElementById('allStab').textContent='';return}
+  const st=window._st||[],cl=window._cl||[];
+  if(hlKind==='stab'){const b=st.reduce((a,s)=>s.length>a.length?s:a,[]);b.forEach(v=>hl.add(v))}
+  if(hlKind==='clq'){const b=cl.reduce((a,s)=>s.length>a.length?s:a,[]);b.forEach(v=>hl.add(v));E.forEach(([u,v],i)=>{if(hl.has(u)&&hl.has(v))hlE.add(i)})}
+  if(hlKind==='dom'&&window._dm)window._dm.forEach(v=>hl.add(v));
+  if(hlKind==='ctr'||hlKind==='per'){const ecc=V.map((_,i)=>Math.max(...bfs(i))),t=hlKind==='ctr'?Math.min(...ecc):Math.max(...ecc);ecc.forEach((e,i)=>{if(e===t)hl.add(i)})}
+  const el=document.getElementById('allStab');
+  el.innerHTML=hlKind==='stab'?'<b>Toate mulțimile stabile maximale:</b> '+st.map(s=>'{'+s.map(lbl).sort((a,b)=>a-b).join(',')+'}').join('  '):
+               hlKind==='clq'?'<b>Toate clicile maximale:</b> '+cl.map(s=>'{'+s.map(lbl).sort((a,b)=>a-b).join(',')+'}').join('  '):'';
+}
+function table(M,rowL,colL){return '<table><tr><th></th>'+colL.map(c=>`<th>${c}</th>`).join('')+'</tr>'+M.map((r,i)=>`<tr><th>${rowL[i]}</th>`+r.map(x=>`<td>${x===Infinity?'∞':x}</td>`).join('')+'</tr>').join('')+'</table>'}
+function renderMat(){const el=document.getElementById('mat'),L=V.map((_,i)=>lbl(i));if(!n()){el.innerHTML='<p class="hint">Graf gol.</p>';return}
+  if(tab==='adj')el.innerHTML=table(adj(),L,L);
+  if(tab==='dist')el.innerHTML=table(V.map((_,i)=>bfs(i)),L,L);
+  if(tab==='inc'){const M=V.map((_,i)=>E.map(([u,v])=>u===v?2:dir?(i===u?1:i===v?-1:0):(i===u||i===v?1:0)));el.innerHTML=table(M,L,E.map((_,k)=>'e'+(k+1)))}
+}
+function circle(){const N=n(),cx=W()/2,cy=H()/2,r=Math.min(W(),H())/2-40;V.forEach((p,i)=>{p.x=cx+r*Math.cos(2*Math.PI*i/N-Math.PI/2);p.y=cy+r*Math.sin(2*Math.PI*i/N-Math.PI/2)})}
+// Aranjare automată: Fruchterman–Reingold cu răcire, pornind din mai multe poziții, se păstrează cea cu cele mai puține intersecții
+function crossings(P){let c=0;const s=(a,b,p)=>Math.sign((b.x-a.x)*(p.y-a.y)-(b.y-a.y)*(p.x-a.x));for(let i=0;i<E.length;i++)for(let j=i+1;j<E.length;j++){const[a,b]=E[i],[c2,d]=E[j];if(a===c2||a===d||b===c2||b===d)continue;const A=P[a],B=P[b],C=P[c2],D=P[d];if(s(A,B,C)*s(A,B,D)<0&&s(C,D,A)*s(C,D,B)<0)c++}return c}
+function fr(P){const N=P.length,w=W()-60,h=H()-60,k=Math.sqrt(w*h/Math.max(N,1))*0.75;let t=w/8;const g=nb();
+  for(let it=0;it<400;it++){const d=P.map(()=>({x:0,y:0}));
+    for(let i=0;i<N;i++)for(let j=i+1;j<N;j++){let dx=P[i].x-P[j].x,dy=P[i].y-P[j].y,L=Math.hypot(dx,dy)||0.01;const f=k*k/L;d[i].x+=dx/L*f;d[i].y+=dy/L*f;d[j].x-=dx/L*f;d[j].y-=dy/L*f}
+    for(let i=0;i<N;i++)for(const j of g[i])if(j>i){let dx=P[i].x-P[j].x,dy=P[i].y-P[j].y,L=Math.hypot(dx,dy)||0.01;const f=L*L/k;d[i].x-=dx/L*f;d[i].y-=dy/L*f;d[j].x+=dx/L*f;d[j].y+=dy/L*f}
+    for(let i=0;i<N;i++){d[i].x+=(w/2-P[i].x)*0.02;d[i].y+=(h/2-P[i].y)*0.02;const L=Math.hypot(d[i].x,d[i].y)||1;P[i].x+=d[i].x/L*Math.min(L,t);P[i].y+=d[i].y/L*Math.min(L,t)}
+    t*=0.985}
+  // scalare în canvas
+  const xs=P.map(p=>p.x),ys=P.map(p=>p.y),mnx=Math.min(...xs),mxx=Math.max(...xs),mny=Math.min(...ys),mxy=Math.max(...ys);
+  const sc=Math.min((W()-80)/((mxx-mnx)||1),(H()-80)/((mxy-mny)||1));
+  return P.map(p=>({x:40+(p.x-mnx)*sc+((W()-80)-(mxx-mnx)*sc)/2,y:40+(p.y-mny)*sc+((H()-80)-(mxy-mny)*sc)/2}))}
+function auto(){if(n()<2)return;let best=null,bc=Infinity;
+  const tries=n()>40?3:12;
+  for(let t=0;t<tries;t++){const init=t===0?(circle(),V.map(p=>({...p}))):V.map(()=>({x:Math.random()*W(),y:Math.random()*H()}));
+    const P=fr(init),c=crossings(P);if(c<bc){bc=c;best=P}}
+  animateTo(best)}
+function animateTo(T){const S=V.map(p=>({...p}));let f=0;(function st(){f++;const a=Math.min(1,f/25),e=1-Math.pow(1-a,3);V.forEach((p,i)=>{p.x=S[i].x+(T[i].x-S[i].x)*e;p.y=S[i].y+(T[i].y-S[i].y)*e});draw();if(a<1)requestAnimationFrame(st)})()}
+
+function loadMatrix(txt){const rows=txt.trim().split(/\n+/).map(r=>r.trim().split(/[\s,;]+/).filter(x=>x!=='').map(Number)).filter(r=>r.length);
+  const N=rows.length;if(!N||rows.some(r=>r.length!==N||r.some(isNaN))){alert('Matricea trebuie să fie pătratică și numerică ('+N+' rânduri).');return}
+  const sym=rows.every((r,i)=>r.every((x,j)=>x===rows[j][i]));dir=!sym;document.getElementById('cDir').checked=dir;
+  V=Array.from({length:N},()=>({x:0,y:0}));E=[];
+  for(let i=0;i<N;i++)for(let j=dir?0:i;j<N;j++)if(rows[i][j])E.push([i,j]);
+  sel=null;circle();update();auto()}
+function curMatrix(){return adj().map(r=>r.join(' ')).join('\n')}
+function example(name){const ed=[];let N=0;
+  if(name==='C5'){N=5;for(let i=0;i<5;i++)ed.push([i,(i+1)%5])}
+  if(name==='K4'){N=4;for(let i=0;i<4;i++)for(let j=i+1;j<4;j++)ed.push([i,j])}
+  if(name==='Petersen'){N=10;for(let i=0;i<5;i++){ed.push([i,(i+1)%5]);ed.push([i,i+5]);ed.push([5+i,5+(i+2)%5])}}
+  if(name==='K3,3'){N=6;for(let i=0;i<3;i++)for(let j=3;j<6;j++)ed.push([i,j])}
+  if(name==='Arbore'){N=9;[[0,1],[0,2],[1,3],[1,4],[2,5],[2,6],[4,7],[6,8]].forEach(e=>ed.push(e))}
+  if(name==='Cub Q3'){N=8;for(let i=0;i<8;i++)for(let b=1;b<8;b<<=1)if(i<(i^b))ed.push([i,i^b])}
+  dir=false;document.getElementById('cDir').checked=false;V=Array.from({length:N},()=>({x:0,y:0}));E=ed;sel=null;circle();update();auto()}
+
+const setMode=m=>{mode=m;sel=null;['mAdd','mMove','mDel'].forEach(id=>document.getElementById(id).classList.toggle('on',id==={add:'mAdd',move:'mMove',del:'mDel'}[m]));draw()};
+mAdd.onclick=()=>setMode('add');mMove.onclick=()=>setMode('move');mDel.onclick=()=>setMode('del');
+bAuto.onclick=auto;bCircle.onclick=()=>{const S=V.map(p=>({...p}));circle();const T=V.map(p=>({...p}));V=S;animateTo(T)};
+cDir.onchange=e=>{dir=e.target.checked;update()};
+bClear.onclick=()=>{V=[];E=[];sel=null;update()};
+bComp.onclick=()=>{if(dir){alert('Complementarul e implementat pentru grafuri neorientate.');return}const ne=[];for(let i=0;i<n();i++)for(let j=i+1;j<n();j++)if(!hasEdge(i,j))ne.push([i,j]);E=ne;update()};
+sEx.onchange=e=>{if(e.target.value)example(e.target.value);e.target.value=''};
+bLoad.onclick=()=>loadMatrix(ta.value);
+bCopy.onclick=()=>{ta.value=curMatrix();navigator.clipboard?.writeText(ta.value).catch(()=>{})};
+document.querySelectorAll('[data-t]').forEach(b=>b.onclick=()=>{tab=b.dataset.t;document.querySelectorAll('[data-t]').forEach(x=>x.classList.toggle('on',x===b));renderMat()});
+document.querySelectorAll('[data-hl]').forEach(b=>b.onclick=()=>{hlKind=b.dataset.hl;applyHl();draw()});
+addEventListener('resize',resize);
+matchMedia('(prefers-color-scheme: dark)').addEventListener('change',draw);
+resize();example('Petersen');
+</script>
+</body>
+</html>

@@ -1,0 +1,114 @@
+<!DOCTYPE html>
+<html lang="ro">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Test de repetare 1–3</title>
+<style>
+:root{--bg:#f4f5f7;--card:#fff;--ink:#1d2330;--mut:#667;--line:#d8dbe2;--acc:#2f6fed;--ok:#2b8a3e;--bad:#c92a2a;--okbg:#ebfbee;--badbg:#fff5f5}
+@media (prefers-color-scheme:dark){:root{--bg:#15171c;--card:#1f232b;--ink:#e6e8ee;--mut:#9aa;--line:#343a46;--acc:#6b9bff;--ok:#51cf66;--bad:#ff6b6b;--okbg:#1c3324;--badbg:#3a1f22}}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--ink);font:15px/1.5 system-ui,Segoe UI,Roboto,sans-serif}
+.wrap{max-width:820px;margin:0 auto;padding:16px}
+h1{font-size:22px;margin:8px 0}
+.q{background:var(--card);border:1px solid var(--line);border-radius:10px;padding:14px;margin:12px 0}
+.q h3{margin:0 0 8px;font-size:15px}
+.tag{font-size:11px;color:var(--mut);border:1px solid var(--line);border-radius:10px;padding:1px 8px;margin-left:6px;font-weight:400}
+label{display:block;padding:6px 8px;border-radius:6px;cursor:pointer}
+label:hover{background:var(--bg)}
+input[type=text]{font:inherit;padding:6px 8px;border:1px solid var(--line);border-radius:6px;background:var(--bg);color:var(--ink);width:200px}
+.ok{background:var(--okbg);color:var(--ok)}.bad{background:var(--badbg);color:var(--bad)}
+.exp{display:none;margin-top:8px;padding:8px 10px;border-left:3px solid var(--acc);background:var(--bg);font-size:14px}
+.done .exp{display:block}
+button{font:inherit;padding:10px 18px;border:0;border-radius:8px;background:var(--acc);color:#fff;cursor:pointer}
+.bar{position:sticky;bottom:0;background:var(--card);border-top:1px solid var(--line);padding:10px 16px;display:flex;gap:10px;align-items:center;flex-wrap:wrap}
+pre{background:var(--bg);padding:8px;border-radius:6px;font-size:13px;overflow:auto}
+#score{font-weight:600}
+</style>
+</head>
+<body>
+<div class="wrap">
+<h1>Test de repetare — Teoria grafurilor, capitolele 1–3</h1>
+<p style="color:var(--mut)">1. Noțiuni de bază · 2. Lanțuri, cicluri, componente, caracteristici metrice · 3. Mulțimi stabile. Întrebările se amestecă la fiecare reîncărcare. Pentru verificare, poți desena grafurile în <a href="graf-editor.html">editorul de grafuri</a>.</p>
+<div id="qs"></div>
+</div>
+<div class="bar"><button id="check">Verifică</button><button id="reset" style="background:var(--mut)">Test nou</button><span id="score"></span></div>
+<script>
+// t: 'mc' (o variantă), 'in' (răspuns numeric/text)
+const Q=[
+// ---- Capitolul 1
+{c:1,q:'Un graf neorientat are 7 vârfuri, cu gradele 3,3,2,2,4,1,1. Câte muchii are?',t:'in',a:['8'],e:'Lema strângerii de mână: Σd(v) = 2m ⇒ 16 = 2m ⇒ m = 8.'},
+{c:1,q:'Poate exista un graf neorientat simplu cu gradele 3, 3, 3, 2, 2?',t:'mc',o:['Da','Nu'],a:0,e:'Suma = 13 este impară, dar suma gradelor trebuie să fie pară (= 2m). Deci NU.',fix:1},
+{c:1,q:'Câte muchii are graful complet K₇?',t:'in',a:['21'],e:'Kₙ are n(n−1)/2 muchii: 7·6/2 = 21.'},
+{c:1,q:'Numărul de vârfuri de grad impar într-un graf este întotdeauna:',t:'mc',o:['par','impar','egal cu numărul de muchii','cel mult 2'],a:0,e:'Consecință a lemei Σd(v)=2m: suma gradelor impare trebuie să fie pară, deci numărul lor e par.'},
+{c:1,q:'Matricea de adiacență a unui graf neorientat este întotdeauna:',t:'mc',o:['simetrică','antisimetrică','diagonală','inferior triunghiulară'],a:0,e:'aᵢⱼ = aⱼᵢ, deoarece muchia [i,j] = [j,i].'},
+{c:1,q:'În matricea de adiacență a unui graf neorientat simplu, suma elementelor de pe linia i este egală cu:',t:'mc',o:['gradul vârfului i','numărul de muchii','numărul de componente','excentricitatea lui i'],a:0,e:'Fiecare 1 pe linia i corespunde unui vecin al lui i.'},
+{c:1,q:'Într-un graf orientat, Σ d⁺(v) (grade exterioare) este egală cu:',t:'mc',o:['numărul de arce m','2m','Σ d⁻(v) + m','n'],a:0,e:'Fiecare arc pleacă dintr-un singur vârf: Σd⁺ = Σd⁻ = m.'},
+{c:1,q:'Un graf are n = 10 vârfuri și m = 12 muchii. Câte muchii are complementarul său?',t:'in',a:['33'],e:'K₁₀ are 45 muchii; 45 − 12 = 33.'},
+{c:1,q:'Graful complet bipartit K₃,₄ are câte muchii?',t:'in',a:['12'],e:'Kₚ,q are p·q muchii: 3·4 = 12.'},
+{c:1,q:'Un graf k-regulat cu n vârfuri are:',t:'mc',o:['n·k/2 muchii','n·k muchii','k(k−1)/2 muchii','n−1 muchii'],a:0,e:'Σd = n·k = 2m.'},
+{c:1,q:'Există un graf 3-regulat cu 7 vârfuri?',t:'mc',o:['Da','Nu'],a:1,e:'n·k = 21 este impar, deci nu poate fi 2m. NU există.',fix:1},
+{c:1,q:'Un subgraf parțial (graf parțial) al lui G = (X, U) se obține:',t:'mc',o:['păstrând toate vârfurile și eliminând unele muchii','eliminând unele vârfuri și muchiile incidente lor','adăugând muchii','contractând muchii'],a:0,e:'Graf parțial: aceleași vârfuri, U′ ⊆ U. Subgraf (indus): X′ ⊆ X cu toate muchiile dintre ele.'},
+{c:1,q:'În matricea de incidență vârf–muchie a unui graf neorientat fără bucle, fiecare coloană conține:',t:'mc',o:['exact doi de 1','exact un 1','un 1 și un −1','cel puțin un 1'],a:0,e:'Fiecare muchie are exact două extremități. (La graf orientat: un +1 și un −1.)'},
+{c:1,q:'Două grafuri izomorfe au obligatoriu:',t:'mc',o:['același șir de grade','aceeași matrice de adiacență','aceeași desenare','aceleași etichete ale vârfurilor'],a:0,e:'Șirul de grade este un invariant. Matricea poate diferi prin permutarea vârfurilor.'},
+{c:1,q:'Un vârf de grad 0 se numește:',t:'mc',o:['izolat','terminal (pendant)','central','articulație'],a:0,e:'Grad 0 = izolat; grad 1 = terminal/pendant.'},
+// ---- Capitolul 2
+{c:2,q:'Un lanț în care toate vârfurile sunt distincte se numește:',t:'mc',o:['lanț elementar','lanț simplu','ciclu','lanț eulerian'],a:0,e:'Elementar = vârfuri distincte. Simplu = muchii distincte.'},
+{c:2,q:'Ce este un ciclu hamiltonian?',t:'mc',o:['un ciclu elementar care trece prin toate vârfurile','un ciclu care trece prin toate muchiile o dată','cel mai scurt ciclu','un ciclu de lungime pară'],a:0,e:'Hamiltonian = toate vârfurile o singură dată. Eulerian = toate muchiile o singură dată.'},
+{c:2,q:'Un graf conex are ciclu eulerian dacă și numai dacă:',t:'mc',o:['toate vârfurile au grad par','are exact 2 vârfuri de grad impar','are n ≥ 3 și δ ≥ n/2','e bipartit'],a:0,e:'Teorema lui Euler. Cu exact 2 vârfuri impare are lanț eulerian (nu ciclu).'},
+{c:2,q:'Un graf are n = 12 vârfuri, m = 15 muchii și p = 2 componente conexe. Numărul ciclomatic ν(G) = ?',t:'in',a:['5'],e:'ν = m − n + p = 15 − 12 + 2 = 5.'},
+{c:2,q:'Numărul minim de muchii ale unui graf conex cu n vârfuri este:',t:'mc',o:['n − 1','n','n/2','n(n−1)/2'],a:0,e:'Un arbore are n−1 muchii — minimul pentru conexitate.'},
+{c:2,q:'Excentricitatea e(v) a unui vârf este:',t:'mc',o:['max d(v,u) după toate vârfurile u','min d(v,u)','gradul lui v','numărul de cicluri prin v'],a:0,e:'e(v) = max_u d(v,u). Raza = min e(v), diametrul = max e(v).'},
+{c:2,q:'Pentru ciclul C₆, raza și diametrul sunt:',t:'mc',o:['r = 3, d = 3','r = 2, d = 3','r = 3, d = 6','r = 1, d = 3'],a:0,e:'În Cₙ fiecare vârf are excentricitatea ⌊n/2⌋ = 3, deci r = d = 3.'},
+{c:2,q:'Pentru lanțul P₅ (5 vârfuri în linie: 1–2–3–4–5), raza r(G) = ?',t:'in',a:['2'],e:'e(3)=2, e(2)=e(4)=3, e(1)=e(5)=4. r = 2, d = 4, centrul = {3}.'},
+{c:2,q:'Pentru lanțul P₅, diametrul d(G) = ?',t:'in',a:['4'],e:'d = max e(v) = e(1) = 4.'},
+{c:2,q:'Relația corectă între rază și diametru într-un graf conex:',t:'mc',o:['r ≤ d ≤ 2r','d ≤ r','d = 2r întotdeauna','r + d = n'],a:0,e:'Pentru u,w: d(u,w) ≤ d(u,c)+d(c,w) ≤ 2r, unde c e în centru.'},
+{c:2,q:'Centrul unui graf este mulțimea vârfurilor cu:',t:'mc',o:['excentricitate minimă','excentricitate maximă','grad maxim','grad minim'],a:0,e:'Centru: e(v) = r(G). Periferie: e(v) = d(G).'},
+{c:2,q:'Care este diametrul grafului complet Kₙ (n ≥ 2)?',t:'in',a:['1'],e:'Orice două vârfuri sunt adiacente, deci toate distanțele sunt 1.'},
+{c:2,q:'Care este diametrul lui Petersen?',t:'in',a:['2'],e:'Graful Petersen are diametrul 2 și raza 2 (e 3-regulat, 10 vârfuri, girth 5).'},
+{c:2,q:'Un graf este bipartit dacă și numai dacă:',t:'mc',o:['nu conține cicluri de lungime impară','nu conține cicluri','este conex','are toate gradele pare'],a:0,e:'Teorema lui König.'},
+{c:2,q:'Dacă G nu este conex, atunci complementarul său Ḡ este:',t:'mc',o:['conex (cu diametru ≤ 2)','neconex','complet','arbore'],a:0,e:'Două vârfuri din componente diferite sunt adiacente în Ḡ; două din aceeași componentă au un vecin comun în altă componentă.'},
+{c:2,q:'Distanța d(u,v) într-un graf neconex, între vârfuri din componente diferite, se consideră:',t:'mc',o:['∞','0','n','−1'],a:0,e:'Nu există lanț între ele, deci d = ∞; diametrul grafului neconex e ∞.'},
+{c:2,q:'Pentru un arbore, centrul este format din:',t:'mc',o:['1 sau 2 vârfuri adiacente','exact un vârf','toate frunzele','cel puțin 3 vârfuri'],a:0,e:'Teorema lui Jordan: centrul unui arbore are 1 vârf sau 2 vârfuri adiacente.'},
+// ---- Capitolul 3
+{c:3,q:'O mulțime S de vârfuri este stabilă (interior stabilă, independentă) dacă:',t:'mc',o:['oricare două vârfuri din S nu sunt adiacente','oricare două vârfuri din S sunt adiacente','orice vârf din afara lui S are vecin în S','S conține toate vârfurile de grad maxim'],a:0,e:'Stabilă intern = independentă. „Orice vârf din afară are vecin în S” = stabilă extern (dominantă).'},
+{c:3,q:'Numărul de stabilitate internă α(G) este:',t:'mc',o:['cardinalul maxim al unei mulțimi stabile','cardinalul minim al unei mulțimi dominante','numărul de mulțimi stabile maximale','gradul maxim'],a:0,e:'α(G) = max{|S| : S stabilă}. β(G) (stabilitate externă) = min |mulțime dominantă|.'},
+{c:3,q:'α(Kₙ) = ?',t:'in',a:['1'],e:'În graful complet orice două vârfuri sunt adiacente, deci o mulțime stabilă are cel mult un vârf.'},
+{c:3,q:'α(C₇) = ?',t:'in',a:['3'],e:'α(Cₙ) = ⌊n/2⌋ = 3.'},
+{c:3,q:'α(K₃,₅) = ?',t:'in',a:['5'],e:'Partea cea mai mare a bipartiției este stabilă: max(3,5) = 5.'},
+{c:3,q:'O mulțime stabilă este maximală dacă:',t:'mc',o:['nu mai poate fi extinsă cu niciun vârf păstrând stabilitatea','are cardinalul α(G)','conține toate vârfurile izolate și nimic altceva','e complementul unei clici'],a:0,e:'Maximală (după incluziune) ≠ maximă (după cardinal). Orice mulțime maximă e maximală, nu și invers.'},
+{c:3,q:'O mulțime stabilă maximală este întotdeauna și:',t:'mc',o:['exterior stabilă (dominantă)','clică','de cardinal α(G)','centru'],a:0,e:'Dacă un vârf din afară n-ar avea vecin în S, l-am putea adăuga — contradicție cu maximalitatea. Deci S e și dominantă (nucleu).'},
+{c:3,q:'S este stabilă în G dacă și numai dacă în complementarul Ḡ, S este:',t:'mc',o:['clică (subgraf complet)','stabilă','dominantă','arbore'],a:0,e:'Ne-adiacența în G = adiacența în Ḡ. Deci α(G) = ω(Ḡ).'},
+{c:3,q:'Pentru orice graf cu n vârfuri și grad maxim Δ, este adevărat că:',t:'mc',o:['α(G) ≥ n/(Δ+1)','α(G) ≤ Δ','α(G) = n − Δ','α(G) = ω(G)'],a:0,e:'Marginea α(G) ≥ n/(Δ+1) se obține cu algoritmul greedy (alegi un vârf, elimini vecinii).'},
+{c:3,q:'Graful drum 1–2–3–4 (P₄). Câte mulțimi stabile maximale are?',t:'in',a:['3'],e:'{1,3}, {2,4}, {1,4}. Toate au 2 elemente, deci α = 2.'},
+{c:3,q:'Pentru graful stea K₁,₆ (un centru legat de 6 frunze), numărul de stabilitate externă β(G) = ?',t:'in',a:['1'],e:'Centrul singur domină toate frunzele. (α = 6 — frunzele.)'},
+{c:3,q:'Mulțimea S este acoperire cu vârfuri (vertex cover) dacă și numai dacă X \\ S este:',t:'mc',o:['stabilă','clică','dominantă','conexă'],a:0,e:'Deci α(G) + τ(G) = n (Gallai).'},
+{c:3,q:'Graful Petersen: α(G) = ?',t:'in',a:['4'],e:'Petersen are 10 vârfuri și numărul de stabilitate internă 4. Verifică în editor cu butonul „Mulțime stabilă maximă”.'},
+];
+function shuffle(a){for(let i=a.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));[a[i],a[j]]=[a[j],a[i]]}return a}
+let cur=[];
+function build(){
+  cur=shuffle([...Q]).sort((a,b)=>a.c-b.c).map(q=>{
+    if(q.t!=='mc'||q.fix)return{...q,oo:q.o&&q.o.map((t,i)=>({t,i}))};
+    return{...q,oo:shuffle(q.o.map((t,i)=>({t,i})))}});
+  const el=document.getElementById('qs');el.innerHTML='';
+  cur.forEach((q,k)=>{const d=document.createElement('div');d.className='q';
+    d.innerHTML=`<h3>${k+1}. ${q.q}<span class="tag">cap. ${q.c}</span></h3>`+
+      (q.t==='mc'?q.oo.map(o=>`<label><input type="radio" name="q${k}" value="${o.i}"> ${o.t}</label>`).join(''):
+       `<input type="text" name="q${k}" placeholder="răspuns">`)+`<div class="exp">${q.e}</div>`;
+    el.appendChild(d)});
+  document.getElementById('score').textContent='';scrollTo(0,0);
+}
+document.getElementById('check').onclick=()=>{let ok=0;
+  cur.forEach((q,k)=>{const d=document.querySelectorAll('.q')[k];d.classList.add('done');let good;
+    if(q.t==='mc'){const s=d.querySelector('input:checked');good=s&&+s.value===q.a;
+      d.querySelectorAll('label').forEach(l=>{const v=+l.querySelector('input').value;l.className=v===q.a?'ok':(l.querySelector('input').checked?'bad':'')})}
+    else{const inp=d.querySelector('input');good=q.a.includes(inp.value.trim().toLowerCase());inp.className=good?'ok':'bad';if(!good)d.querySelector('.exp').innerHTML='<b>Răspuns: '+q.a[0]+'.</b> '+q.e}
+    if(good)ok++});
+  const p=Math.round(ok/cur.length*100);
+  document.getElementById('score').textContent=`Scor: ${ok}/${cur.length} (${p}%) — nota ≈ ${Math.max(1,(p/10)).toFixed(1)}`};
+document.getElementById('reset').onclick=build;
+build();
+</script>
+</body>
+</html>
