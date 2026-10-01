@@ -12,7 +12,7 @@
   </div>
 
   <nav class="toc" aria-label="Cuprins">
-    <a href="#s1">1. Arbore și pădure</a><a href="#s2">2. m = n − 1</a><a href="#s3">3. Lanț unic</a><a href="#s4">4. Arbore parțial</a><a href="#s5">5. Kruskal și Prim</a><a href="#s6">6. Fițuica</a><a href="#s7">7. Verificare</a>
+    <a href="#s1">1. Arbore și pădure</a><a href="#s2">2. m = n − 1</a><a href="#s3">3. Lanț unic</a><a href="#s4">4. Arbore parțial și APM</a><a href="#s5">5. Kruskal și Prim</a><a href="#s6">6. Fițuica</a><a href="#s7">7. Verificare</a>
   </nav>
 
   <div class="section" id="s1">
@@ -52,9 +52,34 @@
 
   <div class="section" id="s4">
     <h2><span class="num">4</span>Arbore parțial și cost minim</h2>
-    <p><b>Arbore parțial</b> al unui graf conex G = un arbore care folosește <b>toate vârfurile</b> lui G și doar muchii din G (adică „scoți muchii până rămâne un arbore”). Are mereu <b>n − 1</b> muchii.</p>
-    <p>Dacă fiecare muchie are un <b>cost</b> (pondere) w(u) ≥ 0, graful se numește <b>ponderat</b>. Costul unui arbore = suma costurilor muchiilor lui.</p>
-    <div class="rule"><b>Exemplu din viață:</b> 7 sate de legat prin drumuri. Fiecare drum posibil costă altceva. Vrei ca toate satele să fie legate între ele, cu cheltuială cât mai mică. Asta e <b>problema arborelui parțial de cost minim (APM)</b>. Soluția nu are niciodată cicluri: un ciclu înseamnă un drum de prisos.</div>
+    <p><b>Da, ai înțeles bine:</b> arbore parțial = un arbore care trece prin <b>toate vârfurile</b> grafului, fără cicluri, și folosește doar muchii care <b>există deja în graf</b>.</p>
+
+    <h3 style="font-family:'Fraunces',Georgia,serif;font-size:1.05rem;margin:16px 0 6px;">Diferența față de „arborele obișnuit”</h3>
+    <div class="cmp">
+      <div class="card"><b>Arbore (simplu)</b><br>Un graf care, <b>în sine</b>, e conex și fără cicluri. Nu te întrebi de unde vine.<br><br>Exemplu: o schemă de familie desenată de la zero.</div>
+      <div class="card"><b>Arbore parțial</b><br>Un arbore <b>scos dintr-un graf G dat</b>. Păstrezi toate vârfurile lui G și alegi doar o parte din muchiile lui G.<br><br>Exemplu: din harta cu toate drumurile posibile alegi doar drumurile necesare.</div>
+    </div>
+    <div class="rule"><b>Pe scurt:</b> orice arbore parțial <i>este</i> un arbore. Cuvântul „parțial” spune doar că vine dintr-un graf mai mare G, din care a păstrat <b>toate vârfurile</b> și <b>doar o parte din muchii</b>. Are mereu <b>n − 1</b> muchii.<br><br>Un graf conex are de obicei <b>mai mulți</b> arbori parțiali, nu doar unul.</div>
+
+    <h3 style="font-family:'Fraunces',Georgia,serif;font-size:1.05rem;margin:16px 0 6px;">Exemplu mic: 3 sate</h3>
+    <p>Sate A, B, C. Drumuri posibile: A–B costă 4, B–C costă 3, A–C costă 10. Alegi n − 1 = 2 drumuri:</p>
+    <div class="tablewrap"><table class="cheat">
+      <tr><th>Drumuri alese</th><th>Arbore parțial?</th><th>Cost</th></tr>
+      <tr><td>A–B + B–C</td><td>da</td><td><b>7</b> ← minim (APM)</td></tr>
+      <tr><td>A–B + A–C</td><td>da</td><td>14</td></tr>
+      <tr><td>B–C + A–C</td><td>da</td><td>13</td></tr>
+      <tr><td>A–B + B–C + A–C (toate 3)</td><td>nu: formează ciclu</td><td>17</td></tr>
+    </table></div>
+
+    <h3 style="font-family:'Fraunces',Georgia,serif;font-size:1.05rem;margin:16px 0 6px;">Costul și problema APM</h3>
+    <p>Dacă fiecare muchie are un <b>cost</b> w(u) ≥ 0, graful se numește <b>ponderat</b>. <b>Costul unui arbore</b> = suma costurilor muchiilor lui.</p>
+    <div class="rule"><b>Exemplu din viață:</b> 7 sate de legat prin drumuri, fiecare drum posibil cu alt preț. Vrei toate satele legate, cu cheltuială cât mai mică. Asta e <b>problema arborelui parțial de cost minim (APM)</b>. Soluția nu are niciodată cicluri: un ciclu înseamnă un drum de prisos.</div>
+
+    <p>Acum încearcă tu pe cele 7 sate. Alege muchii (drumuri) până obții un arbore parțial. Panoul îți spune ce lipsește și cât costă.</p>
+    <div class="wg" id="w4" data-kind="span">
+      <div><div class="board"></div><div class="hintline">Muchie aleasă = verde gros. Muchiile roșii formează un ciclu. Ținta: 6 muchii, cost cât mai mic.</div></div>
+      <div class="wpanel"></div>
+    </div>
   </div>
 
   <div class="section" id="s5">
@@ -232,6 +257,38 @@
     }
     return out;
   }
+  function Span(el){
+    const g=WG, ids=Object.keys(g.pos).map(Number), n=ids.length;
+    let sel=new Set();
+    const best=steps('kruskal').slice(-1)[0].tree, bestCost=best.reduce((t,i)=>t+g.E[i][2],0);
+    const board=el.querySelector('.board'), panel=el.querySelector('.wpanel');
+    const svg=mk('svg',{viewBox:`0 0 ${g.W} ${g.H}`,role:'img','aria-label':'graf cu costuri'}); board.appendChild(svg);
+    const btns=document.createElement('div'); btns.className='wbtns';
+    const mkb=(t,f)=>{ const b=document.createElement('button'); b.className='tbtn'; b.textContent=t; b.onclick=f; btns.appendChild(b); };
+    mkb('Golește',()=>{ sel=new Set(); upd(); });
+    mkb('Un arbore parțial (nu cel mai ieftin)',()=>{ sel=new Set([1,3,2,5,8,10]); upd(); });
+    mkb('Arată APM',()=>{ sel=new Set(best); upd(); });
+    function upd(){
+      const S=[...sel], E=S.map(i=>g.E[i]), m=S.length, c=comps(ids,E).count;
+      const cyc=new Set(S.filter(i=>comps(ids,S.filter(j=>j!==i).map(j=>g.E[j])).count===c));
+      const touched=new Set(); E.forEach(e=>{touched.add(e[0]);touched.add(e[1]);});
+      const missing=ids.filter(v=>!touched.has(v)), conn=c===1, acyc=cyc.size===0, tree=conn&&acyc;
+      const cost=E.reduce((t,e)=>t+e[2],0);
+      const L=[];
+      L.push(`Muchii alese: ${m} din ${n-1} necesare<span class="why">Un arbore parțial are exact n − 1 = ${n-1} muchii.</span>`);
+      L.push(`Ating toate vârfurile ${pill(missing.length===0)}<span class="why">${missing.length?'Vârfuri neatinse: '+missing.join(', '):'Toate cele 7 sate au măcar un drum.'}</span>`);
+      L.push(`Conex ${pill(conn)}<span class="why">${conn?'Din orice sat ajungi în oricare altul.':`Are ${c} bucăți separate.`}</span>`);
+      L.push(`Fără cicluri ${pill(acyc)}<span class="why">${acyc?'Niciun drum de prisos.':'Muchii pe cicluri (roșu): '+[...cyc].map(i=>ename(g.E[i].slice(0,2))).join(', ')}</span>`);
+      L.push(`<b>Arbore parțial</b> ${pill(tree)}<span class="why">${tree?'Conex, fără cicluri, pe toate vârfurile!':'Trebuie conex și fără cicluri, pe toate cele 7 vârfuri.'}</span>`);
+      L.push(`Cost: <b>${cost}</b> ${tree?pill(cost===bestCost):pill(null)}<span class="why">${!tree?'Costul contează abia când ai un arbore parțial.':cost===bestCost?`Ai atins costul minim ${bestCost}: e un APM!`:`Se poate și cu ${bestCost}. Ești cu ${cost-bestCost} peste minim.`}</span>`);
+      panel.innerHTML=`<div class="sel">Ai ales: ${S.length?S.map(i=>ename(g.E[i].slice(0,2))+' ('+g.E[i][2]+')').join(', '):'nimic'}</div>`+L.map(x=>`<div class="wline">${x}</div>`).join('');
+      panel.appendChild(btns);
+      drawBase(svg,g,i=>sel.has(i)?(cyc.has(i)?'stroke:var(--bad);stroke-width:7':'stroke:var(--good);stroke-width:7'):'stroke:var(--line);stroke-width:3;stroke-dasharray:3 7',v=>touched.has(v)?'fill:var(--good)':'',true);
+    }
+    svg.addEventListener('click',e=>{ const h=e.target.closest('[data-e]'); if(!h) return; const i=+h.dataset.e; sel.has(i)?sel.delete(i):sel.add(i); upd(); });
+    upd();
+  }
+
   function Algo(el){
     const g=WG, board=el.querySelector('.board'), panel=el.querySelector('.wpanel'), sw=document.getElementById('alg');
     const svg=mk('svg',{viewBox:`0 0 ${g.W} ${g.H}`,role:'img','aria-label':'graf cu costuri'}); board.appendChild(svg);
@@ -258,7 +315,7 @@
     upd();
   }
 
-  document.querySelectorAll('.wg').forEach(el=>{ const k=el.dataset.kind; if(k==='build') Build(el); else if(k==='path') PathW(el); else if(k==='algo') Algo(el); });
+  document.querySelectorAll('.wg').forEach(el=>{ const k=el.dataset.kind; if(k==='build') Build(el); else if(k==='path') PathW(el); else if(k==='algo') Algo(el); else if(k==='span') Span(el); });
 
   // quiz + salvare
   let db=null; const results={};
