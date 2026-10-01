@@ -169,7 +169,7 @@ button.check:disabled{opacity:0.5; cursor:default;}
 (function(){
   const NS='http://www.w3.org/2000/svg';
   function mk(t,a){ const e=document.createElementNS(NS,t); for(const k in a) e.setAttribute(k,a[k]); return e; }
-  const G={W:640,H:490,pos:{1:[80,70],2:[230,70],3:[380,70],4:[230,200],5:[380,200],6:[300,330],7:[480,330],8:[300,440]},
+  const G={W:640,H:530,pos:{1:[80,70],2:[200,150],3:[380,70],4:[230,270],5:[400,250],6:[300,380],7:[490,370],8:[300,480]},
     E:[[1,2,4],[1,3,9],[2,3,2],[2,4,8],[3,4,7],[3,5,6],[4,5,3],[4,6,10],[5,6,5],[5,7,12],[6,7,1],[6,8,11],[7,8,13]]};
   function graph(){
     const svg=mk('svg',{viewBox:`0 0 ${G.W} ${G.H}`,role:'img','aria-label':'graf cu costuri'});
