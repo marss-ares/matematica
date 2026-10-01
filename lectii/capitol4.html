@@ -1,0 +1,430 @@
+<title>Arbori</title>
+<meta name="description" content="Lecție interactivă pentru Capitolul 4: arbori, păduri, teorema de echivalențe, arbore parțial de cost minim, algoritmii Kruskal și Prim.">
+<style>
+:root{
+  --bg:#f6f5f1;
+  --surface:#ffffff;
+  --surface-2:#eeece4;
+  --ink:#1c2321;
+  --ink-dim:#5b6460;
+  --line:#d9d5c9;
+  --accent:#8a3b2e;
+  --accent-ink:#ffffff;
+  --node:#2c4a52;
+  --node-2:#c98a3c;
+  --good:#2f6b4f;
+  --bad:#a13a3a;
+  --radius:14px;
+  color-scheme: light;
+}
+@media (prefers-color-scheme: dark){
+  :root:not([data-theme="light"]){
+    --bg:#181a17; --surface:#222521; --surface-2:#2b2e29;
+    --ink:#eeece6; --ink-dim:#a8ada4; --line:#3a3d37;
+    --accent:#e08b6f; --accent-ink:#1c1310;
+    --node:#7fb3bd; --node-2:#e6b16a; --good:#7fc79c; --bad:#e08585;
+    color-scheme: dark;
+  }
+}
+:root[data-theme="dark"]{
+  --bg:#181a17; --surface:#222521; --surface-2:#2b2e29;
+  --ink:#eeece6; --ink-dim:#a8ada4; --line:#3a3d37;
+  --accent:#e08b6f; --accent-ink:#1c1310;
+  --node:#7fb3bd; --node-2:#e6b16a; --good:#7fc79c; --bad:#e08585;
+  color-scheme: dark;
+}
+*{box-sizing:border-box;}
+body{background:var(--bg); color:var(--ink); font-family:'Source Serif 4',Georgia,serif; padding-inline:16px; padding-block:32px;}
+.wrap{max-width:720px; margin:0 auto;}
+h1{font-family:'Fraunces',Georgia,serif; font-weight:600; font-size:clamp(1.5rem,5vw,2.1rem); margin:0 0 4px; text-wrap:balance;}
+.subtitle{font-family:'Inter',system-ui,sans-serif; color:var(--ink-dim); font-size:0.92rem; margin-bottom:22px;}
+svg{max-width:100%; height:auto;}
+.graphbox{display:flex; justify-content:center; margin:14px 0; overflow-x:auto;}
+.node-circle{fill:var(--node); stroke:var(--bg); stroke-width:3;}
+.node-label{font-family:'Inter',sans-serif; font-size:13px; font-weight:700; fill:var(--accent-ink);}
+.edge-line{stroke:var(--ink-dim); stroke-width:2;}
+
+.progressbar{position:sticky; top:env(safe-area-inset-top,0px); background:var(--bg); padding-block:10px 4px; z-index:5; margin-bottom:10px;}
+.pbar-track{height:6px; background:var(--surface-2); border-radius:999px; overflow:hidden;}
+.pbar-fill{height:100%; background:var(--accent); width:0%; transition:width .3s;}
+.pbar-label{font-family:'Inter',sans-serif; font-size:0.72rem; color:var(--ink-dim); margin-top:4px;}
+
+.identity-box{
+  font-family:'Inter',sans-serif; background:var(--surface-2); border-radius:10px;
+  padding:14px 16px; margin-bottom:20px; display:flex; gap:10px; align-items:center; flex-wrap:wrap;
+}
+.identity-box input{
+  flex:1; min-width:140px; padding:8px 10px; border-radius:7px;
+  border:1px solid var(--line); background:var(--surface); color:var(--ink); font-family:inherit; font-size:0.9rem;
+}
+
+.qcard{
+  background:var(--surface); border:1px solid var(--line); border-radius:var(--radius);
+  padding:20px; margin-bottom:16px; font-family:'Inter',system-ui,sans-serif;
+}
+.qnum{font-size:0.72rem; text-transform:uppercase; letter-spacing:0.06em; color:var(--ink-dim); margin-bottom:6px;}
+.qtext{font-family:'Source Serif 4',Georgia,serif; font-size:1.05rem; margin-bottom:14px; line-height:1.5;}
+.opts{display:flex; flex-direction:column; gap:8px;}
+.opt{
+  text-align:left; border:1px solid var(--line); background:var(--surface); color:var(--ink);
+  padding:10px 14px; border-radius:8px; cursor:pointer; font-family:inherit; font-size:0.92rem;
+  transition:background .15s, border-color .15s;
+}
+.opt:hover{border-color:var(--accent);}
+.opt.correct{background:color-mix(in srgb, var(--good) 22%, var(--surface)); border-color:var(--good); color:var(--good);}
+.opt.wrong{background:color-mix(in srgb, var(--bad) 22%, var(--surface)); border-color:var(--bad); color:var(--bad);}
+.opt:disabled{cursor:default;}
+.fillrow{display:flex; align-items:center; gap:8px; flex-wrap:wrap;}
+input.fillbox{
+  width:64px; padding:7px 8px; border-radius:6px; border:1px solid var(--line);
+  background:var(--surface); color:var(--ink); font-family:'JetBrains Mono',monospace; text-align:center; font-size:0.95rem;
+}
+button.check{
+  font-family:'Inter',sans-serif; font-weight:600; font-size:0.85rem;
+  background:var(--accent); color:var(--accent-ink); border:none; padding:9px 18px; border-radius:8px; cursor:pointer; margin-top:10px;
+}
+button.check:hover{opacity:0.9;}
+button.check:disabled{opacity:0.5; cursor:default;}
+.feedback{margin-top:10px; font-size:0.88rem; display:none;}
+.feedback.show{display:block;}
+
+.resultbox{
+  background:var(--surface); border:2px solid var(--accent); border-radius:var(--radius);
+  padding:28px 24px; text-align:center; font-family:'Inter',sans-serif; display:none;
+}
+.resultbox.show{display:block;}
+.resultbox .score{font-family:'Fraunces',Georgia,serif; font-size:2.6rem; font-weight:700; color:var(--accent); margin-bottom:6px;}
+.resultbox .msg{font-size:0.95rem; color:var(--ink-dim); margin-bottom:4px;}
+
+.wrap{max-width:900px;}
+.section{background:var(--surface);border:1px solid var(--line);border-radius:14px;padding:22px;margin-bottom:22px;}
+.section h2{font-family:'Fraunces',Georgia,serif;font-weight:600;font-size:1.35rem;margin:0 0 10px;display:flex;gap:10px;align-items:center;text-wrap:balance;}
+.section h2 .num{font-family:'Inter',sans-serif;font-size:0.75rem;font-weight:700;background:var(--accent);color:var(--accent-ink);border-radius:999px;width:26px;height:26px;display:inline-flex;align-items:center;justify-content:center;flex:none;}
+.section p{line-height:1.65;margin:0 0 12px;}
+.rule{font-family:'Inter',sans-serif;background:var(--surface-2);border-left:3px solid var(--accent);border-radius:6px;padding:12px 16px;margin:12px 0;font-size:0.95rem;line-height:1.55;}
+.rule.warn{border-left-color:var(--node-2);}
+.wg{display:grid;grid-template-columns:minmax(0,1fr) 280px;gap:14px;align-items:start;margin-top:10px;}
+@media (max-width:760px){.wg{grid-template-columns:1fr;}}
+.wg .board{background:var(--bg);border:1px solid var(--line);border-radius:12px;overflow:hidden;}
+.wg svg{display:block;width:100%;height:auto;user-select:none;-webkit-user-select:none;-webkit-tap-highlight-color:transparent;touch-action:manipulation;}
+.wpanel{font-family:'Inter',sans-serif;font-size:0.88rem;background:var(--surface-2);border-radius:10px;padding:12px 14px;}
+.wpanel .sel{font-weight:700;margin-bottom:8px;word-break:break-word;}
+.wline{padding:6px 0;border-top:1px dashed var(--line);line-height:1.45;}
+.wline:first-of-type{border-top:none;}
+.pill{display:inline-block;padding:1px 8px;border-radius:999px;font-size:0.75rem;font-weight:700;margin-left:4px;}
+.pill.yes{background:color-mix(in srgb,var(--good) 20%,transparent);color:var(--good);}
+.pill.no{background:color-mix(in srgb,var(--bad) 20%,transparent);color:var(--bad);}
+.pill.na{background:var(--line);color:var(--ink-dim);}
+.why{color:var(--ink-dim);font-size:0.82rem;display:block;margin-top:2px;}
+.wbtns{display:flex;gap:6px;flex-wrap:wrap;margin-top:10px;}
+.tbtn{font-family:'Inter',sans-serif;font-weight:600;font-size:0.82rem;background:var(--surface);color:var(--ink);border:1px solid var(--line);padding:7px 11px;border-radius:8px;cursor:pointer;}
+.tbtn:focus-visible{outline:2px solid var(--accent);outline-offset:2px;}
+.hintline{font-family:'Inter',sans-serif;font-size:0.82rem;color:var(--ink-dim);margin-top:6px;}
+.vtx{cursor:pointer;}
+.ehit{stroke:transparent;stroke-width:20;cursor:pointer;}
+.toc{display:flex;flex-wrap:wrap;gap:6px;margin-bottom:18px;font-family:'Inter',sans-serif;font-size:0.82rem;}
+.toc a{color:var(--ink);text-decoration:none;background:var(--surface);border:1px solid var(--line);border-radius:999px;padding:4px 10px;}
+.cheat{width:100%;border-collapse:collapse;font-family:'Inter',sans-serif;font-size:0.88rem;}
+.cheat th,.cheat td{text-align:left;padding:7px 8px;border-bottom:1px solid var(--line);vertical-align:top;}
+.cheat th{font-size:0.75rem;text-transform:uppercase;letter-spacing:0.05em;color:var(--ink-dim);}
+.tablewrap{overflow-x:auto;}
+.gbadge{display:inline-block;font-size:0.72rem;font-weight:700;letter-spacing:0.04em;text-transform:uppercase;background:var(--accent);color:var(--accent-ink);border-radius:999px;padding:2px 9px;margin-bottom:6px;}
+.nobadge{display:inline-block;font-size:0.72rem;font-weight:700;letter-spacing:0.04em;text-transform:uppercase;background:var(--line);color:var(--ink-dim);border-radius:999px;padding:2px 9px;margin-bottom:6px;}
+.swrow{display:flex;gap:8px;align-items:center;flex-wrap:wrap;font-family:'Inter',sans-serif;font-size:0.88rem;margin-bottom:8px;}
+.swrow select{font-family:'Inter',sans-serif;font-size:0.88rem;padding:7px 10px;border-radius:8px;border:1px solid var(--line);background:var(--surface);color:var(--ink);}
+.quiz{font-family:Inter,sans-serif;background:var(--surface-2);border-radius:10px;padding:14px;margin-top:12px;}
+.quiz .q{font-weight:600;margin-bottom:10px;}
+.cmp{display:grid;grid-template-columns:1fr 1fr;gap:14px;}
+@media (max-width:640px){.cmp{grid-template-columns:1fr;}}
+.cmp .card{background:var(--surface-2);border-radius:10px;padding:12px;font-family:'Inter',sans-serif;font-size:0.88rem;}
+
+.wlabel{font-family:'JetBrains Mono',monospace;font-size:13px;font-weight:700;fill:var(--ink);}
+.wbg{fill:var(--surface);stroke:var(--line);stroke-width:1;}
+.cmp{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin:12px 0;}
+@media (max-width:640px){.cmp{grid-template-columns:1fr;}}
+.card{font-family:'Inter',sans-serif;background:var(--surface-2);border-radius:10px;padding:12px 14px;font-size:0.92rem;line-height:1.55;}
+.quiz{background:var(--surface-2);border-radius:12px;padding:14px 16px;margin:12px 0;font-family:'Inter',sans-serif;}
+.quiz .q{font-family:'Source Serif 4',Georgia,serif;font-size:1rem;margin-bottom:10px;line-height:1.5;}
+.gbadge,.nobadge{font-size:0.7rem;font-weight:700;border-radius:999px;padding:2px 8px;margin-right:6px;background:var(--accent);color:var(--accent-ink);}
+.nobadge{background:var(--line);color:var(--ink-dim);}
+.steplog{font-size:0.82rem;line-height:1.45;max-height:210px;overflow:auto;margin-top:8px;}
+.steplog div{padding:3px 0;border-top:1px dashed var(--line);}
+.steplog .ok{color:var(--good);} .steplog .no{color:var(--bad);}
+.swrow{font-family:'Inter',sans-serif;font-size:0.9rem;margin:10px 0;display:flex;gap:8px;align-items:center;flex-wrap:wrap;}
+</style>
+
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Fraunces:wght@500;600;700&family=Source+Serif+4:wght@400;500&family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@500;700&display=swap">
+
+<div class="wrap">
+  <h1>Arbori</h1>
+  <div class="subtitle">Capitolul 4 · construiești singur arbori, apoi rulezi pas cu pas algoritmii lui Kruskal și Prim.</div>
+
+  <div class="identity-box">
+    <span style="font-size:0.85rem;">Numele tău:</span>
+    <input type="text" id="studentName" placeholder="ex: Victor" autocomplete="off">
+  </div>
+
+  <nav class="toc" aria-label="Cuprins">
+    <a href="#s1">1. Arbore și pădure</a><a href="#s2">2. m = n − 1</a><a href="#s3">3. Lanț unic</a><a href="#s4">4. Arbore parțial</a><a href="#s5">5. Kruskal și Prim</a><a href="#s6">6. Fițuica</a><a href="#s7">7. Verificare</a>
+  </nav>
+
+  <div class="section" id="s1">
+    <h2><span class="num">1</span>Arbore și pădure</h2>
+    <p><b>Arbore</b> = graf <b>conex</b> (dintr-un vârf ajungi în oricare altul) și <b>fără cicluri</b>.<br><b>Pădure</b> = graf <b>fără cicluri</b>, dar nu neapărat conex. Fiecare componentă a unei păduri e un arbore.</p>
+    <div class="rule"><b>Exemplu din viață:</b> arborele genealogic al unei familii, sau structura de foldere de pe calculator: de la rădăcină ajungi oriunde și nu te poți „învârti în cerc”.</div>
+    <p>Apasă pe muchii ca să le pui sau să le scoți. Încearcă să faci un arbore, apoi o pădure, apoi un ciclu.</p>
+    <div class="wg" id="w1" data-kind="build">
+      <div><div class="board"></div><div class="hintline">Linia groasă = muchie pusă. Muchiile roșii sunt pe un ciclu.</div></div>
+      <div class="wpanel"></div>
+    </div>
+  </div>
+
+  <div class="section" id="s2">
+    <h2><span class="num">2</span>Teorema 1: numărul de muchii e n − 1</h2>
+    <p>Pentru un graf cu <b>n</b> vârfuri și <b>m</b> muchii, aceste afirmații sunt <b>echivalente</b> (adică dacă una e adevărată, sunt toate):</p>
+    <div class="rule">1) G e arbore<br>2) G e conex și <b>m = n − 1</b><br>3) G e aciclic și <b>m = n − 1</b><br>4) între oricare 2 vârfuri există <b>un singur</b> lanț<br>5) G e <b>maximal aciclic</b>: dacă adaugi orice muchie nouă, apare un ciclu</div>
+    <p>Practic, când ai <b>n − 1</b> muchii, îți ajunge să verifici <b>o singură</b> proprietate (conex <i>sau</i> aciclic) și o ai și pe cealaltă.</p>
+    <div class="rule warn"><b>Atenție:</b> m = n − 1 <b>singur</b> nu ajunge! Un ciclu de 4 vârfuri, plus un vârf legat de el, plus un vârf izolat, are n = 6, m = 5 = n − 1, dar nu e arbore (nu e conex și are ciclu).</div>
+    <p>Joacă-te mai jos: panoul îți arată n, m, numărul de componente și ce afirmații din teoremă sunt adevărate.</p>
+    <div class="wg" id="w2" data-kind="build" data-theorem="1">
+      <div><div class="board"></div><div class="hintline">Apasă „m = n − 1, dar nu arbore” ca să vezi exemplul de mai sus.</div></div>
+      <div class="wpanel"></div>
+    </div>
+    <div class="rule"><b>De ce m = n − 1?</b> (ideea demonstrației) Scoți o muchie dintr-un arbore: se rupe în <b>2 arbori</b> mai mici, cu n₁ + n₂ = n vârfuri. Prin inducție au (n₁ − 1) + (n₂ − 1) muchii. Cu muchia scoasă: (n₁ − 1) + (n₂ − 1) + 1 = n − 1 ✓</div>
+  </div>
+
+  <div class="section" id="s3">
+    <h2><span class="num">3</span>Lanț unic și „maximal aciclic”</h2>
+    <p>Într-un arbore, între oricare 2 vârfuri există <b>exact un lanț</b>. Dacă ar fi două, împreună ar forma un ciclu.</p>
+    <p>Apasă pe 2 vârfuri. Vezi lanțul unic dintre ele. Dacă nu sunt vecine, vezi și ce se întâmplă când le <b>unești cu o muchie nouă</b>: apare exact un ciclu. Asta e afirmația 5: arborele e „maximal aciclic”.</p>
+    <div class="wg" id="w3" data-kind="path">
+      <div><div class="board"></div><div class="hintline">Alege primul vârf, apoi al doilea.</div></div>
+      <div class="wpanel"></div>
+    </div>
+  </div>
+
+  <div class="section" id="s4">
+    <h2><span class="num">4</span>Arbore parțial și cost minim</h2>
+    <p><b>Arbore parțial</b> al unui graf conex G = un arbore care folosește <b>toate vârfurile</b> lui G și doar muchii din G (adică „scoți muchii până rămâne un arbore”). Are mereu <b>n − 1</b> muchii.</p>
+    <p>Dacă fiecare muchie are un <b>cost</b> (pondere) w(u) ≥ 0, graful se numește <b>ponderat</b>. Costul unui arbore = suma costurilor muchiilor lui.</p>
+    <div class="rule"><b>Exemplu din viață:</b> 7 sate de legat prin drumuri. Fiecare drum posibil costă altceva. Vrei ca toate satele să fie legate între ele, cu cheltuială cât mai mică. Asta e <b>problema arborelui parțial de cost minim (APM)</b>. Soluția nu are niciodată cicluri: un ciclu înseamnă un drum de prisos.</div>
+  </div>
+
+  <div class="section" id="s5">
+    <h2><span class="num">5</span>Algoritmii Kruskal și Prim</h2>
+    <div class="cmp">
+      <div class="card"><b>Kruskal</b> — „cel mai ieftin drum din tot graful”<br>1. Sortezi muchiile crescător după cost.<br>2. Le iei pe rând: <b>o pui</b> dacă <b>nu formează ciclu</b>, altfel o sari.<br>3. Te oprești când ai <b>n − 1</b> muchii.<br><i>Pe parcurs ai o pădure care se unește.</i></div>
+      <div class="card"><b>Prim</b> — „cresc un singur arbore”<br>1. Pornești dintr-un vârf oarecare.<br>2. Pui muchia cea mai ieftină care are <b>exact un capăt</b> în arborele de până acum.<br>3. Te oprești la <b>n − 1</b> muchii.<br><i>Pe parcurs ai mereu un singur arbore.</i></div>
+    </div>
+    <p>Rulează pas cu pas pe graful din curs. Muchiile verzi sunt alese, cele roșii sunt respinse (ar forma ciclu), cele punctate sunt candidate la Prim.</p>
+    <div class="swrow"><label for="alg">Algoritm:</label>
+      <select id="alg"><option value="kruskal">Kruskal</option><option value="prim">Prim (din vârful 1)</option></select></div>
+    <div class="wg" id="w5" data-kind="algo">
+      <div><div class="board"></div><div class="hintline">Apasă „Pasul următor” și citește explicația din dreapta.</div></div>
+      <div class="wpanel"></div>
+    </div>
+    <div class="rule">Ambii algoritmi dau un APM de cost <b>39</b> (5 + 5 + 6 + 7 + 7 + 9). Dacă mai multe muchii au același cost, ordinea aleasă poate schimba <i>arborele</i>, dar <b>nu și costul minim</b>.</div>
+  </div>
+
+  <div class="section" id="s6">
+    <h2><span class="num">6</span>Fițuica: tot capitolul</h2>
+    <div class="tablewrap"><table class="cheat">
+      <tr><th>Noțiune</th><th>Ce înseamnă</th></tr>
+      <tr><td><b>Arbore</b></td><td>conex + aciclic</td></tr>
+      <tr><td><b>Pădure</b></td><td>aciclic (componentele sunt arbori)</td></tr>
+      <tr><td><b>Teorema 1</b></td><td>arbore ⇔ conex și m = n − 1 ⇔ aciclic și m = n − 1 ⇔ lanț unic între oricare 2 vârfuri ⇔ maximal aciclic</td></tr>
+      <tr><td><b>Pădure cu k componente</b></td><td>m = n − k</td></tr>
+      <tr><td><b>Arbore parțial</b></td><td>arbore pe toate vârfurile, cu n − 1 muchii din G</td></tr>
+      <tr><td><b>APM</b></td><td>arbore parțial cu suma costurilor minimă</td></tr>
+      <tr><td><b>Kruskal</b></td><td>muchii sortate; adaugi dacă nu face ciclu</td></tr>
+      <tr><td><b>Prim</b></td><td>crești un arbore din un vârf; muchia minimă cu exact un capăt în arbore</td></tr>
+    </table></div>
+  </div>
+
+  <div class="section" id="s7">
+    <h2><span class="num">7</span>Verificare rapidă</h2>
+    <p>Întrebările <span class="gbadge">graf cu costuri</span> se referă la graful din secțiunea 5 (muchiile: 1–2:7, 1–4:5, 2–3:8, 2–4:9, 2–5:7, 3–5:5, 4–5:15, 4–6:6, 5–6:8, 5–7:9, 6–7:11).</p>
+
+    <div class="quiz" data-qid="q1"><span class="nobadge">teorie</span><div class="q">Un arbore are 8 vârfuri. Câte muchii are?</div><div class="opts"><button class="opt" data-correct="false">8</button><button class="opt" data-correct="true">7</button><button class="opt" data-correct="false">9</button></div><div class="feedback"></div></div>
+    <div class="quiz" data-qid="q2"><span class="nobadge">teorie</span><div class="q">Un graf are 10 vârfuri și 9 muchii. Este sigur arbore?</div><div class="opts"><button class="opt" data-correct="false">Da, m = n − 1</button><button class="opt" data-correct="true">Nu neapărat: trebuie să fie și conex (sau aciclic)</button></div><div class="feedback"></div></div>
+    <div class="quiz" data-qid="q3"><span class="nobadge">teorie</span><div class="q">O pădure are 12 vârfuri și 3 componente conexe. Câte muchii are?</div><div class="opts"><button class="opt" data-correct="false">11</button><button class="opt" data-correct="true">9</button><button class="opt" data-correct="false">10</button></div><div class="feedback"></div></div>
+    <div class="quiz" data-qid="q4"><span class="nobadge">teorie</span><div class="q">Adaugi o muchie nouă între 2 vârfuri ale unui arbore. Ce obții?</div><div class="opts"><button class="opt" data-correct="true">Un graf cu exact un ciclu</button><button class="opt" data-correct="false">Tot un arbore</button><button class="opt" data-correct="false">Un graf neconex</button></div><div class="feedback"></div></div>
+    <div class="quiz" data-qid="q5"><span class="nobadge">teorie</span><div class="q">Câte lanțuri distincte există între 2 vârfuri într-un arbore?</div><div class="opts"><button class="opt" data-correct="false">Cel puțin 2</button><button class="opt" data-correct="true">Exact unul</button><button class="opt" data-correct="false">Depinde de arbore</button></div><div class="feedback"></div></div>
+    <div class="quiz" data-qid="q6"><span class="gbadge">graf cu costuri</span><div class="q">Care e costul arborelui parțial minim?</div><div class="opts"><button class="opt" data-correct="false">37</button><button class="opt" data-correct="true">39</button><button class="opt" data-correct="false">45</button></div><div class="feedback"></div></div>
+    <div class="quiz" data-qid="q7"><span class="gbadge">graf cu costuri</span><div class="q">Intră muchia 4–5 (cost 15) în APM?</div><div class="opts"><button class="opt" data-correct="false">Da</button><button class="opt" data-correct="true">Nu, e cea mai scumpă și nu e necesară: 4 și 5 se leagă și ieftin, prin 1–2–5</button></div><div class="feedback"></div></div>
+    <div class="quiz" data-qid="q8"><span class="gbadge">graf cu costuri</span><div class="q">Kruskal ajunge la muchia 2–4 (cost 9), când 1–4 și 1–2 sunt deja alese. O pune?</div><div class="opts"><button class="opt" data-correct="false">Da, e următoarea după cost</button><button class="opt" data-correct="true">Nu, 2 și 4 sunt deja legate (prin 1): ar forma ciclu 1–2–4</button></div><div class="feedback"></div></div>
+    <div class="quiz" data-qid="q9"><span class="nobadge">teorie</span><div class="q">Prin ce diferă Prim de Kruskal?</div><div class="opts"><button class="opt" data-correct="true">Prim crește mereu un singur arbore; Kruskal poate avea mai mulți arbori (pădure) până la final</button><button class="opt" data-correct="false">Prim dă cost mai mic decât Kruskal</button><button class="opt" data-correct="false">Prim sortează toate muchiile</button></div><div class="feedback"></div></div>
+    <div class="quiz" data-qid="q10"><span class="nobadge">teorie</span><div class="q">Câte muchii are un arbore parțial al unui graf conex cu 15 vârfuri?</div><div class="opts"><button class="opt" data-correct="true">14</button><button class="opt" data-correct="false">15</button><button class="opt" data-correct="false">Depinde de G</button></div><div class="feedback"></div></div>
+  </div>
+</div>
+
+<script>
+(function(){
+  const NS='http://www.w3.org/2000/svg';
+  function mk(t,a){ const e=document.createElementNS(NS,t); for(const k in a) e.setAttribute(k,a[k]); return e; }
+  function pill(v){ return v===null ? '<span class="pill na">–</span>' : `<span class="pill ${v?'yes':'no'}">${v?'da':'nu'}</span>`; }
+  const ename = e => e.join('–');
+
+  // graful pentru construit arbori (hexagon + 3 diagonale)
+  const BUILD = {W:640,H:380, pos:{1:[320,40],2:[500,130],3:[500,260],4:[320,340],5:[140,260],6:[140,130]},
+    E:[[1,2],[2,3],[3,4],[4,5],[5,6],[6,1],[1,4],[2,5],[3,6]], start:[0,1,2,3]};
+  // arbore de 7 vârfuri
+  const TREE = {W:640,H:380, pos:{1:[320,40],2:[170,130],3:[470,130],4:[90,250],5:[240,250],6:[400,250],7:[550,250]},
+    E:[[1,2],[1,3],[2,4],[2,5],[3,6],[3,7]]};
+  // graful ponderat din curs
+  const WG = {W:640,H:400, pos:{1:[150,70],2:[320,70],3:[500,70],4:[110,230],5:[360,230],6:[200,350],7:[520,350]},
+    E:[[1,2,7],[1,4,5],[2,3,8],[2,4,9],[2,5,7],[3,5,5],[4,5,15],[4,6,6],[5,6,8],[5,7,9],[6,7,11]]};
+
+  function comps(ids, edges){
+    const p={}; ids.forEach(i=>p[i]=i); const f=x=>p[x]===x?x:(p[x]=f(p[x]));
+    edges.forEach(([a,b])=>{ p[f(a)]=f(b); });
+    return {find:f, count:new Set(ids.map(f)).size};
+  }
+
+  function drawBase(svg,g,edgeStyle,vStyle,weights){
+    svg.textContent='';
+    g.E.forEach((e,i)=>{
+      const [a,b]=e,[x1,y1]=g.pos[a],[x2,y2]=g.pos[b];
+      svg.appendChild(mk('line',{class:'edge-line',x1,y1,x2,y2,style:edgeStyle(i)}));
+      svg.appendChild(mk('line',{class:'ehit',x1,y1,x2,y2,'data-e':i}));
+    });
+    if(weights) g.E.forEach((e,i)=>{
+      const [x1,y1]=g.pos[e[0]],[x2,y2]=g.pos[e[1]]; const mx=(x1+x2)/2,my=(y1+y2)/2;
+      svg.appendChild(mk('rect',{class:'wbg',x:mx-14,y:my-11,width:28,height:22,rx:6,style:'pointer-events:none'}));
+      const t=mk('text',{class:'wlabel',x:mx,y:my+5,'text-anchor':'middle',style:'pointer-events:none'}); t.textContent=e[2]; svg.appendChild(t);
+    });
+    Object.entries(g.pos).forEach(([id,[x,y]])=>{
+      id=+id; const gg=mk('g',{class:'vtx','data-v':id});
+      gg.appendChild(mk('circle',{class:'node-circle',cx:x,cy:y,r:19,style:vStyle(id)}));
+      const t=mk('text',{class:'node-label',x,y:y+5,'text-anchor':'middle',style:'font-size:15px;pointer-events:none'}); t.textContent=id; gg.appendChild(t);
+      svg.appendChild(gg);
+    });
+  }
+
+  // ---------- 1+2: construire ----------
+  function Build(el){
+    const g=BUILD, ids=Object.keys(g.pos).map(Number), th=el.dataset.theorem==='1';
+    let sel=new Set(g.start);
+    const board=el.querySelector('.board'), panel=el.querySelector('.wpanel');
+    const svg=mk('svg',{viewBox:`0 0 ${g.W} ${g.H}`,role:'img','aria-label':'graf interactiv'}); board.appendChild(svg);
+    const btns=document.createElement('div'); btns.className='wbtns';
+    [['Arbore',[0,1,2,3,4]],['Pădure',[0,1,3,4]],['Cu ciclu',[0,1,2,6]],['m = n − 1, dar nu arbore',[0,7,3,6,1]],['Golește',[]]].forEach(([n,s])=>{
+      const b=document.createElement('button'); b.className='tbtn'; b.textContent=n; b.onclick=()=>{ sel=new Set(s); upd(); }; btns.appendChild(b); });
+    function upd(){
+      const S=[...sel], E=S.map(i=>g.E[i]), n=ids.length, m=S.length;
+      const c=comps(ids,E).count;
+      const cyc=new Set(S.filter(i=>comps(ids,S.filter(j=>j!==i).map(j=>g.E[j])).count===c?true:false));
+      const acyc=cyc.size===0, conn=c===1, tree=acyc&&conn;
+      const L=[];
+      L.push(`n = ${n}, m = ${m}, componente k = ${c}<span class="why">${acyc? `Pădure: m = n − k = ${n} − ${c} = ${n-c}`:'Are cicluri, așa că formula m = n − k nu se aplică.'}</span>`);
+      L.push(`Conex ${pill(conn)}<span class="why">${conn?'Toate vârfurile sunt legate între ele.':`Are ${c} componente.`}</span>`);
+      L.push(`Aciclic (pădure) ${pill(acyc)}<span class="why">${acyc?'Nicio muchie nu e pe un ciclu.':'Muchii pe cicluri (roșu): '+[...cyc].map(i=>ename(g.E[i])).join(', ')}</span>`);
+      L.push(`<b>Arbore</b> ${pill(tree)}<span class="why">${tree?'Conex și aciclic!':'Trebuie să fie și conex, și aciclic.'}</span>`);
+      if(th){
+        L.push(`m = n − 1 ? ${pill(m===n-1)}<span class="why">Ai ${m}, iar n − 1 = ${n-1}.</span>`);
+        L.push(`2) conex și m = n−1 ${pill(conn&&m===n-1)}`);
+        L.push(`3) aciclic și m = n−1 ${pill(acyc&&m===n-1)}`);
+        L.push(`<span class="why">${(conn&&m===n-1)===(acyc&&m===n-1)&&(conn&&m===n-1)===tree?'Afirmațiile 1), 2), 3) au aceeași valoare, cum spune teorema ✓':'Observă: m = n − 1 singur nu decide!'}</span>`);
+      }
+      panel.innerHTML=`<div class="sel">Muchii: ${S.length?S.map(i=>ename(g.E[i])).join(', '):'niciuna'}</div>`+L.map(x=>`<div class="wline">${x}</div>`).join('');
+      panel.appendChild(btns);
+      drawBase(svg,g,i=>sel.has(i)?(cyc.has(i)?'stroke:var(--bad);stroke-width:7':'stroke:var(--accent);stroke-width:7'):'stroke:var(--line);stroke-width:3;stroke-dasharray:3 7',v=>'');
+    }
+    svg.addEventListener('click',e=>{ const h=e.target.closest('[data-e]'); if(!h) return; const i=+h.dataset.e; sel.has(i)?sel.delete(i):sel.add(i); upd(); });
+    upd();
+  }
+
+  // ---------- 3: lanț unic ----------
+  function PathW(el){
+    const g=TREE, ids=Object.keys(g.pos).map(Number);
+    const A={}; ids.forEach(i=>A[i]=[]); g.E.forEach(([a,b])=>{A[a].push(b);A[b].push(a);});
+    let pick=[];
+    const board=el.querySelector('.board'), panel=el.querySelector('.wpanel');
+    const svg=mk('svg',{viewBox:`0 0 ${g.W} ${g.H}`,role:'img','aria-label':'arbore interactiv'}); board.appendChild(svg);
+    const btns=document.createElement('div'); btns.className='wbtns';
+    const bc=document.createElement('button'); bc.className='tbtn'; bc.textContent='Golește'; bc.onclick=()=>{pick=[];upd();}; btns.appendChild(bc);
+    function path(s,t){ const prev={[s]:null}, q=[s]; while(q.length){ const u=q.shift(); A[u].forEach(w=>{ if(!(w in prev)){prev[w]=u;q.push(w);} }); }
+      const p=[]; for(let x=t;x!==null;x=prev[x]) p.unshift(x); return p; }
+    function upd(){
+      let pe=new Set(), pv=new Set(pick), L=[], extra='';
+      if(pick.length===2){
+        const [s,t]=pick, p=path(s,t); p.forEach(v=>pv.add(v));
+        for(let i=0;i<p.length-1;i++){ const k=g.E.findIndex(e=>(e[0]===p[i]&&e[1]===p[i+1])||(e[1]===p[i]&&e[0]===p[i+1])); pe.add(k); }
+        L.push(`Lanțul dintre ${s} și ${t}: <b>${p.join(' – ')}</b><span class="why">Are ${p.length-1} muchii. Nu există alt lanț fără repetări.</span>`);
+        if(p.length>2){
+          L.push(`Adaugi muchia ${s}–${t} ${pill(true)}<span class="why">Se formează ciclul ${p.join(' – ')} – ${s}. Ciclul e unic, deci arborele e <b>maximal aciclic</b>.</span>`);
+          extra=`<line x1="${g.pos[s][0]}" y1="${g.pos[s][1]}" x2="${g.pos[t][0]}" y2="${g.pos[t][1]}" stroke="var(--bad)" stroke-width="4" stroke-dasharray="9 6"/>`;
+        } else if(p.length===2) L.push(`Sunt vecini: lanțul e chiar muchia dintre ei. Nu poți adăuga o muchie nouă între ei.`);
+      } else L.push(pick.length===1?`Ai ales ${pick[0]}. Alege al doilea vârf.`:'Alege 2 vârfuri.');
+      panel.innerHTML=`<div class="sel">Ai ales: ${pick.length?pick.join(', '):'nimic'}</div>`+L.map(x=>`<div class="wline">${x}</div>`).join('');
+      panel.appendChild(btns);
+      drawBase(svg,g,i=>pe.has(i)?'stroke:var(--accent);stroke-width:7':'stroke-width:3',v=>pv.has(v)?'fill:var(--accent)':'');
+      if(extra) svg.insertAdjacentHTML('afterbegin',extra.replace('<line','<line style="pointer-events:none"'));
+    }
+    svg.addEventListener('click',e=>{ const v=e.target.closest('[data-v]'); if(!v) return; const id=+v.dataset.v;
+      if(pick.length===2) pick=[id]; else if(pick[0]===id) pick=[]; else pick.push(id); upd(); });
+    upd();
+  }
+
+  // ---------- 5: Kruskal / Prim ----------
+  function steps(alg){
+    const g=WG, ids=Object.keys(g.pos).map(Number), n=ids.length, out=[];
+    let tree=[];
+    if(alg==='kruskal'){
+      const order=g.E.map((e,i)=>i).sort((a,b)=>g.E[a][2]-g.E[b][2]||a-b); const rej=[];
+      for(const i of order){ if(tree.length===n-1) break;
+        const [a,b,w]=g.E[i]; const cm=comps(ids,tree.map(j=>g.E[j])); const cyc=cm.find(a)===cm.find(b);
+        if(cyc){ rej.push(i); out.push({i,ok:false,tree:[...tree],rej:[...rej],txt:`Muchia ${a}–${b} (cost ${w}): ${a} și ${b} sunt deja legate → ar forma ciclu. <b>O sar.</b>`}); }
+        else { tree.push(i); out.push({i,ok:true,tree:[...tree],rej:[...rej],txt:`Muchia ${a}–${b} (cost ${w}): nu formează ciclu → <b>o pun</b>. (${tree.length}/${n-1})`}); } }
+    } else {
+      const inT=new Set([1]); out.push({i:null,ok:true,tree:[],rej:[],cand:cands(),txt:'Pornesc din vârful 1. Candidate: muchiile cu exact un capăt în arbore.'});
+      function cands(){ return g.E.map((e,i)=>i).filter(i=>inT.has(g.E[i][0])!==inT.has(g.E[i][1])); }
+      while(tree.length<n-1){ const c=cands().sort((a,b)=>g.E[a][2]-g.E[b][2]||a-b); const i=c[0]; const [a,b,w]=g.E[i];
+        const nv=inT.has(a)?b:a; inT.add(nv); tree.push(i);
+        out.push({i,ok:true,tree:[...tree],rej:[],cand:cands(),txt:`Candidate: ${c.map(j=>ename(g.E[j])+':'+g.E[j][2]).join(', ')}. Cea mai ieftină: ${a}–${b} (cost ${w}) → <b>adaug vârful ${nv}</b>. (${tree.length}/${n-1})`}); }
+    }
+    return out;
+  }
+  function Algo(el){
+    const g=WG, board=el.querySelector('.board'), panel=el.querySelector('.wpanel'), sw=document.getElementById('alg');
+    const svg=mk('svg',{viewBox:`0 0 ${g.W} ${g.H}`,role:'img','aria-label':'graf cu costuri'}); board.appendChild(svg);
+    let S=steps(sw.value), k=0;
+    const btns=document.createElement('div'); btns.className='wbtns';
+    const mkb=(t,f)=>{ const b=document.createElement('button'); b.className='tbtn'; b.textContent=t; b.onclick=f; btns.appendChild(b); };
+    mkb('◀ Înapoi',()=>{ if(k>0){k--;upd();} });
+    mkb('Pasul următor ▶',()=>{ if(k<S.length){k++;upd();} });
+    mkb('Rezultat',()=>{ k=S.length; upd(); });
+    mkb('De la capăt',()=>{ k=0; upd(); });
+    sw.addEventListener('change',()=>{ S=steps(sw.value); k=0; upd(); });
+    function upd(){
+      const cur=k>0?S[k-1]:null, tree=new Set(cur?cur.tree:[]), rej=new Set(cur&&cur.rej?cur.rej:[]), cand=new Set(cur&&cur.cand?cur.cand:[]);
+      const cost=[...tree].reduce((s,i)=>s+g.E[i][2],0), done=k===S.length;
+      const inT=new Set(); if(sw.value==='prim'&&cur) inT.add(1); tree.forEach(i=>{inT.add(g.E[i][0]);inT.add(g.E[i][1]);});
+      let log=S.slice(0,k).map((s,j)=>`<div class="${s.i===null?'':(s.ok?'ok':'no')}">${j+1}. ${s.txt}</div>`).join('');
+      panel.innerHTML=`<div class="sel">Pasul ${k} din ${S.length} · muchii alese: ${tree.size} · cost: ${cost}</div>`+
+        (done?`<div class="wline"><b>Gata!</b> ${tree.size} = n − 1 muchii. Costul APM = <b>${cost}</b>.</div>`:'')+`<div class="steplog">${log||'<div>Apasă „Pasul următor”.</div>'}</div>`;
+      panel.appendChild(btns);
+      drawBase(svg,g,i=>tree.has(i)?'stroke:var(--good);stroke-width:7':rej.has(i)&&cur&&cur.i===i?'stroke:var(--bad);stroke-width:6;stroke-dasharray:9 6':cand.has(i)?'stroke:var(--node-2);stroke-width:5;stroke-dasharray:3 6':'stroke-width:3',
+        v=>inT.has(v)?'fill:var(--good)':'',true);
+      const lg=svg.querySelector('.edge-line'); if(lg){}
+    }
+    upd();
+  }
+
+  document.querySelectorAll('.wg').forEach(el=>{ const k=el.dataset.kind; if(k==='build') Build(el); else if(k==='path') PathW(el); else if(k==='algo') Algo(el); });
+
+  // quiz + salvare
+  let db=null; const results={};
+  function slug(s){ return (s||'anonim').trim().toLowerCase().replace(/[^a-z0-9]+/g,'-').replace(/(^-|-$)/g,'')||'anonim'; }
+  async function save(){ const name=document.getElementById('studentName').value.trim(); try{ localStorage.setItem('graf_student_name', name); }catch(e){}
+    if(!db) return; try{ await db.doc('lessons/' + slug(name) + '-capitol4').set({name:name||'(anonim)', results, updatedAt:new Date().toISOString()}); }catch(e){} }
+  document.querySelectorAll('.quiz').forEach(function(q){ const opts=q.querySelectorAll('.opt'), fb=q.querySelector('.feedback');
+    opts.forEach(b=>b.addEventListener('click', function(){ if(opts[0].disabled) return; const ok=b.dataset.correct==='true'; opts.forEach(o=>o.disabled=true);
+      b.classList.add(ok?'correct':'wrong'); if(!ok) q.querySelector('.opt[data-correct="true"]').classList.add('correct');
+      fb.textContent = ok ? '✓ Corect!' : '✗ Am marcat cu verde răspunsul corect.'; fb.style.color = ok ? 'var(--good)' : 'var(--bad)'; fb.classList.add('show');
+      results[q.dataset.qid]=ok; save(); })); });
+  try{ const s=localStorage.getItem('graf_student_name'); if(s) document.getElementById('studentName').value=s; }catch(e){}
+  document.getElementById('studentName').addEventListener('change', save);
+  (async function(){ try{ if(window.claude && window.claude.use) db = await window.claude.use('db'); }catch(e){} })();
+})();
+</script>

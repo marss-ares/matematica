@@ -16,5 +16,6 @@
 | minmax.html | Minim/minimal, maxim/maximal | https://claude.ai/artifact/Mf1mp1y8dBBjgYu5UzLg9J |
 | acoperiri.html | Exerciții acoperiri, runda 1 | https://claude.ai/artifact/WAhsGB8dD6YXTSvWfNrB2U |
 | acoperiri2.html | Exerciții acoperiri, runda 2 | https://claude.ai/artifact/Ug4xoYbtVagoGy1H1updGy |
+| capitol4.html | Capitolul 4: Arbori (Kruskal, Prim) | (de publicat) |
 
 Fișierele se pot deschide și local, în browser (dublu-click). Salvarea răspunsurilor funcționează doar pe varianta online.
