@@ -17,5 +17,6 @@
 | acoperiri.html | Exerciții acoperiri, runda 1 | https://claude.ai/artifact/WAhsGB8dD6YXTSvWfNrB2U |
 | acoperiri2.html | Exerciții acoperiri, runda 2 | https://claude.ai/artifact/Ug4xoYbtVagoGy1H1updGy |
 | capitol4.html | Capitolul 4: Arbori (Kruskal, Prim) | (de publicat) |
+| test-capitol4.html | Test greu capitolul 4 (arbori, APM, Kruskal, Prim) | (de publicat) |
 
 Fișierele se pot deschide și local, în browser (dublu-click). Salvarea răspunsurilor funcționează doar pe varianta online.
