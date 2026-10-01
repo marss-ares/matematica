@@ -1,0 +1,470 @@
+<title>Mulțimi stabile</title>
+<meta name="description" content="Lecție interactivă pentru Capitolul 3: mulțimi stabile interior și exterior, nucleu, acoperiri, clici și cuplaje. Alegi vârfuri sau muchii și vezi pe loc ce proprietăți are mulțimea.">
+<style>
+:root{
+  --bg:#f6f5f1;
+  --surface:#ffffff;
+  --surface-2:#eeece4;
+  --ink:#1c2321;
+  --ink-dim:#5b6460;
+  --line:#d9d5c9;
+  --accent:#8a3b2e;
+  --accent-ink:#ffffff;
+  --node:#2c4a52;
+  --node-2:#c98a3c;
+  --good:#2f6b4f;
+  --bad:#a13a3a;
+  --radius:14px;
+  color-scheme: light;
+}
+@media (prefers-color-scheme: dark){
+  :root:not([data-theme="light"]){
+    --bg:#181a17; --surface:#222521; --surface-2:#2b2e29;
+    --ink:#eeece6; --ink-dim:#a8ada4; --line:#3a3d37;
+    --accent:#e08b6f; --accent-ink:#1c1310;
+    --node:#7fb3bd; --node-2:#e6b16a; --good:#7fc79c; --bad:#e08585;
+    color-scheme: dark;
+  }
+}
+:root[data-theme="dark"]{
+  --bg:#181a17; --surface:#222521; --surface-2:#2b2e29;
+  --ink:#eeece6; --ink-dim:#a8ada4; --line:#3a3d37;
+  --accent:#e08b6f; --accent-ink:#1c1310;
+  --node:#7fb3bd; --node-2:#e6b16a; --good:#7fc79c; --bad:#e08585;
+  color-scheme: dark;
+}
+*{box-sizing:border-box;}
+body{background:var(--bg); color:var(--ink); font-family:'Source Serif 4',Georgia,serif; padding-inline:16px; padding-block:32px;}
+.wrap{max-width:720px; margin:0 auto;}
+h1{font-family:'Fraunces',Georgia,serif; font-weight:600; font-size:clamp(1.5rem,5vw,2.1rem); margin:0 0 4px; text-wrap:balance;}
+.subtitle{font-family:'Inter',system-ui,sans-serif; color:var(--ink-dim); font-size:0.92rem; margin-bottom:22px;}
+svg{max-width:100%; height:auto;}
+.graphbox{display:flex; justify-content:center; margin:14px 0; overflow-x:auto;}
+.node-circle{fill:var(--node); stroke:var(--bg); stroke-width:3;}
+.node-label{font-family:'Inter',sans-serif; font-size:13px; font-weight:700; fill:var(--accent-ink);}
+.edge-line{stroke:var(--ink-dim); stroke-width:2;}
+
+.progressbar{position:sticky; top:env(safe-area-inset-top,0px); background:var(--bg); padding-block:10px 4px; z-index:5; margin-bottom:10px;}
+.pbar-track{height:6px; background:var(--surface-2); border-radius:999px; overflow:hidden;}
+.pbar-fill{height:100%; background:var(--accent); width:0%; transition:width .3s;}
+.pbar-label{font-family:'Inter',sans-serif; font-size:0.72rem; color:var(--ink-dim); margin-top:4px;}
+
+.identity-box{
+  font-family:'Inter',sans-serif; background:var(--surface-2); border-radius:10px;
+  padding:14px 16px; margin-bottom:20px; display:flex; gap:10px; align-items:center; flex-wrap:wrap;
+}
+.identity-box input{
+  flex:1; min-width:140px; padding:8px 10px; border-radius:7px;
+  border:1px solid var(--line); background:var(--surface); color:var(--ink); font-family:inherit; font-size:0.9rem;
+}
+
+.qcard{
+  background:var(--surface); border:1px solid var(--line); border-radius:var(--radius);
+  padding:20px; margin-bottom:16px; font-family:'Inter',system-ui,sans-serif;
+}
+.qnum{font-size:0.72rem; text-transform:uppercase; letter-spacing:0.06em; color:var(--ink-dim); margin-bottom:6px;}
+.qtext{font-family:'Source Serif 4',Georgia,serif; font-size:1.05rem; margin-bottom:14px; line-height:1.5;}
+.opts{display:flex; flex-direction:column; gap:8px;}
+.opt{
+  text-align:left; border:1px solid var(--line); background:var(--surface); color:var(--ink);
+  padding:10px 14px; border-radius:8px; cursor:pointer; font-family:inherit; font-size:0.92rem;
+  transition:background .15s, border-color .15s;
+}
+.opt:hover{border-color:var(--accent);}
+.opt.correct{background:color-mix(in srgb, var(--good) 22%, var(--surface)); border-color:var(--good); color:var(--good);}
+.opt.wrong{background:color-mix(in srgb, var(--bad) 22%, var(--surface)); border-color:var(--bad); color:var(--bad);}
+.opt:disabled{cursor:default;}
+.fillrow{display:flex; align-items:center; gap:8px; flex-wrap:wrap;}
+input.fillbox{
+  width:64px; padding:7px 8px; border-radius:6px; border:1px solid var(--line);
+  background:var(--surface); color:var(--ink); font-family:'JetBrains Mono',monospace; text-align:center; font-size:0.95rem;
+}
+button.check{
+  font-family:'Inter',sans-serif; font-weight:600; font-size:0.85rem;
+  background:var(--accent); color:var(--accent-ink); border:none; padding:9px 18px; border-radius:8px; cursor:pointer; margin-top:10px;
+}
+button.check:hover{opacity:0.9;}
+button.check:disabled{opacity:0.5; cursor:default;}
+.feedback{margin-top:10px; font-size:0.88rem; display:none;}
+.feedback.show{display:block;}
+
+.resultbox{
+  background:var(--surface); border:2px solid var(--accent); border-radius:var(--radius);
+  padding:28px 24px; text-align:center; font-family:'Inter',sans-serif; display:none;
+}
+.resultbox.show{display:block;}
+.resultbox .score{font-family:'Fraunces',Georgia,serif; font-size:2.6rem; font-weight:700; color:var(--accent); margin-bottom:6px;}
+.resultbox .msg{font-size:0.95rem; color:var(--ink-dim); margin-bottom:4px;}
+
+.wrap{max-width:900px;}
+.section{background:var(--surface);border:1px solid var(--line);border-radius:14px;padding:22px;margin-bottom:22px;}
+.section h2{font-family:'Fraunces',Georgia,serif;font-weight:600;font-size:1.35rem;margin:0 0 10px;display:flex;gap:10px;align-items:center;text-wrap:balance;}
+.section h2 .num{font-family:'Inter',sans-serif;font-size:0.75rem;font-weight:700;background:var(--accent);color:var(--accent-ink);border-radius:999px;width:26px;height:26px;display:inline-flex;align-items:center;justify-content:center;flex:none;}
+.section p{line-height:1.65;margin:0 0 12px;}
+.rule{font-family:'Inter',sans-serif;background:var(--surface-2);border-left:3px solid var(--accent);border-radius:6px;padding:12px 16px;margin:12px 0;font-size:0.95rem;line-height:1.55;}
+.rule.warn{border-left-color:var(--node-2);}
+.wg{display:grid;grid-template-columns:minmax(0,1fr) 280px;gap:14px;align-items:start;margin-top:10px;}
+@media (max-width:760px){.wg{grid-template-columns:1fr;}}
+.wg .board{background:var(--bg);border:1px solid var(--line);border-radius:12px;overflow:hidden;}
+.wg svg{display:block;width:100%;height:auto;user-select:none;-webkit-user-select:none;-webkit-tap-highlight-color:transparent;touch-action:manipulation;}
+.wpanel{font-family:'Inter',sans-serif;font-size:0.88rem;background:var(--surface-2);border-radius:10px;padding:12px 14px;}
+.wpanel .sel{font-weight:700;margin-bottom:8px;word-break:break-word;}
+.wline{padding:6px 0;border-top:1px dashed var(--line);line-height:1.45;}
+.wline:first-of-type{border-top:none;}
+.pill{display:inline-block;padding:1px 8px;border-radius:999px;font-size:0.75rem;font-weight:700;margin-left:4px;}
+.pill.yes{background:color-mix(in srgb,var(--good) 20%,transparent);color:var(--good);}
+.pill.no{background:color-mix(in srgb,var(--bad) 20%,transparent);color:var(--bad);}
+.pill.na{background:var(--line);color:var(--ink-dim);}
+.why{color:var(--ink-dim);font-size:0.82rem;display:block;margin-top:2px;}
+.wbtns{display:flex;gap:6px;flex-wrap:wrap;margin-top:10px;}
+.tbtn{font-family:'Inter',sans-serif;font-weight:600;font-size:0.82rem;background:var(--surface);color:var(--ink);border:1px solid var(--line);padding:7px 11px;border-radius:8px;cursor:pointer;}
+.tbtn:focus-visible{outline:2px solid var(--accent);outline-offset:2px;}
+.hintline{font-family:'Inter',sans-serif;font-size:0.82rem;color:var(--ink-dim);margin-top:6px;}
+.vtx{cursor:pointer;}
+.ehit{stroke:transparent;stroke-width:20;cursor:pointer;}
+.toc{display:flex;flex-wrap:wrap;gap:6px;margin-bottom:18px;font-family:'Inter',sans-serif;font-size:0.82rem;}
+.toc a{color:var(--ink);text-decoration:none;background:var(--surface);border:1px solid var(--line);border-radius:999px;padding:4px 10px;}
+.cheat{width:100%;border-collapse:collapse;font-family:'Inter',sans-serif;font-size:0.88rem;}
+.cheat th,.cheat td{text-align:left;padding:7px 8px;border-bottom:1px solid var(--line);vertical-align:top;}
+.cheat th{font-size:0.75rem;text-transform:uppercase;letter-spacing:0.05em;color:var(--ink-dim);}
+.tablewrap{overflow-x:auto;}
+.gbadge{display:inline-block;font-size:0.72rem;font-weight:700;letter-spacing:0.04em;text-transform:uppercase;background:var(--accent);color:var(--accent-ink);border-radius:999px;padding:2px 9px;margin-bottom:6px;}
+.nobadge{display:inline-block;font-size:0.72rem;font-weight:700;letter-spacing:0.04em;text-transform:uppercase;background:var(--line);color:var(--ink-dim);border-radius:999px;padding:2px 9px;margin-bottom:6px;}
+.swrow{display:flex;gap:8px;align-items:center;flex-wrap:wrap;font-family:'Inter',sans-serif;font-size:0.88rem;margin-bottom:8px;}
+.swrow select{font-family:'Inter',sans-serif;font-size:0.88rem;padding:7px 10px;border-radius:8px;border:1px solid var(--line);background:var(--surface);color:var(--ink);}
+.quiz{font-family:Inter,sans-serif;background:var(--surface-2);border-radius:10px;padding:14px;margin-top:12px;}
+.quiz .q{font-weight:600;margin-bottom:10px;}
+.cmp{display:grid;grid-template-columns:1fr 1fr;gap:14px;}
+@media (max-width:640px){.cmp{grid-template-columns:1fr;}}
+.cmp .card{background:var(--surface-2);border-radius:10px;padding:12px;font-family:'Inter',sans-serif;font-size:0.88rem;}
+</style>
+
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Fraunces:wght@500;600;700&family=Source+Serif+4:wght@400;500&family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@500;700&display=swap">
+
+<div class="wrap">
+  <h1>Mulțimi stabile în graf</h1>
+  <div class="subtitle">Capitolul 3 · la fiecare secțiune alegi tu vârfuri sau muchii cu click, iar în dreapta vezi pe loc ce fel de mulțime ai făcut.</div>
+
+  <div class="identity-box">
+    <span style="font-size:0.85rem;">Numele tău:</span>
+    <input type="text" id="studentName" placeholder="ex: Victor" autocomplete="off">
+  </div>
+
+  <nav class="toc" aria-label="Cuprins">
+    <a href="#s1">1. Stabilă interior</a><a href="#s2">2. Maximal vs maxim</a><a href="#s3">3. Stabilă exterior</a><a href="#s4">4. Nucleu</a><a href="#s5">5. Acoperire de vârfuri</a><a href="#s6">6. Clică</a><a href="#s7">7. Cuplaj</a><a href="#s8">8. Acoperire de muchii</a><a href="#s9">9. Fițuica</a><a href="#s10">10. Verificare</a>
+  </nav>
+
+  <div class="section" id="s1">
+    <h2><span class="num">1</span>Mulțime stabilă interior (independentă)</h2>
+    <p>O mulțime de vârfuri e <b>stabilă interior</b> dacă <b>niciun vârf din ea nu e legat de alt vârf din ea</b>.</p>
+    <div class="rule"><b>Exemplu din viață:</b> inviți oameni la o petrecere, dar nu vrei 2 care se ceartă. Muchie = „se ceartă”. O mulțime stabilă interior = un grup în care nimeni nu se ceartă cu nimeni.<br><br>În curs apare problema celor 8 regine: pui regine pe tabla de șah așa încât niciuna să nu o atace pe alta.</div>
+    <p>Încearcă pe graful din curs: apasă pe vârfuri ca să le alegi.</p>
+    <div class="wg" id="w1" data-graph="G" data-mode="indep">
+      <div><div class="board"></div><div class="hintline">Apasă pe un vârf ca să-l alegi, apoi apasă din nou ca să-l scoți.</div></div>
+      <div class="wpanel"></div>
+    </div>
+  </div>
+
+  <div class="section" id="s2">
+    <h2><span class="num">2</span>Maximal vs. maxim (cea mai importantă diferență)</h2>
+    <p>Sunt două cuvinte care seamănă foarte mult, dar înseamnă lucruri diferite:</p>
+    <div class="cmp">
+      <div class="card"><b>Maximală</b> = nu mai poți adăuga <b>niciun</b> vârf fără să strici regula. Mulțimea e „plină”, dar poate fi mică.<br><br>Exemplu: <b>{6, 8}</b>. Orice alt vârf e vecin cu 6 sau cu 8. E maximală, dar are doar 2 vârfuri.</div>
+      <div class="card"><b>Maximă</b> = are <b>cel mai mare număr</b> de vârfuri posibil în tot graful.<br><br>Exemplu: <b>{1, 3, 5, 7, 9}</b>, cu 5 vârfuri. Nu există mulțime stabilă mai mare. Numărul ăsta se notează <b>α₀(G) = 5</b>.</div>
+    </div>
+    <div class="rule"><b>Analogie:</b> ai un raft pe care pui cărți. <i>Maximal</i> = raftul tău e plin, nu mai încape nimic (poate ai pus cărți groase). <i>Maxim</i> = raftul cu cele mai multe cărți din toată biblioteca.<br><br><b>Orice maximă e și maximală</b>, dar nu orice maximală e maximă.</div>
+    <p>Construiește tu mai jos întâi {6, 8}, apoi {1, 3, 5, 7, 9}, și uită-te la ce scrie în dreapta.</p>
+    <div class="wg" id="w2" data-graph="G" data-mode="indep">
+      <div><div class="board"></div><div class="hintline">Încearcă {6, 8} și apoi {1, 3, 5, 7, 9}.</div></div>
+      <div class="wpanel"></div>
+    </div>
+    <div class="rule warn">La mulțimile unde cauți „cât mai puțin” (stabilă exterior, acoperiri), perechea de cuvinte e <b>minimală</b> vs. <b>minimă</b>, cu aceeași logică: <i>minimală</i> = nu mai poți scoate nimic, <i>minimă</i> = cea mai mică din tot graful.</div>
+  </div>
+
+  <div class="section" id="s3">
+    <h2><span class="num">3</span>Mulțime stabilă exterior (dominantă)</h2>
+    <p>O mulțime e <b>stabilă exterior</b> dacă <b>fiecare vârf care NU e în ea are cel puțin un vecin în ea</b>.</p>
+    <div class="rule"><b>Exemplu din viață:</b> pui stații de pompieri în sate. Fiecare sat fără stație trebuie să fie <b>vecin</b> cu un sat care are stație. Vrei cât mai puține stații.<br><br>Aici cauți mulțimea <b>minimă</b>. Pe graful din curs, 2 stații ajung: {6, 8}.</div>
+    <div class="wg" id="w3" data-graph="G" data-mode="dom">
+      <div><div class="board"></div><div class="hintline">Vârfurile cu contur roșu sunt „neacoperite”: nu au nicio stație vecină.</div></div>
+      <div class="wpanel"></div>
+    </div>
+  </div>
+
+  <div class="section" id="s4">
+    <h2><span class="num">4</span>Nucleu</h2>
+    <p><b>Nucleu</b> = o mulțime care e <b>în același timp</b> stabilă interior <b>și</b> stabilă exterior. Adică nimeni din ea nu e legat între ei, dar toți ceilalți au un vecin în ea.</p>
+    <div class="rule">În curs, nucleele grafului sunt, de exemplu, {1, 3, 5, 7, 9}, {1, 3, 4, 6, 9} și {6, 8}.<br><b>Truc:</b> orice mulțime stabilă interior <b>maximală</b> e automat și nucleu. Dacă un vârf din afară n-ar avea vecin în mulțime, l-ai putea adăuga, deci n-ar fi maximală.</div>
+    <div class="wg" id="w4" data-graph="G" data-mode="kernel">
+      <div><div class="board"></div><div class="hintline">Încearcă nucleele din curs, apoi caută tu altele.</div></div>
+      <div class="wpanel"></div>
+    </div>
+  </div>
+
+  <div class="section" id="s5">
+    <h2><span class="num">5</span>Acoperire de vârfuri</h2>
+    <p>O mulțime de vârfuri e <b>acoperire de vârfuri</b> dacă <b>fiecare muchie are cel puțin un capăt în ea</b>.</p>
+    <div class="rule"><b>Exemplu din viață:</b> pui paznici la intersecții (vârfuri) ca să supravegheze toate străzile (muchiile). O stradă e supravegheată dacă are un paznic la cel puțin un capăt. Vrei cât mai puțini paznici. Numărul minim se notează <b>β₀(G)</b>. Aici β₀(G) = 4.</div>
+    <div class="wg" id="w5" data-graph="G" data-mode="vcover">
+      <div><div class="board"></div><div class="hintline">Muchiile roșii nu au paznic la niciun capăt.</div></div>
+      <div class="wpanel"></div>
+    </div>
+    <div class="rule"><b>Teorema din curs:</b> A e acoperire de vârfuri <b>dacă și numai dacă</b> restul vârfurilor (X \ A) formează o mulțime stabilă interior. În panou vezi asta la ultima linie.<br>De aici: <b>α₀(G) + β₀(G) = n</b>. Aici 5 + 4 = 9 ✓</div>
+  </div>
+
+  <div class="section" id="s6">
+    <h2><span class="num">6</span>Clică</h2>
+    <p><b>Clică</b> = o mulțime de vârfuri în care <b>oricare două sunt legate</b>. E opusul mulțimii stabile interior: acolo nimeni nu e legat, aici toți sunt legați cu toți.</p>
+    <div class="rule"><b>Exemplu din viață:</b> un grup de prieteni în care fiecare îl cunoaște pe fiecare. Cea mai mare clică are mărimea <b>φ(G)</b>, numită <b>densitatea</b> grafului.<br><br>Legătura cu capitolul 1: o clică în G e o mulțime stabilă interior în <b>complementar</b> (Ḡ), deci <b>φ(G) = α₀(Ḡ)</b>.</div>
+    <div class="wg" id="w6" data-graph="C" data-mode="clique">
+      <div><div class="board"></div><div class="hintline">Pe acest graf, cea mai mare clică are 4 vârfuri. Găsește-o!</div></div>
+      <div class="wpanel"></div>
+    </div>
+  </div>
+
+  <div class="section" id="s7">
+    <h2><span class="num">7</span>Cuplaj (aici alegi muchii, nu vârfuri)</h2>
+    <p><b>Cuplaj</b> = o mulțime de <b>muchii</b> care <b>nu au niciun capăt comun</b>. Fiecare vârf apare în cel mult o muchie aleasă.</p>
+    <div class="rule"><b>Exemplu din viață:</b> formezi perechi de dans. Muchie = „pot dansa împreună”. Un cuplaj = un set de perechi în care nimeni nu dansează în două perechi deodată. Cel mai mare cuplaj are <b>α₁(G)</b> muchii. Aici α₁(G) = 4.</div>
+    <div class="wg" id="w7" data-graph="G" data-mode="matching">
+      <div><div class="board"></div><div class="hintline">Apasă pe muchii (pe linii) ca să le alegi.</div></div>
+      <div class="wpanel"></div>
+    </div>
+    <div class="rule warn">Și aici există <b>maximal</b> vs. <b>maxim</b>. Încearcă să alegi întâi 2–8 și 5–6: nu mai poți adăuga nicio muchie, deși sunt doar 2.</div>
+  </div>
+
+  <div class="section" id="s8">
+    <h2><span class="num">8</span>Acoperire de muchii și cuplaj perfect</h2>
+    <p><b>Acoperire de muchii</b> = o mulțime de muchii astfel încât <b>fiecare vârf să fie capătul a cel puțin unei muchii alese</b>. Cea mai mică are <b>β₁(G)</b> muchii.</p>
+    <div class="wg" id="w8" data-graph="G" data-mode="ecover">
+      <div><div class="board"></div><div class="hintline">Vârfurile cu contur roșu nu sunt atinse de nicio muchie aleasă.</div></div>
+      <div class="wpanel"></div>
+    </div>
+    <div class="rule"><b>Teorema lui Gallai:</b> pentru un graf <b>fără vârfuri izolate</b>, <b>α₁(G) + β₁(G) = n</b>. Aici 4 + 5 = 9 ✓<br><br><b>Cuplaj perfect</b> = un cuplaj care atinge <b>toate</b> vârfurile. Atunci e și acoperirea minimă de muchii. Se poate doar dacă n e par. Graful de sus are n = 9, deci nu are cuplaj perfect. Hexagonul de mai jos are.</div>
+    <div class="wg" id="w9" data-graph="HEX" data-mode="matching">
+      <div><div class="board"></div><div class="hintline">Găsește 3 muchii care ating toate cele 6 vârfuri.</div></div>
+      <div class="wpanel"></div>
+    </div>
+  </div>
+
+  <div class="section" id="s9">
+    <h2><span class="num">9</span>Fițuica: tot capitolul într-un tabel</h2>
+    <div class="tablewrap"><table class="cheat">
+      <tr><th>Nume</th><th>Ce alegi</th><th>Regula</th><th>Cauți</th><th>Notație</th></tr>
+      <tr><td><b>Stabilă interior</b></td><td>vârfuri</td><td>niciun vârf ales legat de altul ales</td><td>cât mai multe</td><td>α₀(G)</td></tr>
+      <tr><td><b>Stabilă exterior</b></td><td>vârfuri</td><td>fiecare din afară are vecin înăuntru</td><td>cât mai puține</td><td>–</td></tr>
+      <tr><td><b>Nucleu</b></td><td>vârfuri</td><td>stabilă interior și exterior</td><td>–</td><td>–</td></tr>
+      <tr><td><b>Acoperire de vârfuri</b></td><td>vârfuri</td><td>fiecare muchie atinge un vârf ales</td><td>cât mai puține</td><td>β₀(G)</td></tr>
+      <tr><td><b>Clică</b></td><td>vârfuri</td><td>oricare 2 legați între ei</td><td>cât mai multe</td><td>φ(G)</td></tr>
+      <tr><td><b>Cuplaj</b></td><td>muchii</td><td>nicio pereche cu capăt comun</td><td>cât mai multe</td><td>α₁(G)</td></tr>
+      <tr><td><b>Acoperire de muchii</b></td><td>muchii</td><td>fiecare vârf atins de o muchie aleasă</td><td>cât mai puține</td><td>β₁(G)</td></tr>
+    </table></div>
+    <div class="rule"><b>Formulele de ținut minte:</b><br>• α₀(G) + β₀(G) = n<br>• α₁(G) + β₁(G) = n (fără vârfuri izolate)<br>• φ(G) = α₀(Ḡ)<br>• β₁(G) ≥ n / 2<br><br><b>Truc pentru litere:</b> α = „cât mai mult”, β = „cât mai puțin”. Indicele <b>0</b> = alegi <b>vârfuri</b>, indicele <b>1</b> = alegi <b>muchii</b>.</div>
+  </div>
+
+  <div class="section" id="s10">
+    <h2><span class="num">10</span>Verificare rapidă</h2>
+    <p>Întrebările marcate cu <span class="gbadge">graful G</span> sunt despre graful de mai jos (același ca în curs). Alege din listă ce vrei să verifici, apoi apasă pe vârfuri sau pe muchii și vezi în dreapta răspunsul. Întrebările marcate <span class="nobadge">teorie</span> nu au nevoie de desen.</p>
+    <div class="swrow"><label for="sw10">Ce verific pe graful G:</label>
+      <select id="sw10" class="modesw" data-for="w10">
+        <option value="indep">Stabilă interior (maximală / maximă)</option>
+        <option value="dom">Stabilă exterior (minimală / minimă)</option>
+        <option value="kernel">Nucleu</option>
+        <option value="vcover">Acoperire de vârfuri</option>
+        <option value="matching">Cuplaj (muchii)</option>
+        <option value="ecover">Acoperire de muchii</option>
+      </select></div>
+    <div class="wg" id="w10" data-graph="G" data-mode="indep">
+      <div><div class="board"></div><div class="hintline">Schimbi tipul din listă și selecția se golește. Muchiile le alegi apăsând pe linii.</div></div>
+      <div class="wpanel"></div>
+    </div>
+
+    <div class="quiz" data-qid="q1"><span class="gbadge">graful G</span><div class="q">{6, 8} e stabilă interior maximală. Este și maximă?</div><div class="opts"><button class="opt" data-correct="false">Da</button><button class="opt" data-correct="true">Nu, pentru că există una mai mare, cu 5 vârfuri</button></div><div class="feedback"></div></div>
+    <div class="quiz" data-qid="q7"><span class="gbadge">graful G</span><div class="q">{8} este stabilă exterior?</div><div class="opts"><button class="opt" data-correct="false">Da, 8 e legat de aproape toți</button><button class="opt" data-correct="true">Nu, vârfurile 5 și 6 nu au niciun vecin ales</button></div><div class="feedback"></div></div>
+    <div class="quiz" data-qid="q8"><span class="gbadge">graful G</span><div class="q">Este {1, 3, 4, 6, 9} nucleu?</div><div class="opts"><button class="opt" data-correct="true">Da: aleșii nu sunt legați între ei, iar fiecare neales are un vecin ales</button><button class="opt" data-correct="false">Nu, 4 și 6 sunt legați</button><button class="opt" data-correct="false">Nu, vârful 8 nu are vecin ales</button></div><div class="feedback"></div></div>
+    <div class="quiz" data-qid="q9"><span class="gbadge">graful G</span><div class="q">{2, 5, 6, 8} este acoperire de vârfuri. Este minimă?</div><div class="opts"><button class="opt" data-correct="true">Da, are 4 vârfuri și β₀(G) = 4</button><button class="opt" data-correct="false">Nu, se poate cu 3</button></div><div class="feedback"></div></div>
+    <div class="quiz" data-qid="q10"><span class="gbadge">graful G</span><div class="q">Cât este α₁(G), cel mai mare cuplaj?</div><div class="opts"><button class="opt" data-correct="false">3</button><button class="opt" data-correct="true">4</button><button class="opt" data-correct="false">5</button></div><div class="feedback"></div></div>
+    <div class="quiz" data-qid="q11"><span class="gbadge">graful G</span><div class="q">Are graful G un cuplaj perfect?</div><div class="opts"><button class="opt" data-correct="false">Da</button><button class="opt" data-correct="true">Nu, are 9 vârfuri (număr impar)</button></div><div class="feedback"></div></div>
+    <div class="quiz" data-qid="q2"><span class="nobadge">teorie</span><div class="q">Un graf are 10 vârfuri și α₀(G) = 6. Cât este β₀(G)?</div><div class="opts"><button class="opt" data-correct="false">6</button><button class="opt" data-correct="true">4</button><button class="opt" data-correct="false">16</button></div><div class="feedback"></div></div>
+    <div class="quiz" data-qid="q3"><span class="nobadge">teorie</span><div class="q">Cuplajul e o mulțime de...</div><div class="opts"><button class="opt" data-correct="false">vârfuri nelegate între ele</button><button class="opt" data-correct="true">muchii fără capete comune</button><button class="opt" data-correct="false">vârfuri legate toate între ele</button></div><div class="feedback"></div></div>
+    <div class="quiz" data-qid="q4"><span class="nobadge">teorie</span><div class="q">Un graf fără vârfuri izolate are 8 vârfuri și α₁(G) = 3. Cât este β₁(G)?</div><div class="opts"><button class="opt" data-correct="true">5</button><button class="opt" data-correct="false">3</button><button class="opt" data-correct="false">11</button></div><div class="feedback"></div></div>
+    <div class="quiz" data-qid="q5"><span class="nobadge">teorie</span><div class="q">Care e diferența dintre o mulțime minimală și una minimă?</div><div class="opts"><button class="opt" data-correct="true">Minimală: nu mai poți scoate nimic. Minimă: cea mai mică din tot graful.</button><button class="opt" data-correct="false">Sunt același lucru.</button><button class="opt" data-correct="false">Minimală: cea mai mică din tot graful. Minimă: nu mai poți scoate nimic.</button></div><div class="feedback"></div></div>
+    <div class="quiz" data-qid="q6"><span class="nobadge">teorie</span><div class="q">O clică în G este, în complementarul Ḡ, o mulțime...</div><div class="opts"><button class="opt" data-correct="true">stabilă interior</button><button class="opt" data-correct="false">stabilă exterior</button><button class="opt" data-correct="false">tot clică</button></div><div class="feedback"></div></div>
+  </div>
+</div>
+<script>
+(function(){
+  const NS='http://www.w3.org/2000/svg';
+  function mk(t,a){ const e=document.createElementNS(NS,t); for(const k in a) e.setAttribute(k,a[k]); return e; }
+  const GRAPHS = {
+    G: {W:640,H:430, pos:{1:[400,60],2:[520,140],3:[520,290],4:[320,330],5:[200,390],6:[100,290],7:[190,190],8:[330,205],9:[230,60]},
+        E:[[1,2],[1,8],[2,8],[9,8],[3,8],[7,8],[4,8],[6,7],[5,6],[4,5]]},
+    C: {W:640,H:380, pos:{1:[80,90],2:[180,190],3:[110,310],4:[270,310],5:[400,300],6:[380,110],7:[560,110],8:[560,300]},
+        E:[[5,6],[5,7],[5,8],[6,7],[6,8],[7,8],[1,2],[2,3],[3,4],[4,5],[2,4],[1,6]]},
+    HEX:{W:480,H:340, pos:{1:[240,40],2:[380,110],3:[380,240],4:[240,305],5:[100,240],6:[100,110]},
+        E:[[1,2],[2,3],[3,4],[4,5],[5,6],[6,1]]}
+  };
+  function setStr(s){ return '{' + [...s].sort((a,b)=>a-b).join(', ') + '}'; }
+  function pill(v){ return v===null ? '<span class="pill na">–</span>' : `<span class="pill ${v?'yes':'no'}">${v?'da':'nu'}</span>`; }
+
+  function prep(g){
+    const ids = Object.keys(g.pos).map(Number).sort((a,b)=>a-b);
+    const A = new Map(ids.map(i=>[i,new Set()])); g.E.forEach(([a,b])=>{ A.get(a).add(b); A.get(b).add(a); });
+    const n = ids.length, m = g.E.length;
+    const vsub = mask => ids.filter((_,i)=>mask>>i&1);
+    const esub = mask => g.E.map((_,i)=>i).filter(i=>mask>>i&1);
+    const isInd = S => { const s=new Set(S); return g.E.every(([a,b])=>!(s.has(a)&&s.has(b))); };
+    const isDom = S => { const s=new Set(S); return ids.every(v=>s.has(v) || [...A.get(v)].some(w=>s.has(w))); };
+    const isCov = S => { const s=new Set(S); return g.E.every(([a,b])=>s.has(a)||s.has(b)); };
+    const isCli = S => S.every((a,i)=>S.slice(i+1).every(b=>A.get(a).has(b)));
+    const isMat = S => { const seen=new Set(); for(const i of S){ const [a,b]=g.E[i]; if(seen.has(a)||seen.has(b)) return false; seen.add(a); seen.add(b);} return true; };
+    const isEcov = S => { const s=new Set(); S.forEach(i=>{ s.add(g.E[i][0]); s.add(g.E[i][1]); }); return ids.every(v=>s.has(v)); };
+    const best = {};
+    function scanV(test, cmp, key){ let bestS=null; for(let k=0;k<(1<<n);k++){ const S=vsub(k); if(test(S) && (bestS===null || cmp(S.length,bestS.length))) bestS=S; } best[key]=bestS; }
+    function scanE(test, cmp, key){ let bestS=null; for(let k=0;k<(1<<m);k++){ const S=esub(k); if(test(S) && (bestS===null || cmp(S.length,bestS.length))) bestS=S; } best[key]=bestS; }
+    scanV(isInd,(a,b)=>a>b,'indep'); scanV(isDom,(a,b)=>a<b,'dom'); scanV(isCov,(a,b)=>a<b,'vcover'); scanV(isCli,(a,b)=>a>b,'clique');
+    scanE(isMat,(a,b)=>a>b,'matching'); scanE(isEcov,(a,b)=>a<b,'ecover');
+    best.kernel = best.indep;
+    return {ids,A,n,m,isInd,isDom,isCov,isCli,isMat,isEcov,best};
+  }
+  const CACHE = {};
+
+  function Widget(el){
+    const gname = el.dataset.graph, g = GRAPHS[gname]; let mode = el.dataset.mode;
+    const P = CACHE[gname] || (CACHE[gname] = prep(g));
+    let edgeMode = (mode==='matching' || mode==='ecover');
+    let sel = new Set();
+    const board = el.querySelector('.board'), panel = el.querySelector('.wpanel');
+    const svg = mk('svg',{viewBox:`0 0 ${g.W} ${g.H}`, role:'img', 'aria-label':'graf interactiv'}); board.appendChild(svg);
+
+    const btns = document.createElement('div'); btns.className='wbtns';
+    const bClear = document.createElement('button'); bClear.className='tbtn'; bClear.textContent='Golește';
+    const bShow = document.createElement('button'); bShow.className='tbtn'; bShow.textContent = 'Arată un exemplu optim';
+    btns.appendChild(bClear); btns.appendChild(bShow);
+
+    function draw(red){
+      svg.textContent='';
+      red = red || {};
+      g.E.forEach(([a,b],i)=>{
+        const [x1,y1]=g.pos[a],[x2,y2]=g.pos[b];
+        let style='stroke-width:3';
+        if(edgeMode && sel.has(i)) style='stroke:var(--accent);stroke-width:7';
+        if(red.edges && red.edges.has(i)) style = (edgeMode && sel.has(i)) ? 'stroke:var(--bad);stroke-width:7' : 'stroke:var(--bad);stroke-width:5;stroke-dasharray:9 6';
+        svg.appendChild(mk('line',{class:'edge-line',x1,y1,x2,y2,style}));
+        if(edgeMode){ const h=mk('line',{class:'ehit',x1,y1,x2,y2,'data-e':i}); svg.appendChild(h); }
+      });
+      Object.entries(g.pos).forEach(([id,[x,y]])=>{
+        id=+id; const gg=mk('g',{class: edgeMode?'':'vtx','data-v':id});
+        let st='';
+        if(!edgeMode && sel.has(id)) st='fill:var(--accent)';
+        if(red.verts && red.verts.has(id)) st += ';stroke:var(--bad);stroke-width:5';
+        gg.appendChild(mk('circle',{class:'node-circle',cx:x,cy:y,r:19,style:st}));
+        const t=mk('text',{class:'node-label',x,y:y+5,'text-anchor':'middle',style:'font-size:15px;pointer-events:none'}); t.textContent=id; gg.appendChild(t);
+        if(edgeMode) gg.style.pointerEvents='none';
+        svg.appendChild(gg);
+      });
+    }
+
+    function status(){
+      const S=[...sel].sort((a,b)=>a-b); const red={edges:new Set(),verts:new Set()}; const L=[];
+      const k = S.length;
+      if(mode==='indep' || mode==='kernel'){
+        const bad = g.E.map((e,i)=>i).filter(i=>sel.has(g.E[i][0])&&sel.has(g.E[i][1])); bad.forEach(i=>red.edges.add(i));
+        const ind = bad.length===0;
+        const addable = ind ? P.ids.filter(v=>!sel.has(v) && ![...P.A.get(v)].some(w=>sel.has(w))) : [];
+        if(mode==='indep'){
+          L.push(`Stabilă interior ${pill(ind)}<span class="why">${ind ? 'Niciun vârf ales nu e legat de alt vârf ales.' : 'Muchii cu ambele capete alese (roșu): ' + bad.map(i=>g.E[i].join('–')).join(', ')}</span>`);
+          L.push(`Maximală ${ind? pill(addable.length===0) : pill(null)}<span class="why">${!ind ? 'Întâi trebuie să fie stabilă.' : addable.length ? 'Mai poți adăuga: ' + addable.join(', ') : 'Nu mai poți adăuga niciun vârf.'}</span>`);
+          const a0 = P.best.indep.length;
+          L.push(`Maximă ${ind? pill(k===a0) : pill(null)}<span class="why">${!ind ? '' : `Ai ${k} vârfuri. Cea mai mare posibilă are α₀ = ${a0}.`}</span>`);
+        } else {
+          const undom = P.ids.filter(v=>!sel.has(v) && ![...P.A.get(v)].some(w=>sel.has(w))); undom.forEach(v=>red.verts.add(v));
+          const dom = undom.length===0;
+          L.push(`Stabilă interior ${pill(ind)}<span class="why">${ind ? 'Niciun vârf ales nu e legat de alt vârf ales.' : 'Muchii în interior: ' + bad.map(i=>g.E[i].join('–')).join(', ')}</span>`);
+          L.push(`Stabilă exterior ${pill(dom)}<span class="why">${dom ? 'Fiecare vârf din afară are un vecin ales.' : 'Fără vecin ales: ' + undom.join(', ')}</span>`);
+          L.push(`<b>Nucleu</b> ${pill(ind&&dom)}<span class="why">${ind&&dom ? 'Le îndeplinește pe amândouă!' : 'Trebuie să fie și stabilă interior, și stabilă exterior.'}</span>`);
+        }
+      }
+      if(mode==='dom'){
+        const undom = P.ids.filter(v=>!sel.has(v) && ![...P.A.get(v)].some(w=>sel.has(w))); undom.forEach(v=>red.verts.add(v));
+        const dom = undom.length===0;
+        const removable = dom ? S.filter(v=>P.isDom(S.filter(x=>x!==v))) : [];
+        const g0 = P.best.dom.length;
+        L.push(`Stabilă exterior ${pill(dom)}<span class="why">${dom ? 'Fiecare vârf din afară are cel puțin un vecin ales.' : 'Vârfuri fără niciun vecin ales (roșu): ' + undom.join(', ')}</span>`);
+        L.push(`Minimală ${dom? pill(removable.length===0) : pill(null)}<span class="why">${!dom ? 'Întâi trebuie să fie stabilă exterior.' : removable.length ? 'Poți scoate ' + removable.join(' sau ') + ' și rămâne stabilă exterior.' : 'Nu mai poți scoate niciun vârf.'}</span>`);
+        L.push(`Minimă ${dom? pill(k===g0) : pill(null)}<span class="why">${!dom ? '' : `Ai ${k} vârfuri. Cea mai mică posibilă are ${g0}.`}</span>`);
+      }
+      if(mode==='vcover'){
+        const unc = g.E.map((e,i)=>i).filter(i=>!sel.has(g.E[i][0])&&!sel.has(g.E[i][1])); unc.forEach(i=>red.edges.add(i));
+        const cov = unc.length===0;
+        const removable = cov ? S.filter(v=>P.isCov(S.filter(x=>x!==v))) : [];
+        const b0 = P.best.vcover.length; const rest = P.ids.filter(v=>!sel.has(v));
+        L.push(`Acoperire de vârfuri ${pill(cov)}<span class="why">${cov ? 'Fiecare muchie are un capăt ales.' : 'Muchii fără capăt ales (roșu): ' + unc.map(i=>g.E[i].join('–')).join(', ')}</span>`);
+        L.push(`Minimală ${cov? pill(removable.length===0) : pill(null)}<span class="why">${!cov ? '' : removable.length ? 'Poți scoate ' + removable.join(' sau ') + '.' : 'Nu mai poți scoate niciun vârf.'}</span>`);
+        L.push(`Minimă ${cov? pill(k===b0) : pill(null)}<span class="why">${!cov ? '' : `Ai ${k} vârfuri. Cea mai mică posibilă are β₀ = ${b0}.`}</span>`);
+        L.push(`Restul X \\ A = ${setStr(rest)} e stabilă interior? ${pill(P.isInd(rest))}<span class="why">Teorema: acoperire ⇔ restul e stabil interior.</span>`);
+      }
+      if(mode==='clique'){
+        const miss=[]; S.forEach((a,i)=>S.slice(i+1).forEach(b=>{ if(!P.A.get(a).has(b)) miss.push(a+'–'+b); }));
+        const cl = miss.length===0;
+        const addable = cl ? P.ids.filter(v=>!sel.has(v) && S.every(u=>P.A.get(v).has(u))) : [];
+        const phi = P.best.clique.length;
+        L.push(`Clică ${pill(cl)}<span class="why">${cl ? 'Oricare 2 vârfuri alese sunt legate.' : 'Lipsesc muchiile: ' + miss.join(', ')}</span>`);
+        L.push(`Maximală ${cl? pill(addable.length===0) : pill(null)}<span class="why">${!cl ? '' : addable.length ? 'Mai poți adăuga: ' + addable.join(', ') : 'Nu mai poți adăuga niciun vârf.'}</span>`);
+        L.push(`Maximă ${cl? pill(k===phi) : pill(null)}<span class="why">${!cl ? '' : `Ai ${k} vârfuri. Cea mai mare clică are φ = ${phi}.`}</span>`);
+      }
+      if(mode==='matching'){
+        const cnt=new Map(); S.forEach(i=>g.E[i].forEach(v=>cnt.set(v,(cnt.get(v)||0)+1)));
+        const clash=[...cnt].filter(([v,c])=>c>1).map(([v])=>v); clash.forEach(v=>red.verts.add(v));
+        S.forEach(i=>{ if(g.E[i].some(v=>clash.includes(v))) red.edges.add(i); });
+        const ok = clash.length===0; const used=new Set(cnt.keys());
+        const addable = ok ? g.E.map((e,i)=>i).filter(i=>!sel.has(i) && !used.has(g.E[i][0]) && !used.has(g.E[i][1])) : [];
+        const a1 = P.best.matching.length; const perfect = ok && used.size===P.n;
+        L.push(`Cuplaj ${pill(ok)}<span class="why">${ok ? 'Nicio pereche de muchii alese nu are capăt comun.' : 'Vârfuri folosite de 2 ori (roșu): ' + clash.join(', ')}</span>`);
+        L.push(`Maximal ${ok? pill(addable.length===0) : pill(null)}<span class="why">${!ok ? '' : addable.length ? 'Mai poți adăuga: ' + addable.map(i=>g.E[i].join('–')).join(', ') : 'Nu mai poți adăuga nicio muchie.'}</span>`);
+        L.push(`Maxim ${ok? pill(k===a1) : pill(null)}<span class="why">${!ok ? '' : `Ai ${k} muchii. Cel mai mare cuplaj are α₁ = ${a1}.`}</span>`);
+        L.push(`Perfect ${ok? pill(perfect) : pill(null)}<span class="why">${!ok ? '' : perfect ? 'Atinge toate vârfurile!' : 'Vârfuri neatinse: ' + P.ids.filter(v=>!used.has(v)).join(', ')}</span>`);
+      }
+      if(mode==='ecover'){
+        const touched=new Set(); S.forEach(i=>{ touched.add(g.E[i][0]); touched.add(g.E[i][1]); });
+        const miss=P.ids.filter(v=>!touched.has(v)); miss.forEach(v=>red.verts.add(v));
+        const ok = miss.length===0;
+        const removable = ok ? S.filter(i=>P.isEcov(S.filter(j=>j!==i))) : [];
+        const b1 = P.best.ecover.length;
+        L.push(`Acoperire de muchii ${pill(ok)}<span class="why">${ok ? 'Fiecare vârf e atins de o muchie aleasă.' : 'Vârfuri neatinse (roșu): ' + miss.join(', ')}</span>`);
+        L.push(`Minimală ${ok? pill(removable.length===0) : pill(null)}<span class="why">${!ok ? '' : removable.length ? 'Poți scoate: ' + removable.map(i=>g.E[i].join('–')).join(', ') : 'Nu mai poți scoate nicio muchie.'}</span>`);
+        L.push(`Minimă ${ok? pill(k===b1) : pill(null)}<span class="why">${!ok ? '' : `Ai ${k} muchii. Cea mai mică are β₁ = ${b1}.`}</span>`);
+      }
+      const selTxt = edgeMode ? (S.length ? S.map(i=>g.E[i].join('–')).join(', ') : 'nimic') : (S.length ? setStr(S) : '{ }');
+      panel.innerHTML = `<div class="sel">Ai ales: ${selTxt}</div>` + L.map(x=>`<div class="wline">${x}</div>`).join('');
+      panel.appendChild(btns);
+      draw(red);
+    }
+    svg.addEventListener('click', function(e){
+      if(edgeMode){ const h=e.target.closest('[data-e]'); if(!h) return; const i=+h.dataset.e; sel.has(i)?sel.delete(i):sel.add(i); }
+      else { const v=e.target.closest('[data-v]'); if(!v) return; const id=+v.dataset.v; sel.has(id)?sel.delete(id):sel.add(id); }
+      status();
+    });
+    bClear.addEventListener('click', ()=>{ sel=new Set(); status(); });
+    bShow.addEventListener('click', ()=>{ sel=new Set(P.best[mode]); status(); });
+    const sw = document.querySelector('select.modesw[data-for="' + el.id + '"]');
+    if(sw) sw.addEventListener('change', ()=>{ mode = sw.value; edgeMode = (mode==='matching' || mode==='ecover'); sel = new Set(); status(); });
+    status();
+  }
+  document.querySelectorAll('.wg').forEach(Widget);
+
+  // quiz + saving
+  let db=null; const results={};
+  function slug(s){ return (s||'anonim').trim().toLowerCase().replace(/[^a-z0-9]+/g,'-').replace(/(^-|-$)/g,'')||'anonim'; }
+  async function save(){ const name=document.getElementById('studentName').value.trim(); try{ localStorage.setItem('graf_student_name', name); }catch(e){}
+    if(!db) return; try{ await db.doc('lessons/' + slug(name) + '-capitol3').set({name:name||'(anonim)', results, updatedAt:new Date().toISOString()}); }catch(e){} }
+  document.querySelectorAll('.quiz').forEach(function(q){ const opts=q.querySelectorAll('.opt'), fb=q.querySelector('.feedback');
+    opts.forEach(b=>b.addEventListener('click', function(){ if(opts[0].disabled) return; const ok=b.dataset.correct==='true'; opts.forEach(o=>o.disabled=true);
+      b.classList.add(ok?'correct':'wrong'); if(!ok) q.querySelector('.opt[data-correct="true"]').classList.add('correct');
+      fb.textContent = ok ? '✓ Corect!' : '✗ Am marcat cu verde răspunsul corect.'; fb.style.color = ok ? 'var(--good)' : 'var(--bad)'; fb.classList.add('show');
+      results[q.dataset.qid]=ok; save(); })); });
+  try{ const s=localStorage.getItem('graf_student_name'); if(s) document.getElementById('studentName').value=s; }catch(e){}
+  document.getElementById('studentName').addEventListener('change', save);
+  (async function(){ try{ if(window.claude && window.claude.use) db = await window.claude.use('db'); }catch(e){} })();
+})();
+</script>

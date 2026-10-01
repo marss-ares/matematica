@@ -1,0 +1,275 @@
+<title>Minim vs minimal</title>
+<style>
+:root{
+  --bg:#f6f5f1;
+  --surface:#ffffff;
+  --surface-2:#eeece4;
+  --ink:#1c2321;
+  --ink-dim:#5b6460;
+  --line:#d9d5c9;
+  --accent:#8a3b2e;
+  --accent-ink:#ffffff;
+  --node:#2c4a52;
+  --node-2:#c98a3c;
+  --good:#2f6b4f;
+  --bad:#a13a3a;
+  --radius:14px;
+  color-scheme: light;
+}
+@media (prefers-color-scheme: dark){
+  :root:not([data-theme="light"]){
+    --bg:#181a17; --surface:#222521; --surface-2:#2b2e29;
+    --ink:#eeece6; --ink-dim:#a8ada4; --line:#3a3d37;
+    --accent:#e08b6f; --accent-ink:#1c1310;
+    --node:#7fb3bd; --node-2:#e6b16a; --good:#7fc79c; --bad:#e08585;
+    color-scheme: dark;
+  }
+}
+:root[data-theme="dark"]{
+  --bg:#181a17; --surface:#222521; --surface-2:#2b2e29;
+  --ink:#eeece6; --ink-dim:#a8ada4; --line:#3a3d37;
+  --accent:#e08b6f; --accent-ink:#1c1310;
+  --node:#7fb3bd; --node-2:#e6b16a; --good:#7fc79c; --bad:#e08585;
+  color-scheme: dark;
+}
+*{box-sizing:border-box;}
+body{background:var(--bg); color:var(--ink); font-family:'Source Serif 4',Georgia,serif; padding-inline:16px; padding-block:32px;}
+.wrap{max-width:720px; margin:0 auto;}
+h1{font-family:'Fraunces',Georgia,serif; font-weight:600; font-size:clamp(1.5rem,5vw,2.1rem); margin:0 0 4px; text-wrap:balance;}
+.subtitle{font-family:'Inter',system-ui,sans-serif; color:var(--ink-dim); font-size:0.92rem; margin-bottom:22px;}
+svg{max-width:100%; height:auto;}
+.graphbox{display:flex; justify-content:center; margin:14px 0; overflow-x:auto;}
+.node-circle{fill:var(--node); stroke:var(--bg); stroke-width:3;}
+.node-label{font-family:'Inter',sans-serif; font-size:13px; font-weight:700; fill:var(--accent-ink);}
+.edge-line{stroke:var(--ink-dim); stroke-width:2;}
+
+.progressbar{position:sticky; top:env(safe-area-inset-top,0px); background:var(--bg); padding-block:10px 4px; z-index:5; margin-bottom:10px;}
+.pbar-track{height:6px; background:var(--surface-2); border-radius:999px; overflow:hidden;}
+.pbar-fill{height:100%; background:var(--accent); width:0%; transition:width .3s;}
+.pbar-label{font-family:'Inter',sans-serif; font-size:0.72rem; color:var(--ink-dim); margin-top:4px;}
+
+.identity-box{
+  font-family:'Inter',sans-serif; background:var(--surface-2); border-radius:10px;
+  padding:14px 16px; margin-bottom:20px; display:flex; gap:10px; align-items:center; flex-wrap:wrap;
+}
+.identity-box input{
+  flex:1; min-width:140px; padding:8px 10px; border-radius:7px;
+  border:1px solid var(--line); background:var(--surface); color:var(--ink); font-family:inherit; font-size:0.9rem;
+}
+
+.qcard{
+  background:var(--surface); border:1px solid var(--line); border-radius:var(--radius);
+  padding:20px; margin-bottom:16px; font-family:'Inter',system-ui,sans-serif;
+}
+.qnum{font-size:0.72rem; text-transform:uppercase; letter-spacing:0.06em; color:var(--ink-dim); margin-bottom:6px;}
+.qtext{font-family:'Source Serif 4',Georgia,serif; font-size:1.05rem; margin-bottom:14px; line-height:1.5;}
+.opts{display:flex; flex-direction:column; gap:8px;}
+.opt{
+  text-align:left; border:1px solid var(--line); background:var(--surface); color:var(--ink);
+  padding:10px 14px; border-radius:8px; cursor:pointer; font-family:inherit; font-size:0.92rem;
+  transition:background .15s, border-color .15s;
+}
+.opt:hover{border-color:var(--accent);}
+.opt.correct{background:color-mix(in srgb, var(--good) 22%, var(--surface)); border-color:var(--good); color:var(--good);}
+.opt.wrong{background:color-mix(in srgb, var(--bad) 22%, var(--surface)); border-color:var(--bad); color:var(--bad);}
+.opt:disabled{cursor:default;}
+.fillrow{display:flex; align-items:center; gap:8px; flex-wrap:wrap;}
+input.fillbox{
+  width:64px; padding:7px 8px; border-radius:6px; border:1px solid var(--line);
+  background:var(--surface); color:var(--ink); font-family:'JetBrains Mono',monospace; text-align:center; font-size:0.95rem;
+}
+button.check{
+  font-family:'Inter',sans-serif; font-weight:600; font-size:0.85rem;
+  background:var(--accent); color:var(--accent-ink); border:none; padding:9px 18px; border-radius:8px; cursor:pointer; margin-top:10px;
+}
+button.check:hover{opacity:0.9;}
+button.check:disabled{opacity:0.5; cursor:default;}
+.feedback{margin-top:10px; font-size:0.88rem; display:none;}
+.feedback.show{display:block;}
+
+.resultbox{
+  background:var(--surface); border:2px solid var(--accent); border-radius:var(--radius);
+  padding:28px 24px; text-align:center; font-family:'Inter',sans-serif; display:none;
+}
+.resultbox.show{display:block;}
+.resultbox .score{font-family:'Fraunces',Georgia,serif; font-size:2.6rem; font-weight:700; color:var(--accent); margin-bottom:6px;}
+.resultbox .msg{font-size:0.95rem; color:var(--ink-dim); margin-bottom:4px;}
+
+:root{--c-purple:#6b4fa0;--c-pink:#b0417a;--c-teal:#1f7a7a;--c-blue:#2f5f9e;}
+@media (prefers-color-scheme: dark){:root:not([data-theme="light"]){--c-purple:#b9a3e6;--c-pink:#ec9cc4;--c-teal:#79cccc;--c-blue:#9dbdf0;}}
+:root[data-theme="dark"]{--c-purple:#b9a3e6;--c-pink:#ec9cc4;--c-teal:#79cccc;--c-blue:#9dbdf0;}
+.wrap{max-width:900px;}
+.section{background:var(--surface);border:1px solid var(--line);border-radius:14px;padding:22px;margin-bottom:22px;}
+.section h2{font-family:'Fraunces',Georgia,serif;font-weight:600;font-size:1.35rem;margin:0 0 10px;display:flex;gap:10px;align-items:center;text-wrap:balance;}
+.section h2 .num{font-family:'Inter',sans-serif;font-size:0.75rem;font-weight:700;background:var(--accent);color:var(--accent-ink);border-radius:999px;width:26px;height:26px;display:inline-flex;align-items:center;justify-content:center;flex:none;}
+.section p{line-height:1.6;margin:0 0 12px;}
+.toc{display:flex;flex-wrap:wrap;gap:6px;margin-bottom:18px;font-family:'Inter',sans-serif;font-size:0.82rem;}
+.toc a{color:var(--ink);text-decoration:none;background:var(--surface);border:1px solid var(--line);border-radius:999px;padding:4px 10px;}
+.tip{font-family:'Inter',sans-serif;background:var(--surface-2);border-radius:10px;padding:12px 14px;margin:10px 0;line-height:1.55;font-size:0.92rem;border-left:4px solid var(--c,var(--accent));}
+.tip h4{margin:0 0 4px;font-size:0.95rem;}
+.tip .big{font-family:'JetBrains Mono',monospace;font-weight:700;font-size:1.05rem;}
+.tablewrap{overflow-x:auto;}
+table.lv{width:100%;border-collapse:collapse;font-family:'Inter',sans-serif;font-size:0.86rem;}
+table.lv th,table.lv td{text-align:left;padding:7px 8px;border-bottom:1px solid var(--line);vertical-align:top;}
+table.lv th{font-size:0.72rem;text-transform:uppercase;letter-spacing:0.05em;color:var(--ink-dim);}
+.dot{display:inline-block;width:10px;height:10px;border-radius:999px;margin-right:6px;vertical-align:0;background:var(--c);}
+.tbtn{font-family:'Inter',sans-serif;font-weight:600;font-size:0.86rem;background:var(--surface);color:var(--ink);border:1px solid var(--line);padding:8px 13px;border-radius:8px;cursor:pointer;}
+.tbtn.primary{background:var(--accent);color:var(--accent-ink);border-color:var(--accent);}
+.tbtn:disabled{opacity:0.45;cursor:default;}
+.tbtn:focus-visible,.card:focus-visible,.mitem:focus-visible{outline:2px solid var(--accent);outline-offset:2px;}
+.row{display:flex;gap:8px;flex-wrap:wrap;align-items:center;}
+.card{perspective:1000px;height:220px;cursor:pointer;margin:10px 0;border:none;background:none;width:100%;padding:0;}
+.card .in{position:relative;width:100%;height:100%;transition:transform .45s;transform-style:preserve-3d;}
+.card.flip .in{transform:rotateY(180deg);}
+.card .f,.card .b{position:absolute;inset:0;backface-visibility:hidden;-webkit-backface-visibility:hidden;border-radius:14px;border:1px solid var(--line);display:flex;flex-direction:column;align-items:center;justify-content:center;padding:18px;text-align:center;font-family:'Inter',sans-serif;}
+.card .f{background:var(--surface-2);font-family:'Fraunces',Georgia,serif;font-size:1.5rem;font-weight:600;color:var(--ink);}
+.card .b{background:var(--surface);transform:rotateY(180deg);font-size:0.98rem;line-height:1.5;color:var(--ink);}
+.card .b .hintc{margin-top:10px;font-size:0.84rem;color:var(--ink-dim);}
+.card small{font-family:'Inter',sans-serif;font-size:0.75rem;color:var(--ink-dim);font-weight:500;margin-top:10px;}
+@media (prefers-reduced-motion: reduce){.card .in{transition:none;}}
+.stat{font-family:'Inter',sans-serif;font-size:0.85rem;color:var(--ink-dim);}
+.mgrid{display:grid;grid-template-columns:1fr 1.6fr;gap:10px;}
+@media (max-width:620px){.mgrid{grid-template-columns:1fr;}}
+.mcol{display:flex;flex-direction:column;gap:8px;}
+.mitem{font-family:'Inter',sans-serif;font-size:0.88rem;text-align:left;border:1px solid var(--line);background:var(--surface);color:var(--ink);padding:10px 12px;border-radius:9px;cursor:pointer;line-height:1.4;}
+.mitem.sel{border-color:var(--accent);background:color-mix(in srgb,var(--accent) 12%,var(--surface));}
+.mitem.done{border-color:var(--good);background:color-mix(in srgb,var(--good) 14%,var(--surface));color:var(--good);cursor:default;}
+.mitem.shake{border-color:var(--bad);background:color-mix(in srgb,var(--bad) 14%,var(--surface));}
+.gbox{display:flex;justify-content:center;}
+.gbox svg{max-width:100%;height:auto;user-select:none;-webkit-user-select:none;}
+.checks{display:flex;flex-direction:column;gap:6px;font-family:'Inter',sans-serif;font-size:0.92rem;margin:10px 0;}
+.checks label{display:flex;gap:8px;align-items:center;padding:7px 10px;border:1px solid var(--line);border-radius:8px;background:var(--surface);cursor:pointer;}
+.checks label.ok{border-color:var(--good);background:color-mix(in srgb,var(--good) 14%,var(--surface));}
+.checks label.miss{border-color:var(--node-2);background:color-mix(in srgb,var(--node-2) 16%,var(--surface));}
+.checks label.bad{border-color:var(--bad);background:color-mix(in srgb,var(--bad) 14%,var(--surface));}
+.note{font-family:'Inter',sans-serif;font-size:0.9rem;background:var(--surface-2);border-radius:8px;padding:10px 14px;line-height:1.5;min-height:1.5em;}
+.qwrap{font-family:'Inter',sans-serif;}
+.qtext{font-family:'Fraunces',Georgia,serif;font-size:1.12rem;margin:8px 0 12px;line-height:1.45;}
+.hintbox{font-family:'Inter',sans-serif;font-size:0.88rem;background:color-mix(in srgb,var(--node-2) 14%,var(--surface));border:1px solid color-mix(in srgb,var(--node-2) 45%,transparent);border-radius:8px;padding:9px 12px;margin-top:8px;}
+.bar{height:6px;background:var(--surface-2);border-radius:999px;overflow:hidden;margin:6px 0 12px;}
+.bar > div{height:100%;background:var(--accent);width:0;transition:width .3s;}
+</style>
+<style>
+.pick .node-circle{cursor:pointer;}
+.node-circle.on{fill:var(--node-2);}
+.verdict{font-family:'Inter',sans-serif;font-size:0.92rem;line-height:1.7;margin-top:8px;}
+.verdict b.y{color:var(--good);} .verdict b.n{color:var(--bad);}
+.cmp{display:grid;grid-template-columns:1fr 1fr;gap:10px;}
+@media(max-width:620px){.cmp{grid-template-columns:1fr;}}
+</style>
+<div class="wrap">
+<h1>Minim vs minimal, maxim vs maximal</h1>
+<div class="subtitle">Lecție de 15 minute + test de 12 întrebări la final</div>
+<div class="identity-box"><span>Numele tău:</span><input id="who" value="Vitea" aria-label="Numele tău"></div>
+
+<div class="section"><h2><span class="num">1</span>Ideea în 2 propoziții</h2>
+<div class="cmp">
+<div class="tip" style="--c:var(--c-teal)"><h4>Maxim = „cel mai mare dintre TOATE”</h4>Compari cu toate mulțimile posibile. Câștigă cea cu cele mai multe vârfuri.</div>
+<div class="tip" style="--c:var(--c-purple)"><h4>Maximal = „nu mai încape NIMIC”</h4>Te uiți doar la mulțimea ta: dacă mai adaugi orice vârf, strici regula. Nu compari cu nimeni.</div>
+</div>
+<div class="cmp">
+<div class="tip" style="--c:var(--c-teal)"><h4>Minim = „cel mai mic dintre TOATE”</h4>Cel mai mic număr de vârfuri posibil.</div>
+<div class="tip" style="--c:var(--c-purple)"><h4>Minimal = „nu mai poți SCOATE nimic”</h4>Dacă scoți orice vârf, strici regula. Nu compari cu nimeni.</div>
+</div>
+<p><b>Truc de memorare:</b> terminația <b>„-al”</b> (maxim<b>al</b>, minim<b>al</b>) = verifici <b>AL</b> tău, doar mulțimea ta. Fără „-al” (maxim, minim) = te compari cu toată lumea.</p>
+</div>
+
+<div class="section"><h2><span class="num">2</span>Analogia cu munții</h2>
+<p>Ești pe un <b>vârf de deal</b>: în orice parte ai face un pas, cobori. Ăsta e un vârf <b>maximal</b>, pentru că nu mai poți urca de acolo.</p>
+<p><b>Everestul</b> e cel mai înalt munte de pe Pământ. El e <b>maxim</b>. Și, evident, nici din vârful Everestului nu mai poți urca, deci e și maximal.</p>
+<div class="tip" style="--c:var(--good)"><h4>Regula de aur</h4>Orice <b>maxim</b> e și <b>maximal</b>. Dar un <b>maximal</b> NU e neapărat <b>maxim</b> (un deal nu e Everestul).<br>La fel: orice <b>minim</b> e și <b>minimal</b>, dar nu invers.</div>
+<p>Altă analogie: rucsacul. Ai pus lucruri și <b>nu mai încape nimic</b>: rucsacul e plin, adică <b>maximal</b>. Dar colegul tău a aranjat mai bine și a băgat mai multe lucruri. Rucsacul lui e mai aproape de <b>maxim</b>.</p>
+</div>
+
+<div class="section"><h2><span class="num">3</span>Pe graf: mulțimi stabile (maximal / maxim)</h2>
+<p>Graful e un lanț: 1–2–3–4–5. Regula pentru o mulțime stabilă este că <b>niciun vârf ales nu e vecin cu alt vârf ales</b>.</p>
+<ul>
+<li><b>{2, 4}</b>: poți adăuga 1? Nu, e vecin cu 2. Pe 3? Nu. Pe 5? Nu, e vecin cu 4. Deci e <b>maximală</b>. Dar are doar 2 vârfuri.</li>
+<li><b>{1, 3, 5}</b>: are 3 vârfuri și nu există nicio mulțime stabilă mai mare. Deci e <b>maximă</b> (și, automat, maximală). De aici α0 = 3.</li>
+<li><b>{1, 3}</b>: mai poți adăuga 5, deci <b>nu e nici măcar maximală</b>.</li>
+</ul>
+<p><b>Încearcă singur:</b> apasă pe vârfuri ca să le alegi.</p>
+<div class="gbox pick" id="g1"></div><div class="verdict" id="v1"></div>
+</div>
+
+<div class="section"><h2><span class="num">4</span>Pe graf: acoperiri de vârfuri (minimal / minim)</h2>
+<p>Același lanț 1–2–3–4–5. Regula pentru o acoperire de vârfuri (β0) este că <b>fiecare muchie trebuie să atingă cel puțin un vârf ales</b>.</p>
+<ul>
+<li><b>{1, 3, 4}</b>: scoți 1? Muchia 1–2 rămâne neacoperită. Scoți 3? Rămâne 2–3 neacoperită. Scoți 4? Rămâne 4–5. Nu poți scoate nimic, deci e <b>minimală</b>. Dar are 3 vârfuri.</li>
+<li><b>{2, 4}</b>: acoperă toate cele 4 muchii cu doar 2 vârfuri, și nu se poate cu mai puține. Deci e <b>minimă</b>. De aici β0 = 2.</li>
+<li><b>{2, 3, 4}</b>: poți scoate 3 și tot e acoperire, deci <b>nu e minimală</b>.</li>
+</ul>
+<p>Observă: α0 + β0 = 3 + 2 = 5 = n ✔</p>
+<div class="gbox pick" id="g2"></div><div class="verdict" id="v2"></div>
+</div>
+
+<div class="section"><h2><span class="num">5</span>Cum verifici pas cu pas (rețeta)</h2>
+<div class="tip" style="--c:var(--c-purple)"><h4>Maximal?</h4>1. Verifică dacă mulțimea respectă regula. 2. Încearcă să adaugi, pe rând, <b>fiecare</b> vârf din afară. 3. Dacă <b>niciunul</b> nu încape, e maximală.</div>
+<div class="tip" style="--c:var(--c-purple)"><h4>Minimal?</h4>1. Verifică dacă mulțimea respectă regula. 2. Încearcă să scoți, pe rând, <b>fiecare</b> vârf. 3. Dacă de <b>fiecare</b> dată se strică regula, e minimală.</div>
+<div class="tip" style="--c:var(--c-teal)"><h4>Maxim / minim?</h4>Trebuie să știi cel mai mare (sau cel mai mic) număr posibil, adică α0, β0 etc. Dacă mulțimea ta are exact atâtea vârfuri, e maximă (sau minimă).</div>
+<p>Exemplu surpriză, <b>steaua</b>: vârful 1 în centru, legat de 2, 3, 4, 5. Mulțimea <b>{1}</b> e stabilă și maximală, pentru că orice alt vârf e vecin cu 1. Dar mulțimea <b>{2, 3, 4, 5}</b> are 4 vârfuri, deci {1} e maximală, dar departe de maximă!</p>
+<div class="gbox" id="g3"></div>
+</div>
+
+<div class="section" id="test"><h2><span class="num">6</span>Test</h2><p>Răspunsul se vede imediat după ce alegi. Răspunsurile se salvează ca să te pot ajuta la ce e mai greu 🙂</p><div id="quiz"></div>
+<div class="resultbox" id="res"><div class="score" id="score"></div><div class="msg" id="msg"></div></div></div>
+</div>
+<script>
+const P5={pos:{1:[40,60],2:[130,60],3:[220,60],4:[310,60],5:[400,60]},e:[[1,2],[2,3],[3,4],[4,5]],w:440,h:120};
+const STAR={pos:{1:[160,100],2:[60,40],3:[260,40],4:[60,160],5:[260,160]},e:[[1,2],[1,3],[1,4],[1,5]],w:320,h:200};
+function draw(el,G,sel,onClick){
+  let s=`<svg viewBox="0 0 ${G.w} ${G.h}" width="${G.w}">`;
+  for(const[a,b]of G.e){const[x1,y1]=G.pos[a],[x2,y2]=G.pos[b];s+=`<line class="edge-line" x1="${x1}" y1="${y1}" x2="${x2}" y2="${y2}"/>`;}
+  for(const v in G.pos){const[x,y]=G.pos[v];s+=`<g data-v="${v}"><circle class="node-circle${sel.has(+v)?' on':''}" cx="${x}" cy="${y}" r="20"/><text class="node-label" x="${x}" y="${y+5}" text-anchor="middle" pointer-events="none">${v}</text></g>`;}
+  el.innerHTML=s+'</svg>';
+  if(onClick)el.querySelectorAll('g[data-v]').forEach(g=>g.onclick=()=>onClick(+g.dataset.v));
+}
+const V=[1,2,3,4,5];
+const stable=(S,G)=>G.e.every(([a,b])=>!(S.has(a)&&S.has(b)));
+const cover=(S,G)=>G.e.every(([a,b])=>S.has(a)||S.has(b));
+function subsets(){const r=[];for(let m=0;m<32;m++)r.push(new Set(V.filter((v,i)=>m>>i&1)));return r;}
+const alpha=Math.max(...subsets().filter(S=>stable(S,P5)).map(S=>S.size));
+const beta=Math.min(...subsets().filter(S=>cover(S,P5)).map(S=>S.size));
+const Y=t=>`<b class="y">DA</b> ${t}`, N=t=>`<b class="n">NU</b> ${t}`;
+const fmt=S=>'{'+[...S].sort().join(', ')+'}';
+let s1=new Set(),s2=new Set();
+function r1(){draw(g1,P5,s1,v=>{s1.has(v)?s1.delete(v):s1.add(v);r1();});
+  if(!s1.size){v1.innerHTML='Alege vârfuri.';return;}
+  if(!stable(s1,P5)){v1.innerHTML=`${fmt(s1)}: stabilă? `+N('– ai ales doi vecini.');return;}
+  const add=V.filter(v=>!s1.has(v)&&stable(new Set([...s1,v]),P5));
+  v1.innerHTML=`${fmt(s1)}: stabilă? ${Y('')}<br>maximală? `+(add.length?N(`– mai poți adăuga ${add.join(', ')}`):Y('– nu mai încape nimic'))+`<br>maximă? `+(s1.size===alpha?Y(`– are ${alpha} = α0`):N(`– are ${s1.size}, dar α0 = ${alpha}`));}
+function r2(){draw(g2,P5,s2,v=>{s2.has(v)?s2.delete(v):s2.add(v);r2();});
+  if(!s2.size){v2.innerHTML='Alege vârfuri.';return;}
+  if(!cover(s2,P5)){const u=P5.e.filter(([a,b])=>!s2.has(a)&&!s2.has(b)).map(e=>e.join('–'));v2.innerHTML=`${fmt(s2)}: acoperire? `+N('– neacoperite: '+u.join(', '));return;}
+  const rem=[...s2].filter(v=>{const t=new Set(s2);t.delete(v);return cover(t,P5);});
+  v2.innerHTML=`${fmt(s2)}: acoperire? ${Y('')}<br>minimală? `+(rem.length?N(`– poți scoate ${rem.join(', ')}`):Y('– nu poți scoate nimic'))+`<br>minimă? `+(s2.size===beta?Y(`– are ${beta} = β0`):N(`– are ${s2.size}, dar β0 = ${beta}`));}
+r1();r2();draw(g3,STAR,new Set([1]));
+
+const Q=[
+["„Maximal” înseamnă:",["cea mai mare mulțime posibilă din graf","nu mai poți adăuga niciun vârf fără să strici regula","conține toate vârfurile"],1],
+["„Minim” înseamnă:",["nu mai poți scoate niciun vârf","cel mai mic număr de vârfuri posibil dintre TOATE","are un singur vârf"],1],
+["Orice mulțime stabilă MAXIMĂ este și MAXIMALĂ?",["Da","Nu"],0],
+["Orice mulțime stabilă MAXIMALĂ este și MAXIMĂ?",["Da","Nu, poate fi doar un „deal”, nu Everestul"],1],
+["Lanțul 1–2–3–4–5. Mulțimea stabilă {2, 4} este:",["maximă","maximală, dar nu maximă","nici maximală"],1],
+["Lanțul 1–2–3–4–5. Mulțimea stabilă {1, 3, 5} este:",["maximă (și maximală)","doar maximală","nu e stabilă"],0],
+["Lanțul 1–2–3–4–5. Mulțimea stabilă {1, 3} este:",["maximală","maximă","nu e maximală, mai încape 5"],2],
+["Lanțul 1–2–3–4–5. Acoperirea {1, 3, 4} este:",["minimă","minimală, dar nu minimă","nu e acoperire"],1],
+["Lanțul 1–2–3–4–5. Acoperirea {2, 3, 4} este:",["minimală","nu e minimală, poți scoate 3","minimă"],1],
+["Steaua (centru 1, frunze 2, 3, 4, 5). Mulțimea stabilă {1} este:",["maximă","maximală, dar nu maximă","nu e stabilă"],1],
+["Vârful unui deal (de unde orice pas coboară) e ca o mulțime:",["maximă","maximală"],1],
+["Într-un graf, α0 = 3. Poate exista o mulțime stabilă maximală cu 2 vârfuri?",["Da, ea e maximală, dar nu maximă","Nu, maximală înseamnă 3"],0]];
+const ans=[];let score=0,done=0;
+function slug(s){return(s||'anonim').trim().toLowerCase().replace(/[^a-z0-9]+/g,'-').replace(/(^-|-$)/g,'')||'anonim';}
+let db=null;(async()=>{try{db=await window.claude.use('db');}catch(e){}})();
+async function save(){if(!db)return;const n=who.value;try{await db.doc('tests/'+slug(n)+'-minmax').set({name:n,score,total:Q.length,done,answers:ans,updatedAt:new Date().toISOString()});}catch(e){}}
+Q.forEach(([t,o,c],i)=>{const d=document.createElement('div');d.className='qcard';d.innerHTML=`<div class="qnum">Întrebarea ${i+1} / ${Q.length}</div><div class="qtext">${t}</div><div class="gbox qg"></div><div class="opts"></div>`;
+ const G=t.startsWith("Lanțul")?P5:t.startsWith("Steaua")?STAR:null; if(G) draw(d.querySelector(".qg"),G,new Set());
+ const box=d.querySelector('.opts');o.forEach((txt,j)=>{const b=document.createElement('button');b.className='opt';b.textContent=txt;b.onclick=()=>{
+  box.querySelectorAll('button').forEach((x,k)=>{x.disabled=true;if(k===c)x.classList.add('correct');});
+  if(j!==c)b.classList.add('wrong');else score++;done++;
+  ans[i]={q:t,chosen:txt,correct:o[c],ok:j===c};save();
+  if(done===Q.length){res.classList.add('show');score_el();}
+ };box.appendChild(b);});quiz.appendChild(d);});
+function score_el(){score_.textContent=score+' / '+Q.length;msg.textContent=score>=10?'Super! Ai prins diferența.':'Mai citește secțiunile 1 și 5, apoi mai încearcă.';}
+const score_=document.getElementById('score');
+</script>

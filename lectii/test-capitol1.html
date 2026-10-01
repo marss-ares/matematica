@@ -1,0 +1,368 @@
+<title>Test: Noțiuni de bază</title>
+<meta name="description" content="Test scurt de verificare pentru Capitolul 1 din cursul de teoria grafurilor.">
+<style>
+:root{
+  --bg:#f6f5f1;
+  --surface:#ffffff;
+  --surface-2:#eeece4;
+  --ink:#1c2321;
+  --ink-dim:#5b6460;
+  --line:#d9d5c9;
+  --accent:#8a3b2e;
+  --accent-ink:#ffffff;
+  --node:#2c4a52;
+  --node-2:#c98a3c;
+  --good:#2f6b4f;
+  --bad:#a13a3a;
+  --radius:14px;
+  color-scheme: light;
+}
+@media (prefers-color-scheme: dark){
+  :root:not([data-theme="light"]){
+    --bg:#181a17; --surface:#222521; --surface-2:#2b2e29;
+    --ink:#eeece6; --ink-dim:#a8ada4; --line:#3a3d37;
+    --accent:#e08b6f; --accent-ink:#1c1310;
+    --node:#7fb3bd; --node-2:#e6b16a; --good:#7fc79c; --bad:#e08585;
+    color-scheme: dark;
+  }
+}
+:root[data-theme="dark"]{
+  --bg:#181a17; --surface:#222521; --surface-2:#2b2e29;
+  --ink:#eeece6; --ink-dim:#a8ada4; --line:#3a3d37;
+  --accent:#e08b6f; --accent-ink:#1c1310;
+  --node:#7fb3bd; --node-2:#e6b16a; --good:#7fc79c; --bad:#e08585;
+  color-scheme: dark;
+}
+*{box-sizing:border-box;}
+body{background:var(--bg); color:var(--ink); font-family:'Source Serif 4',Georgia,serif; padding-inline:16px; padding-block:32px;}
+.wrap{max-width:720px; margin:0 auto;}
+h1{font-family:'Fraunces',Georgia,serif; font-weight:600; font-size:clamp(1.5rem,5vw,2.1rem); margin:0 0 4px; text-wrap:balance;}
+.subtitle{font-family:'Inter',system-ui,sans-serif; color:var(--ink-dim); font-size:0.92rem; margin-bottom:22px;}
+svg{max-width:100%; height:auto;}
+.graphbox{display:flex; justify-content:center; margin:14px 0; overflow-x:auto;}
+.node-circle{fill:var(--node); stroke:var(--bg); stroke-width:3;}
+.node-label{font-family:'Inter',sans-serif; font-size:13px; font-weight:700; fill:var(--accent-ink);}
+.edge-line{stroke:var(--ink-dim); stroke-width:2;}
+
+.progressbar{position:sticky; top:env(safe-area-inset-top,0px); background:var(--bg); padding-block:10px 4px; z-index:5; margin-bottom:10px;}
+.pbar-track{height:6px; background:var(--surface-2); border-radius:999px; overflow:hidden;}
+.pbar-fill{height:100%; background:var(--accent); width:0%; transition:width .3s;}
+.pbar-label{font-family:'Inter',sans-serif; font-size:0.72rem; color:var(--ink-dim); margin-top:4px;}
+
+.identity-box{
+  font-family:'Inter',sans-serif; background:var(--surface-2); border-radius:10px;
+  padding:14px 16px; margin-bottom:20px; display:flex; gap:10px; align-items:center; flex-wrap:wrap;
+}
+.identity-box input{
+  flex:1; min-width:140px; padding:8px 10px; border-radius:7px;
+  border:1px solid var(--line); background:var(--surface); color:var(--ink); font-family:inherit; font-size:0.9rem;
+}
+
+.qcard{
+  background:var(--surface); border:1px solid var(--line); border-radius:var(--radius);
+  padding:20px; margin-bottom:16px; font-family:'Inter',system-ui,sans-serif;
+}
+.qnum{font-size:0.72rem; text-transform:uppercase; letter-spacing:0.06em; color:var(--ink-dim); margin-bottom:6px;}
+.qtext{font-family:'Source Serif 4',Georgia,serif; font-size:1.05rem; margin-bottom:14px; line-height:1.5;}
+.opts{display:flex; flex-direction:column; gap:8px;}
+.opt{
+  text-align:left; border:1px solid var(--line); background:var(--surface); color:var(--ink);
+  padding:10px 14px; border-radius:8px; cursor:pointer; font-family:inherit; font-size:0.92rem;
+  transition:background .15s, border-color .15s;
+}
+.opt:hover{border-color:var(--accent);}
+.opt.correct{background:color-mix(in srgb, var(--good) 22%, var(--surface)); border-color:var(--good); color:var(--good);}
+.opt.wrong{background:color-mix(in srgb, var(--bad) 22%, var(--surface)); border-color:var(--bad); color:var(--bad);}
+.opt:disabled{cursor:default;}
+.fillrow{display:flex; align-items:center; gap:8px; flex-wrap:wrap;}
+input.fillbox{
+  width:64px; padding:7px 8px; border-radius:6px; border:1px solid var(--line);
+  background:var(--surface); color:var(--ink); font-family:'JetBrains Mono',monospace; text-align:center; font-size:0.95rem;
+}
+button.check{
+  font-family:'Inter',sans-serif; font-weight:600; font-size:0.85rem;
+  background:var(--accent); color:var(--accent-ink); border:none; padding:9px 18px; border-radius:8px; cursor:pointer; margin-top:10px;
+}
+button.check:hover{opacity:0.9;}
+button.check:disabled{opacity:0.5; cursor:default;}
+.feedback{margin-top:10px; font-size:0.88rem; display:none;}
+.feedback.show{display:block;}
+
+.resultbox{
+  background:var(--surface); border:2px solid var(--accent); border-radius:var(--radius);
+  padding:28px 24px; text-align:center; font-family:'Inter',sans-serif; display:none;
+}
+.resultbox.show{display:block;}
+.resultbox .score{font-family:'Fraunces',Georgia,serif; font-size:2.6rem; font-weight:700; color:var(--accent); margin-bottom:6px;}
+.resultbox .msg{font-size:0.95rem; color:var(--ink-dim); margin-bottom:4px;}
+</style>
+
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Fraunces:wght@500;600;700&family=Source+Serif+4:wght@400;500&family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@500;700&display=swap">
+
+<div class="wrap">
+  <h1>Test — Noțiuni de bază</h1>
+  <div class="subtitle">9 întrebări · verifică ce ai reținut din Capitolul 1</div>
+
+  <div class="progressbar">
+    <div class="pbar-track"><div class="pbar-fill" id="pbarFill"></div></div>
+    <div class="pbar-label" id="pbarLabel">0 / 9 răspunsuri date</div>
+  </div>
+
+  <div class="identity-box">
+    <span style="font-size:0.85rem;">Numele tău:</span>
+    <input type="text" id="studentName" placeholder="ex: Victor" autocomplete="off">
+  </div>
+
+  <!-- Q1 -->
+  <div class="qcard" data-qid="t1">
+    <div class="qnum">Întrebarea 1</div>
+    <div class="qtext">În notația G = (X, U), ce reprezintă U?</div>
+    <div class="opts">
+      <button class="opt" data-correct="false">Numărul de vârfuri</button>
+      <button class="opt" data-correct="true">Mulțimea muchiilor</button>
+      <button class="opt" data-correct="false">Gradul maxim al grafului</button>
+    </div>
+    <div class="feedback"></div>
+  </div>
+
+  <!-- Q2: graph for degree -->
+  <div class="qcard" data-qid="t2">
+    <div class="qnum">Întrebarea 2</div>
+    <div class="qtext">Care e gradul vârfului <b>2</b> în graful de mai jos?</div>
+    <div class="graphbox">
+      <svg viewBox="0 0 260 160" width="260" height="160">
+        <line class="edge-line" x1="40" y1="120" x2="130" y2="30"/>
+        <line class="edge-line" x1="130" y1="30" x2="220" y2="120"/>
+        <line class="edge-line" x1="40" y1="120" x2="220" y2="120"/>
+        <line class="edge-line" x1="130" y1="30" x2="130" y2="140"/>
+        <circle class="node-circle" cx="40" cy="120" r="15"/>
+        <text class="node-label" x="40" y="124" text-anchor="middle">1</text>
+        <circle class="node-circle" cx="130" cy="30" r="15"/>
+        <text class="node-label" x="130" y="34" text-anchor="middle">2</text>
+        <circle class="node-circle" cx="220" cy="120" r="15"/>
+        <text class="node-label" x="220" y="124" text-anchor="middle">3</text>
+        <circle class="node-circle" cx="130" cy="140" r="15"/>
+        <text class="node-label" x="130" y="144" text-anchor="middle">4</text>
+      </svg>
+    </div>
+    <div class="opts">
+      <button class="opt" data-correct="false">2</button>
+      <button class="opt" data-correct="true">3</button>
+      <button class="opt" data-correct="false">4</button>
+    </div>
+    <div class="feedback"></div>
+  </div>
+
+  <!-- Q3: sum of degrees -->
+  <div class="qcard" data-qid="t3">
+    <div class="qnum">Întrebarea 3</div>
+    <div class="qtext">Un graf are 5 muchii. Cât este suma gradelor tuturor vârfurilor?</div>
+    <div class="opts">
+      <button class="opt" data-correct="false">5</button>
+      <button class="opt" data-correct="false">‎½ · 5 = 2.5</button>
+      <button class="opt" data-correct="true">10</button>
+    </div>
+    <div class="feedback"></div>
+  </div>
+
+  <!-- Q4: odd degree corollary -->
+  <div class="qcard" data-qid="t4">
+    <div class="qnum">Întrebarea 4</div>
+    <div class="qtext">Poate exista un graf ale cărui vârfuri au gradele: 1, 2, 2, 3, 3?</div>
+    <div class="opts">
+      <button class="opt" data-correct="false">Da</button>
+      <button class="opt" data-correct="true">Nu, pentru că are 3 vârfuri cu grad impar (1, 3, 3) — număr impar</button>
+    </div>
+    <div class="feedback"></div>
+  </div>
+
+  <!-- Q5: bipartite edges -->
+  <div class="qcard" data-qid="t5">
+    <div class="qnum">Întrebarea 5</div>
+    <div class="qtext">Un graf bipartit complet are grupele X₁ cu 4 vârfuri și X₂ cu 7 vârfuri. Câte muchii are?</div>
+    <div class="fillrow">
+      <span>m =</span>
+      <input class="fillbox" data-ans="28" maxlength="3" id="t5input">
+    </div>
+    <button class="check" data-qid="t5" id="t5check">Verifică</button>
+    <div class="feedback" id="fb-t5"></div>
+  </div>
+
+  <!-- Q6: adjacency matrix property -->
+  <div class="qcard" data-qid="t6">
+    <div class="qnum">Întrebarea 6</div>
+    <div class="qtext">Matricea de adiacență a unui graf neorientat este întotdeauna...</div>
+    <div class="opts">
+      <button class="opt" data-correct="false">triunghiulară</button>
+      <button class="opt" data-correct="true">simetrică față de diagonala principală</button>
+      <button class="opt" data-correct="false">formată doar din 1</button>
+    </div>
+    <div class="feedback"></div>
+  </div>
+
+  <!-- Q7: bipartite recognition -->
+  <div class="qcard" data-qid="t7">
+    <div class="qnum">Întrebarea 7</div>
+    <div class="qtext">Un graf triunghi (K₃ — 3 vârfuri, toate legate între ele) este bipartit?</div>
+    <div class="opts">
+      <button class="opt" data-correct="false">Da</button>
+      <button class="opt" data-correct="true">Nu</button>
+    </div>
+    <div class="feedback"></div>
+    <p style="font-size:0.82rem; color:var(--ink-dim); margin-top:8px;">Indiciu: încearcă să-l colorezi cu 2 culori fără ca 2 vârfuri legate să aibă aceeași culoare.</p>
+  </div>
+
+  <!-- Q8: Konigsberg condition -->
+  <div class="qcard" data-qid="t8">
+    <div class="qnum">Întrebarea 8</div>
+    <div class="qtext">Ciclul eulerian (traseu circular ce folosește fiecare muchie o singură dată) există într-un graf doar dacă...</div>
+    <div class="opts">
+      <button class="opt" data-correct="false">graful e bipartit</button>
+      <button class="opt" data-correct="true">toate vârfurile au grad par</button>
+      <button class="opt" data-correct="false">numărul de muchii e par</button>
+    </div>
+    <div class="feedback"></div>
+  </div>
+
+  <!-- Q9: vertex/edge terms -->
+  <div class="qcard" data-qid="t9">
+    <div class="qnum">Întrebarea 9</div>
+    <div class="qtext">Un vârf cu grad 0 se numește:</div>
+    <div class="opts">
+      <button class="opt" data-correct="false">vârf terminal</button>
+      <button class="opt" data-correct="true">vârf izolat</button>
+      <button class="opt" data-correct="false">vârf adiacent</button>
+    </div>
+    <div class="feedback"></div>
+  </div>
+
+  <div class="resultbox" id="resultBox">
+    <div class="score" id="scoreText">0 / 9</div>
+    <div class="msg" id="scoreMsg"></div>
+  </div>
+</div>
+
+<script>
+(function(){
+  let db = null;
+  let studentId = null;
+  const results = {};
+  const total = 9;
+
+  function slugify(s){
+    return (s||'anonim').trim().toLowerCase().replace(/[^a-z0-9]+/g,'-').replace(/(^-|-$)/g,'') || 'anonim';
+  }
+
+  async function initCapabilities(){
+    try{ if(window.claude && window.claude.use){ db = await window.claude.use('db'); } }catch(e){ db = null; }
+  }
+
+  async function saveProgress(finalScore){
+    const nameEl = document.getElementById('studentName');
+    const name = nameEl.value.trim();
+    try{ localStorage.setItem('graf_student_name', name); }catch(e){}
+    studentId = slugify(name);
+    if(!db) return;
+    try{
+      await db.doc('tests/' + studentId).set({
+        name: name || '(anonim)',
+        test: 'capitol1',
+        results: results,
+        score: finalScore !== undefined ? finalScore : Object.values(results).filter(r=>r===true).length,
+        total: total,
+        updatedAt: new Date().toISOString()
+      });
+    }catch(e){}
+  }
+
+  function updateProgress(){
+    const answered = Object.keys(results).length;
+    document.getElementById('pbarFill').style.width = (answered/total*100)+'%';
+    document.getElementById('pbarLabel').textContent = answered + ' / ' + total + ' răspunsuri date';
+    if(answered === total){
+      showResult();
+    }
+  }
+
+  function showResult(){
+    const score = Object.values(results).filter(r=>r===true).length;
+    const box = document.getElementById('resultBox');
+    document.getElementById('scoreText').textContent = score + ' / ' + total;
+    let msg;
+    if(score >= 8) msg = 'Excelent! Ai stăpânit foarte bine noțiunile de bază. Putem trece la Capitolul 2.';
+    else if(score >= 6) msg = 'Bine! Mai avem câteva puncte de clarificat înainte să trecem mai departe.';
+    else msg = 'Hai să recapitulăm împreună părțile care nu au ieșit — nicio problemă, e normal la început.';
+    document.getElementById('scoreMsg').textContent = msg;
+    box.classList.add('show');
+    saveProgress(score);
+    box.scrollIntoView({behavior:'smooth', block:'center'});
+  }
+
+  function recordResult(qid, correct){
+    if(results[qid] !== undefined) return; // already answered
+    results[qid] = correct;
+    updateProgress();
+    saveProgress();
+  }
+
+  document.querySelectorAll('.qcard[data-qid] .opts').forEach(function(optsDiv){
+    const card = optsDiv.closest('.qcard');
+    const qid = card.dataset.qid;
+    const opts = optsDiv.querySelectorAll('.opt');
+    const fb = card.querySelector('.feedback');
+    opts.forEach(function(btn){
+      btn.addEventListener('click', function(){
+        if(opts[0].disabled) return;
+        const correct = btn.dataset.correct === 'true';
+        opts.forEach(o=>o.disabled = true);
+        if(correct){
+          btn.classList.add('correct');
+          fb.textContent = '✓ Corect!';
+          fb.style.color = 'var(--good)';
+        } else {
+          btn.classList.add('wrong');
+          const rightBtn = optsDiv.querySelector('.opt[data-correct="true"]');
+          if(rightBtn) rightBtn.classList.add('correct');
+          fb.textContent = '✗ Am marcat răspunsul corect cu verde.';
+          fb.style.color = 'var(--bad)';
+        }
+        fb.classList.add('show');
+        recordResult(qid, correct);
+      });
+    });
+  });
+
+  document.querySelectorAll('button.check').forEach(function(btn){
+    btn.addEventListener('click', function(){
+      const qid = btn.dataset.qid;
+      const card = btn.closest('.qcard');
+      const boxes = card.querySelectorAll('input.fillbox');
+      let allCorrect = true;
+      boxes.forEach(function(box){
+        const ans = (box.dataset.ans||'').trim();
+        const val = box.value.trim();
+        if(val !== ans) allCorrect = false;
+        box.style.borderColor = (val===ans) ? 'var(--good)' : 'var(--bad)';
+      });
+      const fb = document.getElementById('fb-'+qid);
+      if(fb){
+        fb.textContent = allCorrect ? '✓ Corect! m = |X₁|·|X₂| = 4·7 = 28' : '✗ Nu chiar. Formula: m = |X₁|·|X₂| = 4·7 = 28';
+        fb.style.color = allCorrect ? 'var(--good)' : 'var(--bad)';
+        fb.classList.add('show');
+      }
+      btn.disabled = true;
+      boxes.forEach(b=>b.disabled=true);
+      recordResult(qid, allCorrect);
+    });
+  });
+
+  try{
+    const saved = localStorage.getItem('graf_student_name');
+    if(saved) document.getElementById('studentName').value = saved;
+  }catch(e){}
+  document.getElementById('studentName').addEventListener('change', ()=>saveProgress());
+  document.getElementById('studentName').addEventListener('blur', ()=>saveProgress());
+
+  initCapabilities();
+})();
+</script>

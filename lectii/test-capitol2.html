@@ -1,0 +1,390 @@
+<title>Test: Lanțuri și cicluri</title>
+<meta name="description" content="Test de verificare pentru Capitolul 2: lanțuri, cicluri, conexitate, distanțe.">
+<style>
+:root{
+  --bg:#f6f5f1;
+  --surface:#ffffff;
+  --surface-2:#eeece4;
+  --ink:#1c2321;
+  --ink-dim:#5b6460;
+  --line:#d9d5c9;
+  --accent:#8a3b2e;
+  --accent-ink:#ffffff;
+  --node:#2c4a52;
+  --node-2:#c98a3c;
+  --good:#2f6b4f;
+  --bad:#a13a3a;
+  --radius:14px;
+  color-scheme: light;
+}
+@media (prefers-color-scheme: dark){
+  :root:not([data-theme="light"]){
+    --bg:#181a17; --surface:#222521; --surface-2:#2b2e29;
+    --ink:#eeece6; --ink-dim:#a8ada4; --line:#3a3d37;
+    --accent:#e08b6f; --accent-ink:#1c1310;
+    --node:#7fb3bd; --node-2:#e6b16a; --good:#7fc79c; --bad:#e08585;
+    color-scheme: dark;
+  }
+}
+:root[data-theme="dark"]{
+  --bg:#181a17; --surface:#222521; --surface-2:#2b2e29;
+  --ink:#eeece6; --ink-dim:#a8ada4; --line:#3a3d37;
+  --accent:#e08b6f; --accent-ink:#1c1310;
+  --node:#7fb3bd; --node-2:#e6b16a; --good:#7fc79c; --bad:#e08585;
+  color-scheme: dark;
+}
+*{box-sizing:border-box;}
+body{background:var(--bg); color:var(--ink); font-family:'Source Serif 4',Georgia,serif; padding-inline:16px; padding-block:32px;}
+.wrap{max-width:720px; margin:0 auto;}
+h1{font-family:'Fraunces',Georgia,serif; font-weight:600; font-size:clamp(1.5rem,5vw,2.1rem); margin:0 0 4px; text-wrap:balance;}
+.subtitle{font-family:'Inter',system-ui,sans-serif; color:var(--ink-dim); font-size:0.92rem; margin-bottom:22px;}
+svg{max-width:100%; height:auto;}
+.graphbox{display:flex; justify-content:center; margin:14px 0; overflow-x:auto;}
+.node-circle{fill:var(--node); stroke:var(--bg); stroke-width:3;}
+.node-label{font-family:'Inter',sans-serif; font-size:13px; font-weight:700; fill:var(--accent-ink);}
+.edge-line{stroke:var(--ink-dim); stroke-width:2;}
+
+.progressbar{position:sticky; top:env(safe-area-inset-top,0px); background:var(--bg); padding-block:10px 4px; z-index:5; margin-bottom:10px;}
+.pbar-track{height:6px; background:var(--surface-2); border-radius:999px; overflow:hidden;}
+.pbar-fill{height:100%; background:var(--accent); width:0%; transition:width .3s;}
+.pbar-label{font-family:'Inter',sans-serif; font-size:0.72rem; color:var(--ink-dim); margin-top:4px;}
+
+.identity-box{
+  font-family:'Inter',sans-serif; background:var(--surface-2); border-radius:10px;
+  padding:14px 16px; margin-bottom:20px; display:flex; gap:10px; align-items:center; flex-wrap:wrap;
+}
+.identity-box input{
+  flex:1; min-width:140px; padding:8px 10px; border-radius:7px;
+  border:1px solid var(--line); background:var(--surface); color:var(--ink); font-family:inherit; font-size:0.9rem;
+}
+
+.qcard{
+  background:var(--surface); border:1px solid var(--line); border-radius:var(--radius);
+  padding:20px; margin-bottom:16px; font-family:'Inter',system-ui,sans-serif;
+}
+.qnum{font-size:0.72rem; text-transform:uppercase; letter-spacing:0.06em; color:var(--ink-dim); margin-bottom:6px;}
+.qtext{font-family:'Source Serif 4',Georgia,serif; font-size:1.05rem; margin-bottom:14px; line-height:1.5;}
+.opts{display:flex; flex-direction:column; gap:8px;}
+.opt{
+  text-align:left; border:1px solid var(--line); background:var(--surface); color:var(--ink);
+  padding:10px 14px; border-radius:8px; cursor:pointer; font-family:inherit; font-size:0.92rem;
+  transition:background .15s, border-color .15s;
+}
+.opt:hover{border-color:var(--accent);}
+.opt.correct{background:color-mix(in srgb, var(--good) 22%, var(--surface)); border-color:var(--good); color:var(--good);}
+.opt.wrong{background:color-mix(in srgb, var(--bad) 22%, var(--surface)); border-color:var(--bad); color:var(--bad);}
+.opt:disabled{cursor:default;}
+.fillrow{display:flex; align-items:center; gap:8px; flex-wrap:wrap;}
+input.fillbox{
+  width:64px; padding:7px 8px; border-radius:6px; border:1px solid var(--line);
+  background:var(--surface); color:var(--ink); font-family:'JetBrains Mono',monospace; text-align:center; font-size:0.95rem;
+}
+button.check{
+  font-family:'Inter',sans-serif; font-weight:600; font-size:0.85rem;
+  background:var(--accent); color:var(--accent-ink); border:none; padding:9px 18px; border-radius:8px; cursor:pointer; margin-top:10px;
+}
+button.check:hover{opacity:0.9;}
+button.check:disabled{opacity:0.5; cursor:default;}
+.feedback{margin-top:10px; font-size:0.88rem; display:none;}
+.feedback.show{display:block;}
+
+.resultbox{
+  background:var(--surface); border:2px solid var(--accent); border-radius:var(--radius);
+  padding:28px 24px; text-align:center; font-family:'Inter',sans-serif; display:none;
+}
+.resultbox.show{display:block;}
+.resultbox .score{font-family:'Fraunces',Georgia,serif; font-size:2.6rem; font-weight:700; color:var(--accent); margin-bottom:6px;}
+.resultbox .msg{font-size:0.95rem; color:var(--ink-dim); margin-bottom:4px;}
+.fb-explain{color:var(--ink); margin-top:6px; line-height:1.5;}
+</style>
+
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Fraunces:wght@500;600;700&family=Source+Serif+4:wght@400;500&family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@500;700&display=swap">
+
+<div class="wrap">
+  <h1>Test — Lanțuri și cicluri</h1>
+  <div class="subtitle">10 întrebări · Capitolul 2 · la întrebările cu desen se folosește același graf</div>
+
+  <div class="progressbar">
+    <div class="pbar-track"><div class="pbar-fill" id="pbarFill"></div></div>
+    <div class="pbar-label" id="pbarLabel">0 / 10 răspunsuri date</div>
+  </div>
+
+  <div class="identity-box">
+    <span style="font-size:0.85rem;">Numele tău:</span>
+    <input type="text" id="studentName" placeholder="ex: Victor" autocomplete="off">
+  </div>
+
+  <div class="qcard" data-qid="t1" data-explain="Muchiile: (1,2), (2,3), (3,4), (4,5), (5,2). Toate sunt diferite, deci e lanț. Vârful 2 apare de 2 ori, deci nu e elementar.">
+    <div class="qnum">Întrebarea 1</div>
+    <div class="qtext">Secvența (1, 2, 3, 4, 5, 2) este:</div>
+    <div class="graphbox"><svg viewBox="0 0 330 230" width="330" height="230">
+<line class="edge-line" x1="40" y1="100" x2="120" y2="100"/>
+<line class="edge-line" x1="120" y1="100" x2="200" y2="40"/>
+<line class="edge-line" x1="200" y1="40" x2="280" y2="100"/>
+<line class="edge-line" x1="280" y1="100" x2="200" y2="160"/>
+<line class="edge-line" x1="200" y1="160" x2="120" y2="100"/>
+<line class="edge-line" x1="200" y1="160" x2="290" y2="200"/>
+<circle class="node-circle" cx="40" cy="100" r="15"/><text class="node-label" x="40" y="104" text-anchor="middle">1</text>
+<circle class="node-circle" cx="120" cy="100" r="15"/><text class="node-label" x="120" y="104" text-anchor="middle">2</text>
+<circle class="node-circle" cx="200" cy="40" r="15"/><text class="node-label" x="200" y="44" text-anchor="middle">3</text>
+<circle class="node-circle" cx="280" cy="100" r="15"/><text class="node-label" x="280" y="104" text-anchor="middle">4</text>
+<circle class="node-circle" cx="200" cy="160" r="15"/><text class="node-label" x="200" y="164" text-anchor="middle">5</text>
+<circle class="node-circle" cx="290" cy="200" r="15"/><text class="node-label" x="290" y="204" text-anchor="middle">6</text>
+</svg></div>
+    <div class="opts"><button class="opt" data-correct="false">lanț elementar</button>
+<button class="opt" data-correct="true">lanț, dar nu elementar</button>
+<button class="opt" data-correct="false">nu e lanț</button></div>
+    <div class="feedback"></div>
+  </div>
+  <div class="qcard" data-qid="t2" data-explain="Pleacă din 2 și se întoarce în 2, deci e ciclu. În afară de capete, vârfurile 3, 4, 5 apar o singură dată, deci e elementar.">
+    <div class="qnum">Întrebarea 2</div>
+    <div class="qtext">Secvența (2, 3, 4, 5, 2) este:</div>
+    <div class="graphbox"><svg viewBox="0 0 330 230" width="330" height="230">
+<line class="edge-line" x1="40" y1="100" x2="120" y2="100"/>
+<line class="edge-line" x1="120" y1="100" x2="200" y2="40"/>
+<line class="edge-line" x1="200" y1="40" x2="280" y2="100"/>
+<line class="edge-line" x1="280" y1="100" x2="200" y2="160"/>
+<line class="edge-line" x1="200" y1="160" x2="120" y2="100"/>
+<line class="edge-line" x1="200" y1="160" x2="290" y2="200"/>
+<circle class="node-circle" cx="40" cy="100" r="15"/><text class="node-label" x="40" y="104" text-anchor="middle">1</text>
+<circle class="node-circle" cx="120" cy="100" r="15"/><text class="node-label" x="120" y="104" text-anchor="middle">2</text>
+<circle class="node-circle" cx="200" cy="40" r="15"/><text class="node-label" x="200" y="44" text-anchor="middle">3</text>
+<circle class="node-circle" cx="280" cy="100" r="15"/><text class="node-label" x="280" y="104" text-anchor="middle">4</text>
+<circle class="node-circle" cx="200" cy="160" r="15"/><text class="node-label" x="200" y="164" text-anchor="middle">5</text>
+<circle class="node-circle" cx="290" cy="200" r="15"/><text class="node-label" x="290" y="204" text-anchor="middle">6</text>
+</svg></div>
+    <div class="opts"><button class="opt" data-correct="true">ciclu elementar</button>
+<button class="opt" data-correct="false">lanț elementar</button>
+<button class="opt" data-correct="false">nu e ciclu, pentru că 2 se repetă</button></div>
+    <div class="feedback"></div>
+  </div>
+  <div class="qcard" data-qid="t3" data-explain="Lungimea = numărul de muchii: (2,3), (3,4), (4,5), (5,2) = 4.">
+    <div class="qnum">Întrebarea 3</div>
+    <div class="qtext">Care e lungimea ciclului (2, 3, 4, 5, 2)?</div>
+    <div class="graphbox"><svg viewBox="0 0 330 230" width="330" height="230">
+<line class="edge-line" x1="40" y1="100" x2="120" y2="100"/>
+<line class="edge-line" x1="120" y1="100" x2="200" y2="40"/>
+<line class="edge-line" x1="200" y1="40" x2="280" y2="100"/>
+<line class="edge-line" x1="280" y1="100" x2="200" y2="160"/>
+<line class="edge-line" x1="200" y1="160" x2="120" y2="100"/>
+<line class="edge-line" x1="200" y1="160" x2="290" y2="200"/>
+<circle class="node-circle" cx="40" cy="100" r="15"/><text class="node-label" x="40" y="104" text-anchor="middle">1</text>
+<circle class="node-circle" cx="120" cy="100" r="15"/><text class="node-label" x="120" y="104" text-anchor="middle">2</text>
+<circle class="node-circle" cx="200" cy="40" r="15"/><text class="node-label" x="200" y="44" text-anchor="middle">3</text>
+<circle class="node-circle" cx="280" cy="100" r="15"/><text class="node-label" x="280" y="104" text-anchor="middle">4</text>
+<circle class="node-circle" cx="200" cy="160" r="15"/><text class="node-label" x="200" y="164" text-anchor="middle">5</text>
+<circle class="node-circle" cx="290" cy="200" r="15"/><text class="node-label" x="290" y="204" text-anchor="middle">6</text>
+</svg></div>
+    <div class="fillrow"><span>Răspuns:</span><input class="fillbox" id="in-t3" data-ans="4" maxlength="3" inputmode="numeric"></div>
+    <button class="check">Verifică</button>
+    <div class="feedback"></div>
+  </div>
+  <div class="qcard" data-qid="t4" data-explain="Cel mai scurt drum: 1→2→5→6 = 3 muchii. Drumul 1→2→3→4→5→6 are 5 muchii, dar e un ocol, nu contează.">
+    <div class="qnum">Întrebarea 4</div>
+    <div class="qtext">Cât este distanța d(1, 6)?</div>
+    <div class="graphbox"><svg viewBox="0 0 330 230" width="330" height="230">
+<line class="edge-line" x1="40" y1="100" x2="120" y2="100"/>
+<line class="edge-line" x1="120" y1="100" x2="200" y2="40"/>
+<line class="edge-line" x1="200" y1="40" x2="280" y2="100"/>
+<line class="edge-line" x1="280" y1="100" x2="200" y2="160"/>
+<line class="edge-line" x1="200" y1="160" x2="120" y2="100"/>
+<line class="edge-line" x1="200" y1="160" x2="290" y2="200"/>
+<circle class="node-circle" cx="40" cy="100" r="15"/><text class="node-label" x="40" y="104" text-anchor="middle">1</text>
+<circle class="node-circle" cx="120" cy="100" r="15"/><text class="node-label" x="120" y="104" text-anchor="middle">2</text>
+<circle class="node-circle" cx="200" cy="40" r="15"/><text class="node-label" x="200" y="44" text-anchor="middle">3</text>
+<circle class="node-circle" cx="280" cy="100" r="15"/><text class="node-label" x="280" y="104" text-anchor="middle">4</text>
+<circle class="node-circle" cx="200" cy="160" r="15"/><text class="node-label" x="200" y="164" text-anchor="middle">5</text>
+<circle class="node-circle" cx="290" cy="200" r="15"/><text class="node-label" x="290" y="204" text-anchor="middle">6</text>
+</svg></div>
+    <div class="fillrow"><span>Răspuns:</span><input class="fillbox" id="in-t4" data-ans="3" maxlength="3" inputmode="numeric"></div>
+    <button class="check">Verifică</button>
+    <div class="feedback"></div>
+  </div>
+  <div class="qcard" data-qid="t5" data-explain="d(2,1)=1, d(2,3)=1, d(2,5)=1, d(2,4)=2, d(2,6)=2. Cea mai mare = 2.">
+    <div class="qnum">Întrebarea 5</div>
+    <div class="qtext">Cât este excentricitatea e(2)?</div>
+    <div class="graphbox"><svg viewBox="0 0 330 230" width="330" height="230">
+<line class="edge-line" x1="40" y1="100" x2="120" y2="100"/>
+<line class="edge-line" x1="120" y1="100" x2="200" y2="40"/>
+<line class="edge-line" x1="200" y1="40" x2="280" y2="100"/>
+<line class="edge-line" x1="280" y1="100" x2="200" y2="160"/>
+<line class="edge-line" x1="200" y1="160" x2="120" y2="100"/>
+<line class="edge-line" x1="200" y1="160" x2="290" y2="200"/>
+<circle class="node-circle" cx="40" cy="100" r="15"/><text class="node-label" x="40" y="104" text-anchor="middle">1</text>
+<circle class="node-circle" cx="120" cy="100" r="15"/><text class="node-label" x="120" y="104" text-anchor="middle">2</text>
+<circle class="node-circle" cx="200" cy="40" r="15"/><text class="node-label" x="200" y="44" text-anchor="middle">3</text>
+<circle class="node-circle" cx="280" cy="100" r="15"/><text class="node-label" x="280" y="104" text-anchor="middle">4</text>
+<circle class="node-circle" cx="200" cy="160" r="15"/><text class="node-label" x="200" y="164" text-anchor="middle">5</text>
+<circle class="node-circle" cx="290" cy="200" r="15"/><text class="node-label" x="290" y="204" text-anchor="middle">6</text>
+</svg></div>
+    <div class="fillrow"><span>Răspuns:</span><input class="fillbox" id="in-t5" data-ans="2" maxlength="3" inputmode="numeric"></div>
+    <button class="check">Verifică</button>
+    <div class="feedback"></div>
+  </div>
+  <div class="qcard" data-qid="t6" data-explain="Excentricitățile: e(1)=3, e(2)=2, e(3)=3, e(4)=3, e(5)=2, e(6)=3. Cea mai mică e 2 (raza), o au vârfurile 2 și 5.">
+    <div class="qnum">Întrebarea 6</div>
+    <div class="qtext">Care este centrul grafului?</div>
+    <div class="graphbox"><svg viewBox="0 0 330 230" width="330" height="230">
+<line class="edge-line" x1="40" y1="100" x2="120" y2="100"/>
+<line class="edge-line" x1="120" y1="100" x2="200" y2="40"/>
+<line class="edge-line" x1="200" y1="40" x2="280" y2="100"/>
+<line class="edge-line" x1="280" y1="100" x2="200" y2="160"/>
+<line class="edge-line" x1="200" y1="160" x2="120" y2="100"/>
+<line class="edge-line" x1="200" y1="160" x2="290" y2="200"/>
+<circle class="node-circle" cx="40" cy="100" r="15"/><text class="node-label" x="40" y="104" text-anchor="middle">1</text>
+<circle class="node-circle" cx="120" cy="100" r="15"/><text class="node-label" x="120" y="104" text-anchor="middle">2</text>
+<circle class="node-circle" cx="200" cy="40" r="15"/><text class="node-label" x="200" y="44" text-anchor="middle">3</text>
+<circle class="node-circle" cx="280" cy="100" r="15"/><text class="node-label" x="280" y="104" text-anchor="middle">4</text>
+<circle class="node-circle" cx="200" cy="160" r="15"/><text class="node-label" x="200" y="164" text-anchor="middle">5</text>
+<circle class="node-circle" cx="290" cy="200" r="15"/><text class="node-label" x="290" y="204" text-anchor="middle">6</text>
+</svg></div>
+    <div class="opts"><button class="opt" data-correct="true">{2, 5}</button>
+<button class="opt" data-correct="false">{1, 6}</button>
+<button class="opt" data-correct="false">{3, 4}</button></div>
+    <div class="feedback"></div>
+  </div>
+  <div class="qcard" data-qid="t7" data-explain="Muchia (5,6) nu face parte din niciun ciclu. 6 era legat doar de 5, deci după ștergere rămâne singur: 2 componente.">
+    <div class="qnum">Întrebarea 7</div>
+    <div class="qtext">Dacă ștergi muchia (5, 6), graful:</div>
+    <div class="graphbox"><svg viewBox="0 0 330 230" width="330" height="230">
+<line class="edge-line" x1="40" y1="100" x2="120" y2="100"/>
+<line class="edge-line" x1="120" y1="100" x2="200" y2="40"/>
+<line class="edge-line" x1="200" y1="40" x2="280" y2="100"/>
+<line class="edge-line" x1="280" y1="100" x2="200" y2="160"/>
+<line class="edge-line" x1="200" y1="160" x2="120" y2="100"/>
+<line class="edge-line" x1="200" y1="160" x2="290" y2="200"/>
+<circle class="node-circle" cx="40" cy="100" r="15"/><text class="node-label" x="40" y="104" text-anchor="middle">1</text>
+<circle class="node-circle" cx="120" cy="100" r="15"/><text class="node-label" x="120" y="104" text-anchor="middle">2</text>
+<circle class="node-circle" cx="200" cy="40" r="15"/><text class="node-label" x="200" y="44" text-anchor="middle">3</text>
+<circle class="node-circle" cx="280" cy="100" r="15"/><text class="node-label" x="280" y="104" text-anchor="middle">4</text>
+<circle class="node-circle" cx="200" cy="160" r="15"/><text class="node-label" x="200" y="164" text-anchor="middle">5</text>
+<circle class="node-circle" cx="290" cy="200" r="15"/><text class="node-label" x="290" y="204" text-anchor="middle">6</text>
+</svg></div>
+    <div class="opts"><button class="opt" data-correct="false">rămâne conex</button>
+<button class="opt" data-correct="true">devine neconex: vârful 6 rămâne separat</button></div>
+    <div class="feedback"></div>
+  </div>
+  <div class="qcard" data-qid="t8" data-explain="Muchia (3,4) face parte din ciclul 2-3-4-5-2. Poți ocoli: din 3 în 4 mergi 3→2→5→4.">
+    <div class="qnum">Întrebarea 8</div>
+    <div class="qtext">Dacă ștergi muchia (3, 4), graful:</div>
+    <div class="graphbox"><svg viewBox="0 0 330 230" width="330" height="230">
+<line class="edge-line" x1="40" y1="100" x2="120" y2="100"/>
+<line class="edge-line" x1="120" y1="100" x2="200" y2="40"/>
+<line class="edge-line" x1="200" y1="40" x2="280" y2="100"/>
+<line class="edge-line" x1="280" y1="100" x2="200" y2="160"/>
+<line class="edge-line" x1="200" y1="160" x2="120" y2="100"/>
+<line class="edge-line" x1="200" y1="160" x2="290" y2="200"/>
+<circle class="node-circle" cx="40" cy="100" r="15"/><text class="node-label" x="40" y="104" text-anchor="middle">1</text>
+<circle class="node-circle" cx="120" cy="100" r="15"/><text class="node-label" x="120" y="104" text-anchor="middle">2</text>
+<circle class="node-circle" cx="200" cy="40" r="15"/><text class="node-label" x="200" y="44" text-anchor="middle">3</text>
+<circle class="node-circle" cx="280" cy="100" r="15"/><text class="node-label" x="280" y="104" text-anchor="middle">4</text>
+<circle class="node-circle" cx="200" cy="160" r="15"/><text class="node-label" x="200" y="164" text-anchor="middle">5</text>
+<circle class="node-circle" cx="290" cy="200" r="15"/><text class="node-label" x="290" y="204" text-anchor="middle">6</text>
+</svg></div>
+    <div class="opts"><button class="opt" data-correct="true">rămâne conex</button>
+<button class="opt" data-correct="false">devine neconex</button></div>
+    <div class="feedback"></div>
+  </div>
+  <div class="qcard" data-qid="t9" data-explain="Minimul pentru un graf conex: n − 1 = 8 − 1 = 7.">
+    <div class="qnum">Întrebarea 9</div>
+    <div class="qtext">Un graf conex are 8 vârfuri. Care e numărul minim de muchii?</div>
+    
+    <div class="fillrow"><span>Răspuns:</span><input class="fillbox" id="in-t9" data-ans="7" maxlength="3" inputmode="numeric"></div>
+    <button class="check">Verifică</button>
+    <div class="feedback"></div>
+  </div>
+  <div class="qcard" data-qid="t10" data-explain="Maximul e graful complet: C²₅ = 5 · 4 / 2 = 10.">
+    <div class="qnum">Întrebarea 10</div>
+    <div class="qtext">Care e numărul maxim de muchii într-un graf cu 5 vârfuri?</div>
+    
+    <div class="fillrow"><span>Răspuns:</span><input class="fillbox" id="in-t10" data-ans="10" maxlength="3" inputmode="numeric"></div>
+    <button class="check">Verifică</button>
+    <div class="feedback"></div>
+  </div>
+
+  <div class="resultbox" id="resultBox">
+    <div class="score" id="scoreText">0 / 10</div>
+    <div class="msg" id="scoreMsg"></div>
+  </div>
+</div>
+
+<script>
+(function(){
+  let db = null;
+  const results = {};
+  const total = 10;
+  function slugify(s){ return (s||'anonim').trim().toLowerCase().replace(/[^a-z0-9]+/g,'-').replace(/(^-|-$)/g,'') || 'anonim'; }
+  async function saveProgress(){
+    const name = document.getElementById('studentName').value.trim();
+    try{ localStorage.setItem('graf_student_name', name); }catch(e){}
+    if(!db) return;
+    try{
+      await db.doc('tests/' + slugify(name) + '-capitol2').set({
+        name: name || '(anonim)', test: 'capitol2', results: results,
+        score: Object.values(results).filter(r=>r===true).length, total: total,
+        updatedAt: new Date().toISOString()
+      });
+    }catch(e){}
+  }
+  function showFeedback(card, ok){
+    const fb = card.querySelector('.feedback');
+    fb.innerHTML = '';
+    const head = document.createElement('div');
+    head.textContent = ok ? '✓ Corect!' : '✗ Nu chiar.';
+    head.style.color = ok ? 'var(--good)' : 'var(--bad)';
+    head.style.fontWeight = '600';
+    const ex = document.createElement('div');
+    ex.className = 'fb-explain';
+    ex.textContent = card.dataset.explain;
+    fb.appendChild(head); fb.appendChild(ex);
+    fb.classList.add('show');
+  }
+  function record(qid, ok){
+    if(results[qid] !== undefined) return;
+    results[qid] = ok;
+    const answered = Object.keys(results).length;
+    document.getElementById('pbarFill').style.width = (answered/total*100)+'%';
+    document.getElementById('pbarLabel').textContent = answered + ' / ' + total + ' răspunsuri date';
+    saveProgress();
+    if(answered === total){
+      const score = Object.values(results).filter(r=>r===true).length;
+      document.getElementById('scoreText').textContent = score + ' / ' + total;
+      document.getElementById('scoreMsg').textContent =
+        score >= 9 ? 'Excelent! Capitolul 2 e stăpânit. Putem trece la Capitolul 3.' :
+        score >= 7 ? 'Bine! Mai clarificăm întrebările greșite și mergem mai departe.' :
+        'Hai să reluăm împreună întrebările greșite, pas cu pas.';
+      const box = document.getElementById('resultBox');
+      box.classList.add('show');
+      box.scrollIntoView({behavior:'smooth', block:'center'});
+    }
+  }
+  document.querySelectorAll('.qcard').forEach(function(card){
+    const qid = card.dataset.qid;
+    const opts = card.querySelectorAll('.opt');
+    opts.forEach(function(btn){
+      btn.addEventListener('click', function(){
+        if(results[qid] !== undefined) return;
+        const ok = btn.dataset.correct === 'true';
+        opts.forEach(o=>o.disabled=true);
+        btn.classList.add(ok ? 'correct' : 'wrong');
+        if(!ok) card.querySelector('.opt[data-correct="true"]').classList.add('correct');
+        showFeedback(card, ok); record(qid, ok);
+      });
+    });
+    const chk = card.querySelector('button.check');
+    if(chk){
+      const box = card.querySelector('input.fillbox');
+      chk.addEventListener('click', function(){
+        if(results[qid] !== undefined || box.value.trim()==='') return;
+        const ok = box.value.trim() === box.dataset.ans;
+        box.style.borderColor = ok ? 'var(--good)' : 'var(--bad)';
+        box.disabled = true; chk.disabled = true;
+        showFeedback(card, ok); record(qid, ok);
+      });
+    }
+  });
+  try{ const s = localStorage.getItem('graf_student_name'); if(s) document.getElementById('studentName').value = s; }catch(e){}
+  document.getElementById('studentName').addEventListener('change', saveProgress);
+  (async function(){ try{ if(window.claude && window.claude.use) db = await window.claude.use('db'); }catch(e){ db = null; } })();
+})();
+</script>

@@ -1,0 +1,807 @@
+<title>Lanțuri și cicluri</title>
+<meta name="description" content="Lecție interactivă pentru Capitolul 2: lanțuri, cicluri, componente conexe și caracteristici metrice ale grafului.">
+<style>
+:root{
+  --bg:#f6f5f1; --surface:#ffffff; --surface-2:#eeece4;
+  --ink:#1c2321; --ink-dim:#5b6460; --line:#d9d5c9;
+  --accent:#8a3b2e; --accent-ink:#ffffff;
+  --node:#2c4a52; --node-2:#c98a3c; --node-3:#5c7a3f;
+  --good:#2f6b4f; --bad:#a13a3a; --radius:14px;
+  color-scheme: light;
+}
+@media (prefers-color-scheme: dark){
+  :root:not([data-theme="light"]){
+    --bg:#181a17; --surface:#222521; --surface-2:#2b2e29;
+    --ink:#eeece6; --ink-dim:#a8ada4; --line:#3a3d37;
+    --accent:#e08b6f; --accent-ink:#1c1310;
+    --node:#7fb3bd; --node-2:#e6b16a; --node-3:#9fc47f; --good:#7fc79c; --bad:#e08585;
+    color-scheme: dark;
+  }
+}
+:root[data-theme="dark"]{
+  --bg:#181a17; --surface:#222521; --surface-2:#2b2e29;
+  --ink:#eeece6; --ink-dim:#a8ada4; --line:#3a3d37;
+  --accent:#e08b6f; --accent-ink:#1c1310;
+  --node:#7fb3bd; --node-2:#e6b16a; --node-3:#9fc47f; --good:#7fc79c; --bad:#e08585;
+  color-scheme: dark;
+}
+*{box-sizing:border-box;}
+body{background:var(--bg); color:var(--ink); font-family:'Source Serif 4',Georgia,serif; padding-inline:16px; padding-block:32px;}
+.wrap{max-width:760px; margin:0 auto;}
+h1,h2,h3{font-family:'Fraunces',Georgia,serif; font-weight:600; text-wrap:balance;}
+h1{font-size:clamp(1.7rem,5vw,2.4rem); margin:0 0 4px;}
+.subtitle{font-family:'Inter',system-ui,sans-serif; color:var(--ink-dim); font-size:0.95rem; margin-bottom:28px;}
+h2{font-size:1.4rem; margin:0 0 12px; display:flex; align-items:center; gap:10px;}
+h2 .num{
+  font-family:'Inter',system-ui,sans-serif; font-size:0.75rem; font-weight:700;
+  background:var(--accent); color:var(--accent-ink); border-radius:999px; width:26px; height:26px;
+  display:inline-flex; align-items:center; justify-content:center; flex:none;
+}
+p{line-height:1.65; margin:0 0 14px;}
+.section{background:var(--surface); border:1px solid var(--line); border-radius:var(--radius); padding:22px 22px 26px; margin-bottom:22px;}
+.def{background:var(--surface-2); border-left:3px solid var(--accent); border-radius:6px; padding:12px 16px; font-family:'Inter',system-ui,sans-serif; font-size:0.92rem; margin:14px 0;}
+.def b{color:var(--accent);}
+code{font-family:'JetBrains Mono', ui-monospace, monospace; background:var(--surface-2); padding:1px 6px; border-radius:5px; font-size:0.88em;}
+.tag{display:inline-block; font-family:'Inter',sans-serif; font-size:0.72rem; text-transform:uppercase; letter-spacing:0.06em; color:var(--ink-dim); background:var(--surface-2); padding:3px 10px; border-radius:999px; margin-bottom:10px;}
+.graphbox{display:flex; justify-content:center; margin:16px 0; overflow-x:auto;}
+svg{max-width:100%; height:auto;}
+.node-circle{fill:var(--node); stroke:var(--bg); stroke-width:3;}
+.node-label{font-family:'Inter',sans-serif; font-size:13px; font-weight:700; fill:var(--accent-ink);}
+.edge-line{stroke:var(--ink-dim); stroke-width:2;}
+.edge-line.hl{stroke:var(--accent); stroke-width:4;}
+.node-circle.hl{fill:var(--accent);}
+.quiz{font-family:'Inter',system-ui,sans-serif; background:var(--surface-2); border-radius:10px; padding:16px; margin-top:16px;}
+.quiz .q{font-weight:600; margin-bottom:10px; font-size:0.95rem;}
+.opts{display:flex; flex-direction:column; gap:8px;}
+.opt{text-align:left; border:1px solid var(--line); background:var(--surface); color:var(--ink); padding:9px 12px; border-radius:8px; cursor:pointer; font-family:inherit; font-size:0.9rem; transition:background .15s, border-color .15s;}
+.opt:hover{border-color:var(--accent);}
+.opt.correct{background:color-mix(in srgb, var(--good) 22%, var(--surface)); border-color:var(--good); color:var(--good);}
+.opt.wrong{background:color-mix(in srgb, var(--bad) 22%, var(--surface)); border-color:var(--bad); color:var(--bad);}
+.opt:disabled{cursor:default;}
+.feedback{margin-top:10px; font-size:0.88rem; display:none;}
+.feedback.show{display:block;}
+.fillgame{font-family:'Inter',sans-serif;}
+.fillrow{display:flex; align-items:center; gap:8px; flex-wrap:wrap; margin-bottom:10px;}
+input.fillbox{width:64px; padding:6px 8px; border-radius:6px; border:1px solid var(--line); background:var(--surface); color:var(--ink); font-family:'JetBrains Mono',monospace; text-align:center; font-size:0.95rem;}
+input.fillbox.correct{border-color:var(--good); background:color-mix(in srgb, var(--good) 18%, var(--surface));}
+input.fillbox.wrong{border-color:var(--bad); background:color-mix(in srgb, var(--bad) 18%, var(--surface));}
+button.check{font-family:'Inter',sans-serif; font-weight:600; font-size:0.85rem; background:var(--accent); color:var(--accent-ink); border:none; padding:8px 16px; border-radius:8px; cursor:pointer;}
+button.check:hover{opacity:0.9;}
+.progressbar{position:sticky; top:env(safe-area-inset-top,0px); background:var(--bg); padding-block:10px 4px; z-index:5; margin-bottom:8px;}
+.pbar-track{height:6px; background:var(--surface-2); border-radius:999px; overflow:hidden;}
+.pbar-fill{height:100%; background:var(--accent); width:0%; transition:width .3s;}
+.pbar-label{font-family:'Inter',sans-serif; font-size:0.72rem; color:var(--ink-dim); margin-top:4px;}
+.identity-box{font-family:'Inter',sans-serif; background:var(--surface-2); border-radius:10px; padding:14px 16px; margin-bottom:20px; display:flex; gap:10px; align-items:center; flex-wrap:wrap;}
+.identity-box input{flex:1; min-width:140px; padding:8px 10px; border-radius:7px; border:1px solid var(--line); background:var(--surface); color:var(--ink); font-family:inherit; font-size:0.9rem;}
+.footer-note{font-family:'Inter',sans-serif; font-size:0.8rem; color:var(--ink-dim); text-align:center; margin-top:8px;}
+table.metrictable{width:100%; border-collapse:collapse; font-family:'Inter',sans-serif; font-size:0.88rem; margin:14px 0;}
+table.metrictable td{padding:6px 4px; border-bottom:1px solid var(--line);}
+</style>
+
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Fraunces:wght@500;600;700&family=Source+Serif+4:wght@400;500&family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@500;700&display=swap">
+
+<div class="wrap">
+  <h1>Lanțuri, cicluri, componente</h1>
+  <div class="subtitle">Lecție interactivă · Capitolul 2 · continuare directă din Capitolul 1</div>
+
+  <div class="progressbar">
+    <div class="pbar-track"><div class="pbar-fill" id="pbarFill"></div></div>
+    <div class="pbar-label" id="pbarLabel">0 / 6 exerciții rezolvate corect</div>
+  </div>
+
+  <div class="identity-box">
+    <span style="font-size:0.85rem;">Numele tău:</span>
+    <input type="text" id="studentName" placeholder="ex: Victor" autocomplete="off">
+  </div>
+
+  <!-- SECTION 1: lanț -->
+  <div class="section">
+    <span class="tag">Bazele</span>
+    <h2><span class="num">1</span>Ce e un lanț</h2>
+    <p>Un <b>lanț</b> e pur și simplu un <b>traseu</b> printr-un graf: o succesiune de vârfuri legate prin muchii, mers pas cu pas. Diferența față de o plimbare oarecare: <b>nu poți folosi aceeași muchie de 2 ori</b>.</p>
+    <div class="def">
+      <b>Definiție.</b> Lanț = succesiune de vârfuri (x₁, x₂, ..., xₖ) unde fiecare pereche consecutivă (xᵢ, xᵢ₊₁) e o muchie, iar toate muchiile folosite sunt diferite între ele.<br><br>
+      <b>Lanț elementar</b> = un lanț în care <i>toate vârfurile</i> sunt diferite (nu treci de 2 ori prin același vârf).
+    </div>
+
+    <div class="graphbox">
+      <svg viewBox="0 0 340 220" width="340" height="220">
+        <line class="edge-line" x1="50" y1="110" x2="130" y2="60"/>
+        <line class="edge-line" x1="130" y1="60" x2="210" y2="110"/>
+        <line class="edge-line" x1="210" y1="110" x2="130" y2="160"/>
+        <line class="edge-line" x1="210" y1="110" x2="280" y2="60"/>
+        <line class="edge-line" x1="210" y1="110" x2="280" y2="160"/>
+        <line class="edge-line" x1="280" y1="60" x2="280" y2="160"/>
+        <circle class="node-circle" cx="50" cy="110" r="16"/><text class="node-label" x="50" y="114" text-anchor="middle">1</text>
+        <circle class="node-circle" cx="130" cy="60" r="16"/><text class="node-label" x="130" y="64" text-anchor="middle">2</text>
+        <circle class="node-circle" cx="210" cy="110" r="16"/><text class="node-label" x="210" y="114" text-anchor="middle">4</text>
+        <circle class="node-circle" cx="130" cy="160" r="16"/><text class="node-label" x="130" y="164" text-anchor="middle">3</text>
+        <circle class="node-circle" cx="280" cy="60" r="16"/><text class="node-label" x="280" y="64" text-anchor="middle">7</text>
+        <circle class="node-circle" cx="280" cy="160" r="16"/><text class="node-label" x="280" y="164" text-anchor="middle">8</text>
+      </svg>
+    </div>
+    <p style="font-family:'Inter',sans-serif; font-size:0.88rem; color:var(--ink-dim); text-align:center; margin-top:-8px;">
+      Muchii desenate: (1,2), (2,4), (4,3), (4,7), (4,8), (7,8)
+    </p>
+
+    <div class="quiz" data-qid="c1">
+      <div class="q">l = (1, 2, 4, 3) — e un lanț elementar?</div>
+      <div class="opts">
+        <button class="opt" data-correct="true">Da — toate vârfurile sunt distincte</button>
+        <button class="opt" data-correct="false">Nu — 4 nu e legat de 3</button>
+      </div>
+      <div class="feedback"></div>
+    </div>
+
+    <h3 style="font-family:'Inter',sans-serif; font-size:0.95rem; margin-top:26px; margin-bottom:6px;">Lanț vs. lanț elementar — diferența exactă</h3>
+    <p>Ambele sunt <b>lanțuri</b> (respectă regula de bază: fiecare pas e o muchie, iar nicio muchie nu se repetă). Diferența e doar despre <b>vârfuri</b>: poți trece de 2 ori prin același vârf?</p>
+
+    <div class="graphbox" style="gap:30px; flex-wrap:wrap;">
+      <div>
+        <svg viewBox="0 0 290 220" width="290" height="220">
+<line class="edge-line" x1="40" y1="110" x2="110" y2="50"/>
+<line class="edge-line hl" x1="110" y1="50" x2="180" y2="110"/>
+<line class="edge-line hl" x1="180" y1="110" x2="110" y2="170"/>
+<line class="edge-line hl" x1="180" y1="110" x2="250" y2="50"/>
+<line class="edge-line hl" x1="180" y1="110" x2="250" y2="170"/>
+<line class="edge-line hl" x1="250" y1="50" x2="250" y2="170"/>
+<circle class="node-circle" cx="40" cy="110" r="15"/><text class="node-label" x="40" y="114" text-anchor="middle">1</text>
+<circle class="node-circle hl" cx="110" cy="50" r="15"/><text class="node-label" x="110" y="54" text-anchor="middle">2</text>
+<circle class="node-circle hl" cx="180" cy="110" r="15"/><text class="node-label" x="180" y="114" text-anchor="middle">4</text>
+<circle class="node-circle hl" cx="110" cy="170" r="15"/><text class="node-label" x="110" y="174" text-anchor="middle">3</text>
+<circle class="node-circle hl" cx="250" cy="50" r="15"/><text class="node-label" x="250" y="54" text-anchor="middle">7</text>
+<circle class="node-circle hl" cx="250" cy="170" r="15"/><text class="node-label" x="250" y="174" text-anchor="middle">8</text>
+</svg>
+        <p style="text-align:center; font-family:'Inter',sans-serif; font-size:0.85rem;"><b>l = (2, 4, 7, 8, 4, 3)</b><br><span style="color:var(--bad);">Lanț, dar NU elementar</span><br>Muchii folosite: (2,4), (4,7), (7,8), (8,4), (4,3) — toate diferite.<br>Vârful 4 apare de 2 ori.</p>
+      </div>
+      <div>
+        <svg viewBox="0 0 290 220" width="290" height="220">
+<line class="edge-line hl" x1="40" y1="110" x2="110" y2="50"/>
+<line class="edge-line hl" x1="110" y1="50" x2="180" y2="110"/>
+<line class="edge-line" x1="180" y1="110" x2="110" y2="170"/>
+<line class="edge-line" x1="180" y1="110" x2="250" y2="50"/>
+<line class="edge-line hl" x1="180" y1="110" x2="250" y2="170"/>
+<line class="edge-line" x1="250" y1="50" x2="250" y2="170"/>
+<circle class="node-circle hl" cx="40" cy="110" r="15"/><text class="node-label" x="40" y="114" text-anchor="middle">1</text>
+<circle class="node-circle hl" cx="110" cy="50" r="15"/><text class="node-label" x="110" y="54" text-anchor="middle">2</text>
+<circle class="node-circle hl" cx="180" cy="110" r="15"/><text class="node-label" x="180" y="114" text-anchor="middle">4</text>
+<circle class="node-circle" cx="110" cy="170" r="15"/><text class="node-label" x="110" y="174" text-anchor="middle">3</text>
+<circle class="node-circle" cx="250" cy="50" r="15"/><text class="node-label" x="250" y="54" text-anchor="middle">7</text>
+<circle class="node-circle hl" cx="250" cy="170" r="15"/><text class="node-label" x="250" y="174" text-anchor="middle">8</text>
+</svg>
+        <p style="text-align:center; font-family:'Inter',sans-serif; font-size:0.85rem;"><b>l = (1, 2, 4, 8)</b><br><span style="color:var(--good);">Lanț elementar</span><br>Muchii folosite: (1,2), (2,4), (4,8).<br>Fiecare vârf apare o singură dată.</p>
+      </div>
+    </div>
+
+    <div class="def">
+      <b>Cum verifici dacă e lanț:</b> scrii muchiile pas cu pas. La (2, 4, 7, 8, 4, 3) ai: (2,4), (4,7), (7,8), (8,4), (4,3). Nicio pereche nu se repetă (ordinea din paranteză nu contează: (4,8) și (8,4) ar fi aceeași muchie, dar aici apare o singură dată). Deci e lanț.<br><br>
+      <b>Cum verifici dacă e elementar:</b> te uiți la vârfuri. Vârful 4 apare de 2 ori, deci nu e elementar.<br><br>
+      <b>Capcana:</b> (4, 7, 4) nu e lanț deloc, pentru că folosește muchia (4,7) și apoi (7,4), adică aceeași muchie de 2 ori.
+    </div>
+
+    <div class="def">
+      <b>Rezumat:</b><br>
+      • <b>Lanț</b> = nu repeți muchii. Poți trece de 2 ori prin același vârf dacă intri și ieși pe muchii noi.<br>
+      • <b>Lanț elementar</b> = nu repeți nici muchii, nici vârfuri.<br><br>
+      Orice lanț elementar e și lanț, dar nu orice lanț e elementar.
+    </div>
+  </div>
+
+  <!-- SECTION 2: ciclu -->
+  <div class="section">
+    <span class="tag">Bazele</span>
+    <h2><span class="num">2</span>Ce e un ciclu</h2>
+    <p>Un <b>ciclu</b> e un lanț care <b>se întoarce la punctul de plecare</b> (primul vârf = ultimul vârf).</p>
+    <div class="def">
+      <b>Definiție.</b> Ciclu = lanț l=(x₁,...,xₖ) cu x₁ = xₖ.<br><br>
+      <b>Ciclu elementar</b> = toate vârfurile diferite, cu excepția primului și ultimului (care sunt același vârf, intenționat).
+    </div>
+
+    <div class="graphbox">
+      <svg viewBox="0 0 290 220" width="290" height="220">
+        <line class="edge-line" x1="40" y1="110" x2="110" y2="50"/>
+        <line class="edge-line" x1="110" y1="50" x2="180" y2="110"/>
+        <line class="edge-line" x1="180" y1="110" x2="110" y2="170"/>
+        <line class="edge-line hl" x1="180" y1="110" x2="250" y2="50"/>
+        <line class="edge-line hl" x1="180" y1="110" x2="250" y2="170"/>
+        <line class="edge-line hl" x1="250" y1="50" x2="250" y2="170"/>
+        <circle class="node-circle" cx="40" cy="110" r="15"/><text class="node-label" x="40" y="114" text-anchor="middle">1</text>
+        <circle class="node-circle" cx="110" cy="50" r="15"/><text class="node-label" x="110" y="54" text-anchor="middle">2</text>
+        <circle class="node-circle hl" cx="180" cy="110" r="15"/><text class="node-label" x="180" y="114" text-anchor="middle">4</text>
+        <circle class="node-circle" cx="110" cy="170" r="15"/><text class="node-label" x="110" y="174" text-anchor="middle">3</text>
+        <circle class="node-circle hl" cx="250" cy="50" r="15"/><text class="node-label" x="250" y="54" text-anchor="middle">7</text>
+        <circle class="node-circle hl" cx="250" cy="170" r="15"/><text class="node-label" x="250" y="174" text-anchor="middle">8</text>
+      </svg>
+    </div>
+    <p style="font-family:'Inter',sans-serif; font-size:0.88rem; color:var(--ink-dim); text-align:center; margin-top:-8px;">
+      Același graf ca mai sus. Ciclul (4, 7, 8, 4) e elementar și are lungimea 3 (3 muchii: (4,7), (7,8), (8,4)).
+    </p>
+
+    <div class="quiz" data-qid="c2">
+      <div class="q">Care e lungimea unui lanț sau ciclu?</div>
+      <div class="opts">
+        <button class="opt" data-correct="false">Numărul de vârfuri</button>
+        <button class="opt" data-correct="true">Numărul de muchii folosite</button>
+      </div>
+      <div class="feedback"></div>
+    </div>
+  </div>
+
+  <!-- SECTION 3: conex + componente -->
+  <div class="section">
+    <span class="tag">Structură</span>
+    <h2><span class="num">3</span>Graf conex și componente</h2>
+    <p>Ai discutat deja ideea asta: un graf e <b>conex</b> dacă poți ajunge, printr-un lanț, din orice vârf în orice alt vârf. Dacă nu — graful se rupe în <b>componente conexe</b> (bucăți separate).</p>
+
+    <div class="graphbox" style="gap:30px; flex-wrap:wrap;">
+      <div>
+        <svg viewBox="0 0 140 120" width="140" height="120">
+<line class="edge-line" x1="30" y1="30" x2="110" y2="30"/>
+<line class="edge-line" x1="110" y1="30" x2="110" y2="90"/>
+<line class="edge-line" x1="110" y1="90" x2="30" y2="90"/>
+<line class="edge-line" x1="30" y1="90" x2="30" y2="30"/>
+<circle class="node-circle" cx="30" cy="30" r="13"/><text class="node-label" x="30" y="34" text-anchor="middle">a</text>
+<circle class="node-circle" cx="110" cy="30" r="13"/><text class="node-label" x="110" y="34" text-anchor="middle">b</text>
+<circle class="node-circle" cx="110" cy="90" r="13"/><text class="node-label" x="110" y="94" text-anchor="middle">d</text>
+<circle class="node-circle" cx="30" cy="90" r="13"/><text class="node-label" x="30" y="94" text-anchor="middle">e</text>
+</svg>
+        <p style="text-align:center; font-family:'Inter',sans-serif; font-size:0.82rem; color:var(--ink-dim);">conex (k=1)</p>
+      </div>
+      <div>
+        <svg viewBox="0 0 200 120" width="200" height="120">
+          <line class="edge-line" x1="20" y1="30" x2="20" y2="90"/>
+          <line class="edge-line" x1="110" y1="30" x2="150" y2="60"/>
+          <line class="edge-line" x1="110" y1="90" x2="150" y2="60"/>
+          <circle class="node-circle" cx="20" cy="30" r="13" style="fill:var(--node-2)"/><text class="node-label" x="20" y="34" text-anchor="middle">a</text>
+          <circle class="node-circle" cx="20" cy="90" r="13" style="fill:var(--node-2)"/><text class="node-label" x="20" y="94" text-anchor="middle">b</text>
+          <circle class="node-circle" cx="110" cy="30" r="13" style="fill:var(--node-3)"/><text class="node-label" x="110" y="34" text-anchor="middle">c</text>
+          <circle class="node-circle" cx="110" cy="90" r="13" style="fill:var(--node-3)"/><text class="node-label" x="110" y="94" text-anchor="middle">d</text>
+          <circle class="node-circle" cx="150" cy="60" r="13" style="fill:var(--node-3)"/><text class="node-label" x="150" y="64" text-anchor="middle">e</text>
+        </svg>
+        <p style="text-align:center; font-family:'Inter',sans-serif; font-size:0.82rem; color:var(--ink-dim);">neconex (k=2)</p>
+      </div>
+    </div>
+
+    <div class="def">
+      <b>Componentă conexă</b> = o "bucată" maximă din graf în care poți circula liber între orice 2 vârfuri. <b>k</b> = numărul de componente.
+    </div>
+
+    <div class="quiz" data-qid="c3">
+      <div class="q">Dacă o muchie face parte dintr-un ciclu și o ștergi, graful rămâne...</div>
+      <div class="opts">
+        <button class="opt" data-correct="true">tot conex (există alt drum prin ciclu)</button>
+        <button class="opt" data-correct="false">rupt în 2 componente</button>
+      </div>
+      <div class="feedback"></div>
+      <p style="font-size:0.8rem; color:var(--ink-dim); margin-top:8px;">Indiciu: dacă e o buclă, ștergerea unei singure muchii nu te blochează — poți ocoli prin restul ciclului.</p>
+    </div>
+  </div>
+
+  <!-- SECTION 4: distanță -->
+  <div class="section">
+    <span class="tag">Măsurători</span>
+    <h2><span class="num">4</span>Distanța dintre 2 vârfuri</h2>
+    <p><b>Distanța d(x,y)</b> = lungimea celui mai <b>scurt</b> lanț dintre x și y (nu orice lanț, cel mai scurt!). d(x,x) = 0 mereu.</p>
+
+    <div class="graphbox">
+      <svg viewBox="0 0 260 200" width="260" height="200" id="distGraph">
+        <line class="edge-line" x1="60" y1="150" x2="120" y2="90"/>
+        <line class="edge-line" x1="120" y1="90" x2="60" y2="30"/>
+        <line class="edge-line" x1="120" y1="90" x2="200" y2="30"/>
+        <line class="edge-line" x1="120" y1="90" x2="200" y2="150"/>
+        <circle class="node-circle" cx="60" cy="150" r="15"/><text class="node-label" x="60" y="154" text-anchor="middle">1</text>
+        <circle class="node-circle" cx="120" cy="90" r="15"/><text class="node-label" x="120" y="94" text-anchor="middle">2</text>
+        <circle class="node-circle" cx="60" cy="30" r="15"/><text class="node-label" x="60" y="34" text-anchor="middle">3</text>
+        <circle class="node-circle" cx="200" cy="30" r="15"/><text class="node-label" x="200" y="34" text-anchor="middle">4</text>
+        <circle class="node-circle" cx="200" cy="150" r="15"/><text class="node-label" x="200" y="154" text-anchor="middle">5</text>
+      </svg>
+    </div>
+    <p style="font-family:'Inter',sans-serif; font-size:0.85rem; color:var(--ink-dim); text-align:center; margin-top:-8px;">
+      Muchii: (1,2), (2,3), (2,4), (2,5) — vârful 2 e "centrul" acestei stele
+    </p>
+
+    <div class="fillgame">
+      <p style="font-size:0.9rem;">Completează distanțele (cel mai scurt drum, în număr de muchii):</p>
+      <div class="fillrow">
+        <span>d(1,3) =</span><input class="fillbox" data-ans="2" maxlength="2">
+        <span>d(3,4) =</span><input class="fillbox" data-ans="2" maxlength="2">
+        <span>d(1,5) =</span><input class="fillbox" data-ans="2" maxlength="2">
+        <span>d(2,2) =</span><input class="fillbox" data-ans="0" maxlength="2">
+      </div>
+      <button class="check" data-checkgroup="dist1" data-qid="c4">Verifică</button>
+      <div class="feedback" id="fb-dist1"></div>
+    </div>
+  </div>
+
+  <!-- SECTION 5: excentricitate, diametru, raza, centru -->
+  <div class="section">
+    <span class="tag">Măsurători</span>
+    <h2><span class="num">5</span>Excentricitate, diametru, rază, centru</h2>
+    <p>Acum construim pe distanță 4 noțiuni noi, toate legate:</p>
+    <div class="def">
+      <b>Excentricitatea e(x)</b> = cea mai mare distanță de la x la oricare alt vârf (cât de "departe" poate ajunge x, în cel mai rău caz).<br><br>
+      <b>Diametrul D(G)</b> = cea mai mare excentricitate din tot graful (distanța maximă posibilă între oricare 2 vârfuri).<br><br>
+      <b>Raza r(G)</b> = cea mai mică excentricitate din graf (cel mai "central" vârf posibil).<br><br>
+      <b>Centrul</b> = mulțimea vârfurilor cu excentricitate minimă (= raza).
+    </div>
+
+    <div class="graphbox">
+      <svg viewBox="0 0 280 220" width="280" height="220">
+        <line class="edge-line" x1="50" y1="60" x2="130" y2="30"/>
+        <line class="edge-line" x1="50" y1="60" x2="130" y2="150"/>
+        <line class="edge-line" x1="130" y1="30" x2="130" y2="150"/>
+        <line class="edge-line" x1="130" y1="150" x2="200" y2="120"/>
+        <line class="edge-line" x1="200" y1="120" x2="250" y2="180"/>
+        <circle class="node-circle" cx="130" cy="30" r="15"/><text class="node-label" x="130" y="34" text-anchor="middle">2</text>
+        <circle class="node-circle" cx="50" cy="60" r="15"/><text class="node-label" x="50" y="64" text-anchor="middle">1</text>
+        <circle class="node-circle" cx="130" cy="150" r="15"/><text class="node-label" x="130" y="154" text-anchor="middle">3</text>
+        <circle class="node-circle" cx="200" cy="120" r="15"/><text class="node-label" x="200" y="124" text-anchor="middle">5</text>
+        <circle class="node-circle" cx="250" cy="180" r="15"/><text class="node-label" x="250" y="184" text-anchor="middle">6</text>
+      </svg>
+    </div>
+
+    <table class="metrictable">
+      <tr><td><b>e(1)</b></td><td>max distanță de la 1 = 3 (până la 6)</td></tr>
+      <tr><td><b>e(2)</b></td><td>3</td></tr>
+      <tr><td><b>e(3)</b></td><td>2</td></tr>
+      <tr><td><b>e(5)</b></td><td>2</td></tr>
+      <tr><td><b>e(6)</b></td><td>3</td></tr>
+    </table>
+
+    <h3 style="font-family:'Inter',sans-serif; font-size:0.95rem; margin-top:22px; margin-bottom:10px;">Drumul exact folosit pentru fiecare e(x)</h3>
+    <p style="font-size:0.88rem;">Pentru fiecare vârf: scrii distanța (cel mai scurt drum) până la fiecare alt vârf, apoi alegi cea mai mare. Cu roșu e drumul spre vârful cel mai îndepărtat.</p>
+    <div class="graphbox" style="gap:20px; flex-wrap:wrap;">
+      <div style="max-width:280px;">
+        <svg viewBox="0 0 280 210" width="280" height="210">
+<line class="edge-line" x1="50" y1="60" x2="130" y2="30"/>
+<line class="edge-line hl" x1="50" y1="60" x2="130" y2="150"/>
+<line class="edge-line" x1="130" y1="30" x2="130" y2="150"/>
+<line class="edge-line hl" x1="130" y1="150" x2="200" y2="120"/>
+<line class="edge-line hl" x1="200" y1="120" x2="250" y2="180"/>
+<circle class="node-circle hl" cx="50" cy="60" r="15"/><text class="node-label" x="50" y="64" text-anchor="middle">1</text>
+<circle class="node-circle" cx="130" cy="30" r="15"/><text class="node-label" x="130" y="34" text-anchor="middle">2</text>
+<circle class="node-circle hl" cx="130" cy="150" r="15"/><text class="node-label" x="130" y="154" text-anchor="middle">3</text>
+<circle class="node-circle hl" cx="200" cy="120" r="15"/><text class="node-label" x="200" y="124" text-anchor="middle">5</text>
+<circle class="node-circle hl" cx="250" cy="180" r="15"/><text class="node-label" x="250" y="184" text-anchor="middle">6</text>
+</svg>
+        <p style="text-align:center; font-family:'Inter',sans-serif; font-size:0.82rem;"><b>e(1) = 3</b><br>d(1,2)=1, d(1,3)=1, d(1,5)=2, d(1,6)=3<br>cea mai mare = 3, drumul: 1→3→5→6</p>
+      </div>
+      <div style="max-width:280px;">
+        <svg viewBox="0 0 280 210" width="280" height="210">
+<line class="edge-line" x1="50" y1="60" x2="130" y2="30"/>
+<line class="edge-line" x1="50" y1="60" x2="130" y2="150"/>
+<line class="edge-line hl" x1="130" y1="30" x2="130" y2="150"/>
+<line class="edge-line hl" x1="130" y1="150" x2="200" y2="120"/>
+<line class="edge-line hl" x1="200" y1="120" x2="250" y2="180"/>
+<circle class="node-circle" cx="50" cy="60" r="15"/><text class="node-label" x="50" y="64" text-anchor="middle">1</text>
+<circle class="node-circle hl" cx="130" cy="30" r="15"/><text class="node-label" x="130" y="34" text-anchor="middle">2</text>
+<circle class="node-circle hl" cx="130" cy="150" r="15"/><text class="node-label" x="130" y="154" text-anchor="middle">3</text>
+<circle class="node-circle hl" cx="200" cy="120" r="15"/><text class="node-label" x="200" y="124" text-anchor="middle">5</text>
+<circle class="node-circle hl" cx="250" cy="180" r="15"/><text class="node-label" x="250" y="184" text-anchor="middle">6</text>
+</svg>
+        <p style="text-align:center; font-family:'Inter',sans-serif; font-size:0.82rem;"><b>e(2) = 3</b><br>d(2,1)=1, d(2,3)=1, d(2,5)=2, d(2,6)=3<br>cea mai mare = 3, drumul: 2→3→5→6</p>
+      </div>
+      <div style="max-width:280px;">
+        <svg viewBox="0 0 280 210" width="280" height="210">
+<line class="edge-line" x1="50" y1="60" x2="130" y2="30"/>
+<line class="edge-line" x1="50" y1="60" x2="130" y2="150"/>
+<line class="edge-line" x1="130" y1="30" x2="130" y2="150"/>
+<line class="edge-line hl" x1="130" y1="150" x2="200" y2="120"/>
+<line class="edge-line hl" x1="200" y1="120" x2="250" y2="180"/>
+<circle class="node-circle" cx="50" cy="60" r="15"/><text class="node-label" x="50" y="64" text-anchor="middle">1</text>
+<circle class="node-circle" cx="130" cy="30" r="15"/><text class="node-label" x="130" y="34" text-anchor="middle">2</text>
+<circle class="node-circle hl" cx="130" cy="150" r="15"/><text class="node-label" x="130" y="154" text-anchor="middle">3</text>
+<circle class="node-circle hl" cx="200" cy="120" r="15"/><text class="node-label" x="200" y="124" text-anchor="middle">5</text>
+<circle class="node-circle hl" cx="250" cy="180" r="15"/><text class="node-label" x="250" y="184" text-anchor="middle">6</text>
+</svg>
+        <p style="text-align:center; font-family:'Inter',sans-serif; font-size:0.82rem;"><b>e(3) = 2</b><br>d(3,1)=1, d(3,2)=1, d(3,5)=1, d(3,6)=2<br>cea mai mare = 2, drumul: 3→5→6</p>
+      </div>
+      <div style="max-width:280px;">
+        <svg viewBox="0 0 280 210" width="280" height="210">
+<line class="edge-line" x1="50" y1="60" x2="130" y2="30"/>
+<line class="edge-line hl" x1="50" y1="60" x2="130" y2="150"/>
+<line class="edge-line" x1="130" y1="30" x2="130" y2="150"/>
+<line class="edge-line hl" x1="130" y1="150" x2="200" y2="120"/>
+<line class="edge-line" x1="200" y1="120" x2="250" y2="180"/>
+<circle class="node-circle hl" cx="50" cy="60" r="15"/><text class="node-label" x="50" y="64" text-anchor="middle">1</text>
+<circle class="node-circle" cx="130" cy="30" r="15"/><text class="node-label" x="130" y="34" text-anchor="middle">2</text>
+<circle class="node-circle hl" cx="130" cy="150" r="15"/><text class="node-label" x="130" y="154" text-anchor="middle">3</text>
+<circle class="node-circle hl" cx="200" cy="120" r="15"/><text class="node-label" x="200" y="124" text-anchor="middle">5</text>
+<circle class="node-circle" cx="250" cy="180" r="15"/><text class="node-label" x="250" y="184" text-anchor="middle">6</text>
+</svg>
+        <p style="text-align:center; font-family:'Inter',sans-serif; font-size:0.82rem;"><b>e(5) = 2</b><br>d(5,1)=2, d(5,2)=2, d(5,3)=1, d(5,6)=1<br>cea mai mare = 2, drumul: 5→3→1</p>
+      </div>
+      <div style="max-width:280px;">
+        <svg viewBox="0 0 280 210" width="280" height="210">
+<line class="edge-line" x1="50" y1="60" x2="130" y2="30"/>
+<line class="edge-line hl" x1="50" y1="60" x2="130" y2="150"/>
+<line class="edge-line" x1="130" y1="30" x2="130" y2="150"/>
+<line class="edge-line hl" x1="130" y1="150" x2="200" y2="120"/>
+<line class="edge-line hl" x1="200" y1="120" x2="250" y2="180"/>
+<circle class="node-circle hl" cx="50" cy="60" r="15"/><text class="node-label" x="50" y="64" text-anchor="middle">1</text>
+<circle class="node-circle" cx="130" cy="30" r="15"/><text class="node-label" x="130" y="34" text-anchor="middle">2</text>
+<circle class="node-circle hl" cx="130" cy="150" r="15"/><text class="node-label" x="130" y="154" text-anchor="middle">3</text>
+<circle class="node-circle hl" cx="200" cy="120" r="15"/><text class="node-label" x="200" y="124" text-anchor="middle">5</text>
+<circle class="node-circle hl" cx="250" cy="180" r="15"/><text class="node-label" x="250" y="184" text-anchor="middle">6</text>
+</svg>
+        <p style="text-align:center; font-family:'Inter',sans-serif; font-size:0.82rem;"><b>e(6) = 3</b><br>d(6,1)=3, d(6,2)=3, d(6,3)=2, d(6,5)=1<br>cea mai mare = 3, drumul: 6→5→3→1</p>
+      </div>
+    </div>
+    <p style="font-size:0.82rem; color:var(--ink-dim);">Graful: muchii (1,2), (1,3), (2,3), (3,5), (5,6) — un triunghi 1-2-3 cu o „coadă" 3-5-6.</p>
+
+    <div class="quiz" data-qid="c5">
+      <div class="q">Din tabelul de mai sus, cât e diametrul D(G) și care sunt vârfurile centrale?</div>
+      <div class="opts">
+        <button class="opt" data-correct="true">D(G)=3, centru={3, 5} (excentricitatea minimă e 2)</button>
+        <button class="opt" data-correct="false">D(G)=2, centru={1, 2, 6}</button>
+      </div>
+      <div class="feedback"></div>
+    </div>
+
+    <div class="def" style="margin-top:16px;">
+      <b>Reține simplu:</b> diametrul = "cât de mare e graful, în cel mai lung traseu scurt posibil". Centrul = "vârful/vârfurile din mijlocul grafului", cel mai bine plasate față de restul.
+    </div>
+  </div>
+
+  <!-- SECTION 6: inegalitatea muchiilor -->
+  <div class="section">
+    <span class="tag">Teoremă</span>
+    <h2><span class="num">6</span>Câte muchii poate avea un graf</h2>
+    <p>Întrebarea e simplă: ai <b>n</b> vârfuri și vrei ca graful să aibă exact <b>k</b> bucăți (componente). Care e numărul <b>cel mai mic</b> și <b>cel mai mare</b> de muchii posibil? Teorema dă răspunsul:</p>
+    <div class="def" style="text-align:center; font-family:'JetBrains Mono',monospace; font-size:1.05rem;">
+      n − k ≤ m ≤ C²<sub>n−k+1</sub>
+    </div>
+    <p>Luăm pe rând partea stângă (minimul) și partea dreaptă (maximul), cu <b>n = 6</b> vârfuri.</p>
+    <div class="def" style="border-left-color:var(--node-2);">
+      <b>Pe înțelesul tuturor:</b> punctele sunt <b>orașe</b> (A, B, C, D, E, F), liniile sunt <b>drumuri</b>. Avem n = 6 orașe.
+    </div>
+
+    <h3 style="font-family:'Inter',sans-serif; font-size:1rem; margin:22px 0 6px;">Întrebarea 1 (minimul)</h3>
+    <p><i>„Care e cel mai mic număr de drumuri pe care trebuie să le construiesc ca să pot ajunge din orice oraș în orice alt oraș?”</i></p>
+    <div class="graphbox" style="gap:24px; flex-wrap:wrap;">
+      <div style="max-width:320px;">
+        <svg viewBox="0 0 310 200" width="310" height="200">
+<line class="edge-line" style="stroke-width:3" x1="40" y1="60" x2="130" y2="30"/>
+<line class="edge-line" style="stroke-width:3" x1="130" y1="30" x2="230" y2="55"/>
+<line class="edge-line" style="stroke-width:3" x1="230" y1="55" x2="270" y2="150"/>
+<line class="edge-line" style="stroke-width:3" x1="130" y1="30" x2="160" y2="170"/>
+<line class="edge-line" style="stroke-width:3" x1="160" y1="170" x2="60" y2="160"/>
+<circle class="node-circle" cx="40" cy="60" r="16"/><text class="node-label" x="40" y="64" text-anchor="middle">A</text>
+<circle class="node-circle" cx="130" cy="30" r="16"/><text class="node-label" x="130" y="34" text-anchor="middle">B</text>
+<circle class="node-circle" cx="230" cy="55" r="16"/><text class="node-label" x="230" y="59" text-anchor="middle">C</text>
+<circle class="node-circle" cx="270" cy="150" r="16"/><text class="node-label" x="270" y="154" text-anchor="middle">D</text>
+<circle class="node-circle" cx="160" cy="170" r="16"/><text class="node-label" x="160" y="174" text-anchor="middle">E</text>
+<circle class="node-circle" cx="60" cy="160" r="16"/><text class="node-label" x="60" y="164" text-anchor="middle">F</text>
+</svg>
+        <p style="text-align:center; font-family:'Inter',sans-serif; font-size:0.85rem;"><b>5 drumuri: ajungi peste tot</b><br>De exemplu, din F în D: F→E→B→C→D.</p>
+      </div>
+      <div style="max-width:320px;">
+        <svg viewBox="0 0 310 200" width="310" height="200">
+<line class="edge-line" style="stroke-width:3" x1="40" y1="60" x2="130" y2="30"/>
+<line class="edge-line" style="stroke-width:3" x1="130" y1="30" x2="230" y2="55"/>
+<line class="edge-line" style="stroke-width:3" x1="230" y1="55" x2="270" y2="150"/>
+<line class="edge-line" style="stroke-width:3" x1="130" y1="30" x2="160" y2="170"/>
+<circle class="node-circle" cx="40" cy="60" r="16"/><text class="node-label" x="40" y="64" text-anchor="middle">A</text>
+<circle class="node-circle" cx="130" cy="30" r="16"/><text class="node-label" x="130" y="34" text-anchor="middle">B</text>
+<circle class="node-circle" cx="230" cy="55" r="16"/><text class="node-label" x="230" y="59" text-anchor="middle">C</text>
+<circle class="node-circle" cx="270" cy="150" r="16"/><text class="node-label" x="270" y="154" text-anchor="middle">D</text>
+<circle class="node-circle" cx="160" cy="170" r="16"/><text class="node-label" x="160" y="174" text-anchor="middle">E</text>
+<circle class="node-circle" cx="60" cy="160" r="16" style="fill:var(--bad)"/><text class="node-label" x="60" y="164" text-anchor="middle">F</text>
+</svg>
+        <p style="text-align:center; font-family:'Inter',sans-serif; font-size:0.85rem;"><b>4 drumuri: nu ajung</b><br>Orașul F a rămas fără drum. Oricum ai pune 4 drumuri, un oraș rămâne tăiat.</p>
+      </div>
+    </div>
+    <div class="def">
+      <b>Răspuns:</b> n − k = 6 − 1 = <b>5 drumuri</b>. Aici k = 1, pentru că vrei o singură „bucată” în care ajungi peste tot. E calculul celui care vrea să cheltuie cât mai puțin.
+    </div>
+
+    <h3 style="font-family:'Inter',sans-serif; font-size:1rem; margin:22px 0 6px;">Întrebarea 2 (maximul)</h3>
+    <p><i>„Care e cel mai mare număr de drumuri pe care le pot construi, dacă fac cel mult un drum direct între fiecare 2 orașe?”</i></p>
+    <div class="graphbox">
+      <div style="max-width:320px;">
+        <svg viewBox="0 0 310 200" width="310" height="200">
+<line class="edge-line" style="stroke-width:3" x1="40" y1="60" x2="130" y2="30"/>
+<line class="edge-line" style="stroke-width:3" x1="40" y1="60" x2="230" y2="55"/>
+<line class="edge-line" style="stroke-width:3" x1="40" y1="60" x2="270" y2="150"/>
+<line class="edge-line" style="stroke-width:3" x1="40" y1="60" x2="160" y2="170"/>
+<line class="edge-line" style="stroke-width:3" x1="40" y1="60" x2="60" y2="160"/>
+<line class="edge-line" style="stroke-width:3" x1="130" y1="30" x2="230" y2="55"/>
+<line class="edge-line" style="stroke-width:3" x1="130" y1="30" x2="270" y2="150"/>
+<line class="edge-line" style="stroke-width:3" x1="130" y1="30" x2="160" y2="170"/>
+<line class="edge-line" style="stroke-width:3" x1="130" y1="30" x2="60" y2="160"/>
+<line class="edge-line" style="stroke-width:3" x1="230" y1="55" x2="270" y2="150"/>
+<line class="edge-line" style="stroke-width:3" x1="230" y1="55" x2="160" y2="170"/>
+<line class="edge-line" style="stroke-width:3" x1="230" y1="55" x2="60" y2="160"/>
+<line class="edge-line" style="stroke-width:3" x1="270" y1="150" x2="160" y2="170"/>
+<line class="edge-line" style="stroke-width:3" x1="270" y1="150" x2="60" y2="160"/>
+<line class="edge-line" style="stroke-width:3" x1="160" y1="170" x2="60" y2="160"/>
+<circle class="node-circle" cx="40" cy="60" r="16"/><text class="node-label" x="40" y="64" text-anchor="middle">A</text>
+<circle class="node-circle" cx="130" cy="30" r="16"/><text class="node-label" x="130" y="34" text-anchor="middle">B</text>
+<circle class="node-circle" cx="230" cy="55" r="16"/><text class="node-label" x="230" y="59" text-anchor="middle">C</text>
+<circle class="node-circle" cx="270" cy="150" r="16"/><text class="node-label" x="270" y="154" text-anchor="middle">D</text>
+<circle class="node-circle" cx="160" cy="170" r="16"/><text class="node-label" x="160" y="174" text-anchor="middle">E</text>
+<circle class="node-circle" cx="60" cy="160" r="16"/><text class="node-label" x="60" y="164" text-anchor="middle">F</text>
+</svg>
+        <p style="text-align:center; font-family:'Inter',sans-serif; font-size:0.85rem;"><b>15 drumuri</b><br>Fiecare oraș are drum direct spre fiecare alt oraș. Nu mai încape niciun drum nou.</p>
+      </div>
+    </div>
+    <div class="def">
+      <b>Răspuns:</b> C²<sub>6</sub> = 6 · 5 / 2 = <b>15 drumuri</b>. Fiecare oraș are 5 drumuri (spre ceilalți 5), deci 6 · 5 = 30. Dar fiecare drum l-ai numărat de 2 ori (o dată de la fiecare capăt), așa că împarți la 2.
+    </div>
+
+    <h3 style="font-family:'Inter',sans-serif; font-size:1rem; margin:22px 0 6px;">Întrebarea 3 (verificarea)</h3>
+    <p><i>„Cineva zice că a legat 6 orașe cu 3 drumuri și că poți ajunge peste tot. Minte?”</i></p>
+    <div class="graphbox">
+      <div style="max-width:320px;">
+        <svg viewBox="0 0 310 200" width="310" height="200">
+<line class="edge-line" style="stroke-width:3" x1="40" y1="60" x2="130" y2="30"/>
+<line class="edge-line" style="stroke-width:3" x1="230" y1="55" x2="270" y2="150"/>
+<line class="edge-line" style="stroke-width:3" x1="160" y1="170" x2="60" y2="160"/>
+<circle class="node-circle" cx="40" cy="60" r="16" style="fill:var(--node-2)"/><text class="node-label" x="40" y="64" text-anchor="middle">A</text>
+<circle class="node-circle" cx="130" cy="30" r="16" style="fill:var(--node-2)"/><text class="node-label" x="130" y="34" text-anchor="middle">B</text>
+<circle class="node-circle" cx="230" cy="55" r="16" style="fill:var(--node-3)"/><text class="node-label" x="230" y="59" text-anchor="middle">C</text>
+<circle class="node-circle" cx="270" cy="150" r="16" style="fill:var(--node-3)"/><text class="node-label" x="270" y="154" text-anchor="middle">D</text>
+<circle class="node-circle" cx="160" cy="170" r="16"/><text class="node-label" x="160" y="174" text-anchor="middle">E</text>
+<circle class="node-circle" cx="60" cy="160" r="16"/><text class="node-label" x="60" y="164" text-anchor="middle">F</text>
+</svg>
+        <p style="text-align:center; font-family:'Inter',sans-serif; font-size:0.85rem;"><b>3 drumuri: minte</b><br>Cu 3 drumuri obții cel puțin 3 bucăți separate. Aici: {A,B}, {C,D}, {E,F}. Din A nu ajungi niciodată în D.</p>
+      </div>
+    </div>
+    <div class="def">
+      <b>Verificare cu formula:</b> ar trebui 5 ≤ m ≤ 15.<br>
+      • m = 3: 3 &lt; 5 → <b>imposibil</b>, prea puține drumuri ca să ajungi peste tot.<br>
+      • m = 20: 20 &gt; 15 → <b>imposibil</b>, între 6 orașe nu încap 20 de drumuri directe diferite.<br>
+      • m = 8: 5 ≤ 8 ≤ 15 → <b>posibil</b>.
+    </div>
+
+    <p style="margin-top:22px;">Mai jos e aceeași idee cu cifre în loc de litere, plus cazul cu 2 bucăți.</p>
+
+
+    <h3 style="font-family:'Inter',sans-serif; font-size:1rem; margin:22px 0 6px;">Partea 1: minimul, pentru un graf conex (k = 1)</h3>
+    <p>Vrei ca toate cele 6 vârfuri să fie legate într-o singură bucată, folosind cât mai puține muchii. Fiecare muchie nouă poate lipi <b>cel mult un vârf nou</b> la bucata ta. Primul vârf e deja acolo, deci mai ai de lipit 5 vârfuri, adică ai nevoie de <b>5 muchii</b>.</p>
+    <div class="graphbox" style="gap:24px; flex-wrap:wrap;">
+      <div style="max-width:330px;">
+        <svg viewBox="0 0 320 100" width="320" height="100">
+<line class="edge-line" x1="30" y1="50" x2="82" y2="50"/>
+<line class="edge-line" x1="82" y1="50" x2="134" y2="50"/>
+<line class="edge-line" x1="134" y1="50" x2="186" y2="50"/>
+<line class="edge-line" x1="186" y1="50" x2="238" y2="50"/>
+<line class="edge-line" x1="238" y1="50" x2="290" y2="50"/>
+<circle class="node-circle" cx="30" cy="50" r="14"/><text class="node-label" x="30" y="54" text-anchor="middle">1</text>
+<circle class="node-circle" cx="82" cy="50" r="14"/><text class="node-label" x="82" y="54" text-anchor="middle">2</text>
+<circle class="node-circle" cx="134" cy="50" r="14"/><text class="node-label" x="134" y="54" text-anchor="middle">3</text>
+<circle class="node-circle" cx="186" cy="50" r="14"/><text class="node-label" x="186" y="54" text-anchor="middle">4</text>
+<circle class="node-circle" cx="238" cy="50" r="14"/><text class="node-label" x="238" y="54" text-anchor="middle">5</text>
+<circle class="node-circle" cx="290" cy="50" r="14"/><text class="node-label" x="290" y="54" text-anchor="middle">6</text>
+</svg>
+        <p style="text-align:center; font-family:'Inter',sans-serif; font-size:0.84rem;"><b>5 muchii: conex</b><br>1–2–3–4–5–6, totul e o singură bucată.</p>
+      </div>
+      <div style="max-width:330px;">
+        <svg viewBox="0 0 320 100" width="320" height="100">
+<line class="edge-line" x1="30" y1="50" x2="82" y2="50"/>
+<line class="edge-line" x1="82" y1="50" x2="134" y2="50"/>
+<line class="edge-line" x1="134" y1="50" x2="186" y2="50"/>
+<line class="edge-line" x1="238" y1="50" x2="290" y2="50"/>
+<circle class="node-circle" cx="30" cy="50" r="14"/><text class="node-label" x="30" y="54" text-anchor="middle">1</text>
+<circle class="node-circle" cx="82" cy="50" r="14"/><text class="node-label" x="82" y="54" text-anchor="middle">2</text>
+<circle class="node-circle" cx="134" cy="50" r="14"/><text class="node-label" x="134" y="54" text-anchor="middle">3</text>
+<circle class="node-circle" cx="186" cy="50" r="14"/><text class="node-label" x="186" y="54" text-anchor="middle">4</text>
+<circle class="node-circle" cx="238" cy="50" r="14" style="fill:var(--node-2)"/><text class="node-label" x="238" y="54" text-anchor="middle">5</text>
+<circle class="node-circle" cx="290" cy="50" r="14" style="fill:var(--node-2)"/><text class="node-label" x="290" y="54" text-anchor="middle">6</text>
+</svg>
+        <p style="text-align:center; font-family:'Inter',sans-serif; font-size:0.84rem;"><b>4 muchii: nu ajung</b><br>Oricum le-ai pune, rămâne ceva nelipit. Aici {5,6} e separat.</p>
+      </div>
+    </div>
+    <div class="graphbox">
+      <div style="max-width:330px;">
+        <svg viewBox="0 0 220 180" width="220" height="180">
+<line class="edge-line" x1="110" y1="90" x2="110" y2="25"/>
+<line class="edge-line" x1="110" y1="90" x2="172" y2="70"/>
+<line class="edge-line" x1="110" y1="90" x2="148" y2="143"/>
+<line class="edge-line" x1="110" y1="90" x2="72" y2="143"/>
+<line class="edge-line" x1="110" y1="90" x2="48" y2="70"/>
+<circle class="node-circle" cx="110" cy="90" r="14"/><text class="node-label" x="110" y="94" text-anchor="middle">1</text>
+<circle class="node-circle" cx="110" cy="25" r="14"/><text class="node-label" x="110" y="29" text-anchor="middle">2</text>
+<circle class="node-circle" cx="172" cy="70" r="14"/><text class="node-label" x="172" y="74" text-anchor="middle">3</text>
+<circle class="node-circle" cx="148" cy="143" r="14"/><text class="node-label" x="148" y="147" text-anchor="middle">4</text>
+<circle class="node-circle" cx="72" cy="143" r="14"/><text class="node-label" x="72" y="147" text-anchor="middle">5</text>
+<circle class="node-circle" cx="48" cy="70" r="14"/><text class="node-label" x="48" y="74" text-anchor="middle">6</text>
+</svg>
+        <p style="text-align:center; font-family:'Inter',sans-serif; font-size:0.84rem;"><b>Tot 5 muchii, altă formă</b><br>Steaua: 1 legat de toți ceilalți. Și aici sunt exact 5 muchii.</p>
+      </div>
+    </div>
+    <div class="def">
+      <b>Minimul pentru k = 1:</b> m ≥ n − 1 = 6 − 1 = <b>5</b>. Un graf conex cu exact n − 1 muchii nu are cicluri (e un <i>arbore</i>, capitolul 4).
+    </div>
+
+    <h3 style="font-family:'Inter',sans-serif; font-size:1rem; margin:22px 0 6px;">Partea 2: maximul, pentru un graf conex (k = 1)</h3>
+    <p>Acum pui <b>cât mai multe</b> muchii. Maximul e când fiecare vârf e legat de fiecare alt vârf (graful complet K₆). Numărul de muchii e numărul de <b>perechi</b> de vârfuri:</p>
+    <div class="def" style="text-align:center;">
+      C²<sub>p</sub> = p · (p − 1) / 2 &nbsp;&nbsp;→&nbsp;&nbsp; C²<sub>6</sub> = 6 · 5 / 2 = <b>15</b>
+    </div>
+    <p style="font-size:0.9rem;">De ce p·(p−1)/2: fiecare din cele 6 vârfuri se leagă de celelalte 5 (6·5 = 30), dar așa numeri fiecare muchie de 2 ori (o dată de la fiecare capăt), deci împarți la 2.</p>
+    <div class="graphbox">
+      <div style="max-width:330px;">
+        <svg viewBox="0 0 220 210" width="220" height="210">
+<line class="edge-line" x1="110" y1="25" x2="179" y2="65"/>
+<line class="edge-line" x1="110" y1="25" x2="179" y2="145"/>
+<line class="edge-line" x1="110" y1="25" x2="110" y2="185"/>
+<line class="edge-line" x1="110" y1="25" x2="41" y2="145"/>
+<line class="edge-line" x1="110" y1="25" x2="41" y2="65"/>
+<line class="edge-line" x1="179" y1="65" x2="179" y2="145"/>
+<line class="edge-line" x1="179" y1="65" x2="110" y2="185"/>
+<line class="edge-line" x1="179" y1="65" x2="41" y2="145"/>
+<line class="edge-line" x1="179" y1="65" x2="41" y2="65"/>
+<line class="edge-line" x1="179" y1="145" x2="110" y2="185"/>
+<line class="edge-line" x1="179" y1="145" x2="41" y2="145"/>
+<line class="edge-line" x1="179" y1="145" x2="41" y2="65"/>
+<line class="edge-line" x1="110" y1="185" x2="41" y2="145"/>
+<line class="edge-line" x1="110" y1="185" x2="41" y2="65"/>
+<line class="edge-line" x1="41" y1="145" x2="41" y2="65"/>
+<circle class="node-circle" cx="110" cy="25" r="14"/><text class="node-label" x="110" y="29" text-anchor="middle">1</text>
+<circle class="node-circle" cx="179" cy="65" r="14"/><text class="node-label" x="179" y="69" text-anchor="middle">2</text>
+<circle class="node-circle" cx="179" cy="145" r="14"/><text class="node-label" x="179" y="149" text-anchor="middle">3</text>
+<circle class="node-circle" cx="110" cy="185" r="14"/><text class="node-label" x="110" y="189" text-anchor="middle">4</text>
+<circle class="node-circle" cx="41" cy="145" r="14"/><text class="node-label" x="41" y="149" text-anchor="middle">5</text>
+<circle class="node-circle" cx="41" cy="65" r="14"/><text class="node-label" x="41" y="69" text-anchor="middle">6</text>
+</svg>
+        <p style="text-align:center; font-family:'Inter',sans-serif; font-size:0.84rem;"><b>K₆: 15 muchii</b><br>Mai mult nu se poate: toate perechile sunt deja legate.</p>
+      </div>
+    </div>
+    <div class="def">
+      <b>Pentru n = 6, k = 1:</b> 5 ≤ m ≤ 15. Orice graf conex cu 6 vârfuri are între 5 și 15 muchii.
+    </div>
+
+    <h3 style="font-family:'Inter',sans-serif; font-size:1rem; margin:22px 0 6px;">Partea 3: același lucru cu 2 bucăți (k = 2)</h3>
+    <p><b>Minim:</b> fiecare bucată are nevoie de (vârfurile ei − 1) muchii. Oricum ai împărți cele 6 vârfuri în 2 bucăți, totalul iese n − k = 6 − 2 = <b>4</b>.</p>
+    <p><b>Maxim:</b> faci o bucată cât mai mare și complet legată, iar cealaltă bucată rămâne un singur vârf. Bucata mare are n − k + 1 = 6 − 2 + 1 = <b>5</b> vârfuri, deci C²<sub>5</sub> = 5·4/2 = <b>10</b> muchii. De aici vine n − k + 1 din formulă.</p>
+    <div class="graphbox" style="gap:24px; flex-wrap:wrap;">
+      <div style="max-width:330px;">
+        <svg viewBox="0 0 320 100" width="320" height="100">
+<line class="edge-line" x1="30" y1="50" x2="82" y2="50"/>
+<line class="edge-line" x1="82" y1="50" x2="134" y2="50"/>
+<line class="edge-line" x1="186" y1="50" x2="238" y2="50"/>
+<line class="edge-line" x1="238" y1="50" x2="290" y2="50"/>
+<circle class="node-circle" cx="30" cy="50" r="14" style="fill:var(--node-2)"/><text class="node-label" x="30" y="54" text-anchor="middle">1</text>
+<circle class="node-circle" cx="82" cy="50" r="14" style="fill:var(--node-2)"/><text class="node-label" x="82" y="54" text-anchor="middle">2</text>
+<circle class="node-circle" cx="134" cy="50" r="14" style="fill:var(--node-2)"/><text class="node-label" x="134" y="54" text-anchor="middle">3</text>
+<circle class="node-circle" cx="186" cy="50" r="14" style="fill:var(--node-3)"/><text class="node-label" x="186" y="54" text-anchor="middle">4</text>
+<circle class="node-circle" cx="238" cy="50" r="14" style="fill:var(--node-3)"/><text class="node-label" x="238" y="54" text-anchor="middle">5</text>
+<circle class="node-circle" cx="290" cy="50" r="14" style="fill:var(--node-3)"/><text class="node-label" x="290" y="54" text-anchor="middle">6</text>
+</svg>
+        <p style="text-align:center; font-family:'Inter',sans-serif; font-size:0.84rem;"><b>Minim, k = 2: 4 muchii</b><br>Bucata {1,2,3} cu 2 muchii + bucata {4,5,6} cu 2 muchii.</p>
+      </div>
+      <div style="max-width:330px;">
+        <svg viewBox="0 0 260 190" width="260" height="190">
+<line class="edge-line" x1="100" y1="25" x2="171" y2="77"/>
+<line class="edge-line" x1="100" y1="25" x2="144" y2="161"/>
+<line class="edge-line" x1="100" y1="25" x2="56" y2="161"/>
+<line class="edge-line" x1="100" y1="25" x2="29" y2="77"/>
+<line class="edge-line" x1="171" y1="77" x2="144" y2="161"/>
+<line class="edge-line" x1="171" y1="77" x2="56" y2="161"/>
+<line class="edge-line" x1="171" y1="77" x2="29" y2="77"/>
+<line class="edge-line" x1="144" y1="161" x2="56" y2="161"/>
+<line class="edge-line" x1="144" y1="161" x2="29" y2="77"/>
+<line class="edge-line" x1="56" y1="161" x2="29" y2="77"/>
+<circle class="node-circle" cx="100" cy="25" r="14"/><text class="node-label" x="100" y="29" text-anchor="middle">1</text>
+<circle class="node-circle" cx="171" cy="77" r="14"/><text class="node-label" x="171" y="81" text-anchor="middle">2</text>
+<circle class="node-circle" cx="144" cy="161" r="14"/><text class="node-label" x="144" y="165" text-anchor="middle">3</text>
+<circle class="node-circle" cx="56" cy="161" r="14"/><text class="node-label" x="56" y="165" text-anchor="middle">4</text>
+<circle class="node-circle" cx="29" cy="77" r="14"/><text class="node-label" x="29" y="81" text-anchor="middle">5</text>
+<circle class="node-circle" cx="230" cy="100" r="14" style="fill:var(--node-2)"/><text class="node-label" x="230" y="104" text-anchor="middle">6</text>
+</svg>
+        <p style="text-align:center; font-family:'Inter',sans-serif; font-size:0.84rem;"><b>Maxim, k = 2: 10 muchii</b><br>K₅ pe {1,2,3,4,5} + vârful 6 singur.</p>
+      </div>
+    </div>
+
+    <table class="metrictable">
+      <tr><td><b>n = 6</b></td><td><b>minim (n − k)</b></td><td><b>maxim (C²<sub>n−k+1</sub>)</b></td></tr>
+      <tr><td>k = 1</td><td>6 − 1 = 5</td><td>C²<sub>6</sub> = 15</td></tr>
+      <tr><td>k = 2</td><td>6 − 2 = 4</td><td>C²<sub>5</sub> = 10</td></tr>
+      <tr><td>k = 3</td><td>6 − 3 = 3</td><td>C²<sub>4</sub> = 6</td></tr>
+    </table>
+
+    <div class="quiz" data-qid="c6">
+      <div class="q">Un graf conex (k=1) cu 6 vârfuri are minim câte muchii?</div>
+      <div class="opts">
+        <button class="opt" data-correct="false">6</button>
+        <button class="opt" data-correct="true">5</button>
+        <button class="opt" data-correct="false">15</button>
+      </div>
+      <div class="feedback"></div>
+      <p style="font-size:0.8rem; color:var(--ink-dim); margin-top:8px;">Indiciu: uită-te la primul desen din secțiune. 15 e maximul, nu minimul.</p>
+    </div>
+  </div>
+
+  <div class="footer-note">Progresul se salvează automat. Spune-mi când termini și trecem la Capitolul 3 — Mulțimi stabile în graf.</div>
+</div>
+
+<script>
+(function(){
+  let db = null;
+  let studentId = null;
+  const results = {};
+  const total = 6;
+
+  function slugify(s){
+    return (s||'anonim').trim().toLowerCase().replace(/[^a-z0-9]+/g,'-').replace(/(^-|-$)/g,'') || 'anonim';
+  }
+  async function initCapabilities(){
+    try{ if(window.claude && window.claude.use){ db = await window.claude.use('db'); } }catch(e){ db = null; }
+  }
+  async function saveProgress(){
+    const nameEl = document.getElementById('studentName');
+    const name = nameEl.value.trim();
+    try{ localStorage.setItem('graf_student_name', name); }catch(e){}
+    studentId = slugify(name);
+    if(!db) return;
+    try{
+      await db.doc('answers/' + studentId + '-capitol2').set({
+        name: name || '(anonim)', chapter: 'capitol2', results: results, updatedAt: new Date().toISOString()
+      });
+    }catch(e){}
+  }
+  function updateProgress(){
+    const done = Object.values(results).filter(r=>r===true).length;
+    document.getElementById('pbarFill').style.width = (done/total*100)+'%';
+    document.getElementById('pbarLabel').textContent = done + ' / ' + total + ' exerciții rezolvate corect';
+  }
+  function recordResult(qid, correct){
+    results[qid] = correct;
+    updateProgress();
+    saveProgress();
+  }
+  document.querySelectorAll('.quiz[data-qid]').forEach(function(quiz){
+    const qid = quiz.dataset.qid;
+    const opts = quiz.querySelectorAll('.opt');
+    const fb = quiz.querySelector('.feedback');
+    opts.forEach(function(btn){
+      btn.addEventListener('click', function(){
+        const correct = btn.dataset.correct === 'true';
+        opts.forEach(o=>o.disabled = true);
+        if(correct){
+          btn.classList.add('correct');
+          fb.textContent = '✓ Corect!';
+          fb.style.color = 'var(--good)';
+        } else {
+          btn.classList.add('wrong');
+          quiz.querySelector('.opt[data-correct="true"]').classList.add('correct');
+          fb.textContent = '✗ Am marcat răspunsul corect cu verde.';
+          fb.style.color = 'var(--bad)';
+        }
+        fb.classList.add('show');
+        recordResult(qid, correct);
+      });
+    });
+  });
+  document.querySelectorAll('button.check').forEach(function(btn){
+    btn.addEventListener('click', function(){
+      const group = btn.dataset.checkgroup;
+      const qid = btn.dataset.qid;
+      const container = btn.closest('.fillgame');
+      const boxes = container.querySelectorAll('input.fillbox');
+      let allCorrect = true;
+      boxes.forEach(function(box){
+        const ans = (box.dataset.ans||'').trim();
+        const val = box.value.trim();
+        box.classList.remove('correct','wrong');
+        if(val === ans){ box.classList.add('correct'); } else { box.classList.add('wrong'); allCorrect=false; }
+      });
+      const fb = document.getElementById('fb-'+group);
+      if(fb){
+        fb.textContent = allCorrect ? '✓ Perfect, toate corecte!' : '✗ Mai verifică celulele roșii.';
+        fb.style.color = allCorrect ? 'var(--good)' : 'var(--bad)';
+        fb.classList.add('show');
+      }
+      recordResult(qid, allCorrect);
+    });
+  });
+  try{
+    const saved = localStorage.getItem('graf_student_name');
+    if(saved) document.getElementById('studentName').value = saved;
+  }catch(e){}
+  document.getElementById('studentName').addEventListener('change', saveProgress);
+  document.getElementById('studentName').addEventListener('blur', saveProgress);
+  initCapabilities();
+})();
+</script>

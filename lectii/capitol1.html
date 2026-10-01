@@ -1,0 +1,696 @@
+<title>Grafuri: Noțiuni de bază</title>
+<meta name="description" content="Lecție interactivă cu exemple și exerciții pentru Capitolul 1 — noțiuni de bază din teoria grafurilor.">
+<style>
+:root{
+  --bg:#f6f5f1;
+  --surface:#ffffff;
+  --surface-2:#eeece4;
+  --ink:#1c2321;
+  --ink-dim:#5b6460;
+  --line:#d9d5c9;
+  --accent:#8a3b2e;
+  --accent-ink:#ffffff;
+  --node:#2c4a52;
+  --node-2:#c98a3c;
+  --good:#2f6b4f;
+  --bad:#a13a3a;
+  --radius:14px;
+  color-scheme: light;
+}
+@media (prefers-color-scheme: dark){
+  :root:not([data-theme="light"]){
+    --bg:#181a17;
+    --surface:#222521;
+    --surface-2:#2b2e29;
+    --ink:#eeece6;
+    --ink-dim:#a8ada4;
+    --line:#3a3d37;
+    --accent:#e08b6f;
+    --accent-ink:#1c1310;
+    --node:#7fb3bd;
+    --node-2:#e6b16a;
+    --good:#7fc79c;
+    --bad:#e08585;
+    color-scheme: dark;
+  }
+}
+:root[data-theme="dark"]{
+  --bg:#181a17;
+  --surface:#222521;
+  --surface-2:#2b2e29;
+  --ink:#eeece6;
+  --ink-dim:#a8ada4;
+  --line:#3a3d37;
+  --accent:#e08b6f;
+  --accent-ink:#1c1310;
+  --node:#7fb3bd;
+  --node-2:#e6b16a;
+  --good:#7fc79c;
+  --bad:#e08585;
+  color-scheme: dark;
+}
+
+*{box-sizing:border-box;}
+body{
+  background:var(--bg);
+  color:var(--ink);
+  font-family:'Source Serif 4', Georgia, serif;
+  padding-inline:16px;
+  padding-block:32px;
+  max-width:100%;
+}
+.wrap{max-width:760px;margin:0 auto;}
+
+h1,h2,h3{font-family:'Fraunces', Georgia, serif; font-weight:600; text-wrap:balance;}
+h1{font-size:clamp(1.7rem,5vw,2.4rem); margin:0 0 4px;}
+.subtitle{font-family:'Inter',system-ui,sans-serif; color:var(--ink-dim); font-size:0.95rem; margin-bottom:28px;}
+h2{font-size:1.4rem; margin:0 0 12px; display:flex; align-items:center; gap:10px;}
+h2 .num{
+  font-family:'Inter',system-ui,sans-serif;
+  font-size:0.75rem; font-weight:700;
+  background:var(--accent); color:var(--accent-ink);
+  border-radius:999px; width:26px; height:26px;
+  display:inline-flex; align-items:center; justify-content:center;
+  flex:none;
+}
+p{line-height:1.65; margin:0 0 14px;}
+.section{
+  background:var(--surface);
+  border:1px solid var(--line);
+  border-radius:var(--radius);
+  padding:22px 22px 26px;
+  margin-bottom:22px;
+}
+.def{
+  background:var(--surface-2);
+  border-left:3px solid var(--accent);
+  border-radius:6px;
+  padding:12px 16px;
+  font-family:'Inter',system-ui,sans-serif;
+  font-size:0.92rem;
+  margin:14px 0;
+}
+.def b{color:var(--accent);}
+code, .kbd{
+  font-family:'JetBrains Mono', ui-monospace, monospace;
+  background:var(--surface-2);
+  padding:1px 6px; border-radius:5px; font-size:0.88em;
+}
+.tag{
+  display:inline-block; font-family:'Inter',system-ui,sans-serif;
+  font-size:0.72rem; text-transform:uppercase; letter-spacing:0.06em;
+  color:var(--ink-dim); background:var(--surface-2);
+  padding:3px 10px; border-radius:999px; margin-bottom:10px;
+}
+
+/* graph svg */
+.graphbox{
+  display:flex; justify-content:center; margin:16px 0;
+  overflow-x:auto;
+}
+svg{max-width:100%; height:auto;}
+.node-circle{fill:var(--node); stroke:var(--bg); stroke-width:3;}
+.node-label{font-family:'Inter',sans-serif; font-size:13px; font-weight:700; fill:var(--accent-ink);}
+.edge-line{stroke:var(--ink-dim); stroke-width:2;}
+.edge-line.hl{stroke:var(--accent); stroke-width:3;}
+.node-circle.hl{fill:var(--accent);}
+
+/* quiz */
+.quiz{
+  font-family:'Inter',system-ui,sans-serif;
+  background:var(--surface-2);
+  border-radius:10px;
+  padding:16px;
+  margin-top:16px;
+}
+.quiz .q{font-weight:600; margin-bottom:10px; font-size:0.95rem;}
+.opts{display:flex; flex-direction:column; gap:8px;}
+.opt{
+  text-align:left;
+  border:1px solid var(--line);
+  background:var(--surface);
+  color:var(--ink);
+  padding:9px 12px;
+  border-radius:8px;
+  cursor:pointer;
+  font-family:inherit;
+  font-size:0.9rem;
+  transition:background .15s, border-color .15s;
+}
+.opt:hover{border-color:var(--accent);}
+.opt.correct{background:color-mix(in srgb, var(--good) 22%, var(--surface)); border-color:var(--good); color:var(--good);}
+.opt.wrong{background:color-mix(in srgb, var(--bad) 22%, var(--surface)); border-color:var(--bad); color:var(--bad);}
+.opt:disabled{cursor:default;}
+.feedback{margin-top:10px; font-size:0.88rem; display:none;}
+.feedback.show{display:block;}
+
+/* fill in game */
+.fillgame{font-family:'Inter',sans-serif;}
+.fillrow{display:flex; align-items:center; gap:8px; flex-wrap:wrap; margin-bottom:10px;}
+input.fillbox{
+  width:60px; padding:6px 8px; border-radius:6px;
+  border:1px solid var(--line); background:var(--surface); color:var(--ink);
+  font-family:'JetBrains Mono',monospace; text-align:center; font-size:0.95rem;
+}
+input.fillbox.correct{border-color:var(--good); background:color-mix(in srgb, var(--good) 18%, var(--surface));}
+input.fillbox.wrong{border-color:var(--bad); background:color-mix(in srgb, var(--bad) 18%, var(--surface));}
+button.check{
+  font-family:'Inter',sans-serif; font-weight:600; font-size:0.85rem;
+  background:var(--accent); color:var(--accent-ink);
+  border:none; padding:8px 16px; border-radius:8px; cursor:pointer;
+}
+button.check:hover{opacity:0.9;}
+
+/* progress */
+.progressbar{
+  position:sticky; top:env(safe-area-inset-top,0px);
+  background:var(--bg); padding-block:10px 4px; z-index:5;
+  margin-bottom:8px;
+}
+.pbar-track{height:6px; background:var(--surface-2); border-radius:999px; overflow:hidden;}
+.pbar-fill{height:100%; background:var(--accent); width:0%; transition:width .3s;}
+.pbar-label{font-family:'Inter',sans-serif; font-size:0.72rem; color:var(--ink-dim); margin-top:4px;}
+
+.identity-box{
+  font-family:'Inter',sans-serif; background:var(--surface-2);
+  border-radius:10px; padding:14px 16px; margin-bottom:20px;
+  display:flex; gap:10px; align-items:center; flex-wrap:wrap;
+}
+.identity-box input{
+  flex:1; min-width:140px; padding:8px 10px; border-radius:7px;
+  border:1px solid var(--line); background:var(--surface); color:var(--ink);
+  font-family:inherit; font-size:0.9rem;
+}
+.identity-box .savedmsg{font-size:0.78rem; color:var(--good); display:none;}
+.identity-box .savedmsg.show{display:inline;}
+
+.footer-note{
+  font-family:'Inter',sans-serif; font-size:0.8rem; color:var(--ink-dim);
+  text-align:center; margin-top:8px;
+}
+</style>
+
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Fraunces:wght@500;600;700&family=Source+Serif+4:wght@400;500&family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@500;700&display=swap">
+
+<div class="wrap">
+
+  <h1>Teoria grafurilor — noțiuni de bază</h1>
+  <div class="subtitle">Lecție interactivă · Capitolul 1 din cursul tău · fă exercițiile pe măsură ce citești</div>
+
+  <div class="progressbar">
+    <div class="pbar-track"><div class="pbar-fill" id="pbarFill"></div></div>
+    <div class="pbar-label" id="pbarLabel">0 / 5 exerciții rezolvate corect</div>
+  </div>
+
+  <div class="identity-box">
+    <span style="font-size:0.85rem;">Numele tău (ca să-ți văd progresul):</span>
+    <input type="text" id="studentName" placeholder="ex: Victor" autocomplete="off">
+    <span class="savedmsg" id="savedMsg">✓ salvat</span>
+  </div>
+
+  <!-- SECTION 1: definition -->
+  <div class="section">
+    <span class="tag">Bazele</span>
+    <h2><span class="num">1</span>Ce este un graf</h2>
+    <p>Un <b>graf</b> e format din <b>vârfuri</b> (puncte) legate prin <b>muchii</b> (linii). Gândește-te la orașe (vârfuri) legate prin drumuri (muchii).</p>
+    <div class="def">
+      <b>Definiție.</b> G = (X, U), unde X e mulțimea de vârfuri, iar U e mulțimea de muchii — perechi neordonate de vârfuri din X.
+    </div>
+
+    <div class="graphbox">
+      <svg viewBox="0 0 320 180" width="320" height="180">
+        <line class="edge-line" x1="60" y1="130" x2="160" y2="40"/>
+        <line class="edge-line" x1="160" y1="40" x2="260" y2="130"/>
+        <line class="edge-line" x1="60" y1="130" x2="260" y2="130"/>
+        <line class="edge-line" x1="160" y1="40" x2="160" y2="150"/>
+        <circle class="node-circle" cx="60" cy="130" r="17"/>
+        <text class="node-label" x="60" y="134" text-anchor="middle">1</text>
+        <circle class="node-circle" cx="160" cy="40" r="17"/>
+        <text class="node-label" x="160" y="44" text-anchor="middle">2</text>
+        <circle class="node-circle" cx="260" cy="130" r="17"/>
+        <text class="node-label" x="260" y="134" text-anchor="middle">3</text>
+        <circle class="node-circle" cx="160" cy="150" r="17"/>
+        <text class="node-label" x="160" y="154" text-anchor="middle">4</text>
+      </svg>
+    </div>
+    <p style="font-family:'Inter',sans-serif; font-size:0.88rem; color:var(--ink-dim); text-align:center; margin-top:-8px;">
+      X = {1, 2, 3, 4} &nbsp;·&nbsp; U = {(1,2), (2,3), (1,3), (2,4)}
+    </p>
+
+    <div class="quiz" data-qid="q1">
+      <div class="q">Câte muchii are graful de mai sus?</div>
+      <div class="opts">
+        <button class="opt" data-correct="false">3</button>
+        <button class="opt" data-correct="true">4</button>
+        <button class="opt" data-correct="false">5</button>
+      </div>
+      <div class="feedback"></div>
+    </div>
+  </div>
+
+  <!-- SECTION 2: adjacency / incidence / degree -->
+  <div class="section">
+    <span class="tag">Vocabular</span>
+    <h2><span class="num">2</span>Adiacență, incidență, grad</h2>
+    <p><b>Adiacente</b> = două vârfuri legate direct printr-o muchie. <b>Incident</b> = relația dintre un vârf și o muchie care îl atinge. <b>Gradul</b> unui vârf = câte muchii pleacă din el (câți vecini are).</p>
+
+    <div class="graphbox">
+      <svg viewBox="0 0 320 180" width="320" height="180" id="gradGraph">
+        <line class="edge-line" x1="60" y1="130" x2="160" y2="40"/>
+        <line class="edge-line" x1="160" y1="40" x2="260" y2="130"/>
+        <line class="edge-line" x1="60" y1="130" x2="260" y2="130"/>
+        <line class="edge-line" x1="160" y1="40" x2="160" y2="150"/>
+        <circle class="node-circle" cx="60" cy="130" r="17" data-v="1"/>
+        <text class="node-label" x="60" y="134" text-anchor="middle">1</text>
+        <circle class="node-circle" cx="160" cy="40" r="17" data-v="2"/>
+        <text class="node-label" x="160" y="44" text-anchor="middle">2</text>
+        <circle class="node-circle" cx="260" cy="130" r="17" data-v="3"/>
+        <text class="node-label" x="260" y="134" text-anchor="middle">3</text>
+        <circle class="node-circle" cx="160" cy="150" r="17" data-v="4"/>
+        <text class="node-label" x="160" y="154" text-anchor="middle">4</text>
+      </svg>
+    </div>
+
+    <div class="fillgame">
+      <p style="font-size:0.9rem;">Completează gradul fiecărui vârf din același graf (X={1,2,3,4}, U={(1,2),(2,3),(1,3),(2,4)}):</p>
+      <div class="fillrow">
+        <span>d(1) =</span><input class="fillbox" data-ans="2" maxlength="2">
+        <span>d(2) =</span><input class="fillbox" data-ans="3" maxlength="2">
+        <span>d(3) =</span><input class="fillbox" data-ans="2" maxlength="2">
+        <span>d(4) =</span><input class="fillbox" data-ans="1" maxlength="2">
+      </div>
+      <button class="check" data-checkgroup="grad1" data-qid="q2">Verifică</button>
+      <div class="feedback" id="fb-grad1"></div>
+    </div>
+
+    <div class="def" style="margin-top:18px;">
+      <b>Regulă utilă:</b> suma tuturor gradelor = 2 × (numărul de muchii). Și: numărul de vârfuri cu grad impar e mereu par.
+    </div>
+  </div>
+
+  <!-- SECTION 3: types -->
+  <div class="section">
+    <span class="tag">Clasificare</span>
+    <h2><span class="num">3</span>Tipuri de grafuri</h2>
+    <p>Cele mai des întâlnite tipuri, cu care trebuie să te obișnuiești din priviri:</p>
+    <div class="graphbox" style="gap:26px; flex-wrap:wrap;">
+      <svg viewBox="0 0 100 100" width="100" height="100">
+        <line class="edge-line" x1="20" y1="80" x2="80" y2="80"/>
+        <line class="edge-line" x1="20" y1="80" x2="50" y2="20"/>
+        <line class="edge-line" x1="80" y1="80" x2="50" y2="20"/>
+        <circle class="node-circle" cx="20" cy="80" r="10"/>
+        <circle class="node-circle" cx="80" cy="80" r="10"/>
+        <circle class="node-circle" cx="50" cy="20" r="10"/>
+        <text x="50" y="98" text-anchor="middle" font-family="Inter,sans-serif" font-size="11" fill="var(--ink-dim)">K₃ complet</text>
+      </svg>
+      <svg viewBox="0 0 100 100" width="100" height="100">
+        <circle class="node-circle" cx="20" cy="30" r="8"/>
+        <circle class="node-circle" cx="20" cy="70" r="8"/>
+        <circle class="node-circle" cx="80" cy="20" r="8"/>
+        <circle class="node-circle" cx="80" cy="50" r="8"/>
+        <circle class="node-circle" cx="80" cy="80" r="8"/>
+        <text x="50" y="98" text-anchor="middle" font-family="Inter,sans-serif" font-size="11" fill="var(--ink-dim)">O₅ vid</text>
+      </svg>
+      <svg viewBox="0 0 100 100" width="100" height="100">
+        <line class="edge-line" x1="20" y1="30" x2="80" y2="20"/>
+        <line class="edge-line" x1="20" y1="30" x2="80" y2="50"/>
+        <line class="edge-line" x1="20" y1="30" x2="80" y2="80"/>
+        <line class="edge-line" x1="20" y1="70" x2="80" y2="20"/>
+        <line class="edge-line" x1="20" y1="70" x2="80" y2="50"/>
+        <line class="edge-line" x1="20" y1="70" x2="80" y2="80"/>
+        <circle class="node-circle" cx="20" cy="30" r="8"/>
+        <circle class="node-circle" cx="20" cy="70" r="8"/>
+        <circle class="node-circle" cx="80" cy="20" r="8"/>
+        <circle class="node-circle" cx="80" cy="50" r="8"/>
+        <circle class="node-circle" cx="80" cy="80" r="8"/>
+        <text x="50" y="98" text-anchor="middle" font-family="Inter,sans-serif" font-size="11" fill="var(--ink-dim)">K₂,₃ bipartit</text>
+      </svg>
+    </div>
+    <div class="def">
+      <b>Complet (Kₙ)</b>: toate vârfurile sunt legate între ele.<br>
+      <b>Vid (Oₙ)</b>: nicio muchie.<br>
+      <b>Bipartit</b>: vârfurile se împart în 2 grupe, muchiile leagă doar între grupe.
+    </div>
+
+    <div class="quiz" data-qid="q3">
+      <div class="q">Un graf bipartit complet K₃,₃ are câte muchii?</div>
+      <div class="opts">
+        <button class="opt" data-correct="false">6</button>
+        <button class="opt" data-correct="true">9</button>
+        <button class="opt" data-correct="false">3</button>
+      </div>
+      <div class="feedback"></div>
+      <p style="font-size:0.8rem; color:var(--ink-dim); margin-top:8px;">Indiciu: m(K<sub>p,q</sub>) = |X₁|·|X₂|</p>
+    </div>
+
+    <h3 style="font-family:'Inter',sans-serif; font-size:0.95rem; margin-top:26px; margin-bottom:6px;">Ideea ta: „rombul" — oglindim K₂,₃</h3>
+    <p>Ai luat K₂,₃ (2 puncte în stânga, 3 în mijloc, toate legate) și ai mai adăugat o coloană de 2 puncte în dreapta, legată tot de aceleași 3 puncte din mijloc — ca o oglindă. Rezultă forma de romb pe care o descriai:</p>
+
+    <div class="graphbox">
+      <svg viewBox="0 0 360 200" width="360" height="200">
+        <!-- edges left(2) - middle(3) -->
+        <line class="edge-line" x1="40" y1="60"  x2="180" y2="30"/>
+        <line class="edge-line" x1="40" y1="60"  x2="180" y2="100"/>
+        <line class="edge-line" x1="40" y1="60"  x2="180" y2="170"/>
+        <line class="edge-line" x1="40" y1="140" x2="180" y2="30"/>
+        <line class="edge-line" x1="40" y1="140" x2="180" y2="100"/>
+        <line class="edge-line" x1="40" y1="140" x2="180" y2="170"/>
+        <!-- edges middle(3) - right(2) -->
+        <line class="edge-line" x1="180" y1="30"  x2="320" y2="60"/>
+        <line class="edge-line" x1="180" y1="30"  x2="320" y2="140"/>
+        <line class="edge-line" x1="180" y1="100" x2="320" y2="60"/>
+        <line class="edge-line" x1="180" y1="100" x2="320" y2="140"/>
+        <line class="edge-line" x1="180" y1="170" x2="320" y2="60"/>
+        <line class="edge-line" x1="180" y1="170" x2="320" y2="140"/>
+        <!-- left nodes -->
+        <circle class="node-circle" cx="40" cy="60" r="13" style="fill:var(--node-2)"/>
+        <circle class="node-circle" cx="40" cy="140" r="13" style="fill:var(--node-2)"/>
+        <!-- middle nodes -->
+        <circle class="node-circle" cx="180" cy="30" r="13"/>
+        <circle class="node-circle" cx="180" cy="100" r="13"/>
+        <circle class="node-circle" cx="180" cy="170" r="13"/>
+        <!-- right nodes -->
+        <circle class="node-circle" cx="320" cy="60" r="13" style="fill:var(--node-2)"/>
+        <circle class="node-circle" cx="320" cy="140" r="13" style="fill:var(--node-2)"/>
+      </svg>
+    </div>
+    <p style="font-family:'Inter',sans-serif; font-size:0.85rem; color:var(--ink-dim); text-align:center; margin-top:-10px;">
+      portocaliu = 4 vârfuri „exterioare" (stânga + dreapta) &nbsp;·&nbsp; albastru = 3 vârfuri „mijloc"
+    </p>
+
+    <div class="def">
+      <b>Răspuns: da, tot e bipartit</b> — și mai mult, e chiar <b>bipartit complet</b>, doar că mai mare.<br><br>
+      Motivul: nu contează că arată ca un romb cu 2 „aripi". Contează doar dacă poți împărți toate vârfurile în 2 grupe astfel încât muchiile să lege <i>doar</i> între grupe, niciodată în interiorul aceleiași grupe.<br><br>
+      Aici grupa 1 = <b>{stânga, dreapta}</b> (4 vârfuri portocalii — deși sunt pe părți opuse, ele nu sunt legate direct între ele, deci pot fi în aceeași grupă), iar grupa 2 = <b>{mijloc}</b> (3 vârfuri albastre). Fiecare muchie leagă un vârf portocaliu de unul albastru — niciodată portocaliu-portocaliu sau albastru-albastru.<br><br>
+      Cum fiecare din cele 4 vârfuri portocalii e legat de toate cele 3 albastre → e <b>K₄,₃</b> (4×3 = 12 muchii).
+    </div>
+
+    <div class="quiz" data-qid="q3b">
+      <div class="q">Dacă ai adăuga o muchie directă între cele 2 puncte din stânga (portocalii), graful ar mai fi bipartit?</div>
+      <div class="opts">
+        <button class="opt" data-correct="false">Da, tot bipartit</button>
+        <button class="opt" data-correct="true">Nu, pentru că ar exista o muchie în interiorul aceleiași grupe</button>
+      </div>
+      <div class="feedback"></div>
+    </div>
+
+    <h3 style="font-family:'Inter',sans-serif; font-size:0.95rem; margin-top:26px; margin-bottom:6px;">Și dacă exagerăm: 2 — 3 — 6?</h3>
+    <p>Ai întrebat ce se întâmplă dacă în stânga pui 2, în mijloc 3, iar în dreapta 6 — grupe complet inegale. Iată desenul:</p>
+
+    <div class="graphbox">
+      <svg viewBox="0 0 380 260" width="380" height="260">
+        <!-- edges left(2) - middle(3) -->
+        <line class="edge-line" x1="40" y1="100" x2="190" y2="40"/>
+        <line class="edge-line" x1="40" y1="100" x2="190" y2="130"/>
+        <line class="edge-line" x1="40" y1="100" x2="190" y2="220"/>
+        <line class="edge-line" x1="40" y1="160" x2="190" y2="40"/>
+        <line class="edge-line" x1="40" y1="160" x2="190" y2="130"/>
+        <line class="edge-line" x1="40" y1="160" x2="190" y2="220"/>
+        <!-- edges middle(3) - right(6) -->
+        <line class="edge-line" x1="190" y1="40"  x2="330" y2="20"/>
+        <line class="edge-line" x1="190" y1="40"  x2="330" y2="60"/>
+        <line class="edge-line" x1="190" y1="40"  x2="330" y2="100"/>
+        <line class="edge-line" x1="190" y1="40"  x2="330" y2="140"/>
+        <line class="edge-line" x1="190" y1="40"  x2="330" y2="180"/>
+        <line class="edge-line" x1="190" y1="40"  x2="330" y2="220"/>
+        <line class="edge-line" x1="190" y1="130" x2="330" y2="20"/>
+        <line class="edge-line" x1="190" y1="130" x2="330" y2="60"/>
+        <line class="edge-line" x1="190" y1="130" x2="330" y2="100"/>
+        <line class="edge-line" x1="190" y1="130" x2="330" y2="140"/>
+        <line class="edge-line" x1="190" y1="130" x2="330" y2="180"/>
+        <line class="edge-line" x1="190" y1="130" x2="330" y2="220"/>
+        <line class="edge-line" x1="190" y1="220" x2="330" y2="20"/>
+        <line class="edge-line" x1="190" y1="220" x2="330" y2="60"/>
+        <line class="edge-line" x1="190" y1="220" x2="330" y2="100"/>
+        <line class="edge-line" x1="190" y1="220" x2="330" y2="140"/>
+        <line class="edge-line" x1="190" y1="220" x2="330" y2="180"/>
+        <line class="edge-line" x1="190" y1="220" x2="330" y2="220"/>
+        <!-- left nodes (2) -->
+        <circle class="node-circle" cx="40" cy="100" r="12" style="fill:var(--node-2)"/>
+        <circle class="node-circle" cx="40" cy="160" r="12" style="fill:var(--node-2)"/>
+        <!-- middle nodes (3) -->
+        <circle class="node-circle" cx="190" cy="40"  r="12"/>
+        <circle class="node-circle" cx="190" cy="130" r="12"/>
+        <circle class="node-circle" cx="190" cy="220" r="12"/>
+        <!-- right nodes (6) -->
+        <circle class="node-circle" cx="330" cy="20"  r="12" style="fill:var(--node-2)"/>
+        <circle class="node-circle" cx="330" cy="60"  r="12" style="fill:var(--node-2)"/>
+        <circle class="node-circle" cx="330" cy="100" r="12" style="fill:var(--node-2)"/>
+        <circle class="node-circle" cx="330" cy="140" r="12" style="fill:var(--node-2)"/>
+        <circle class="node-circle" cx="330" cy="180" r="12" style="fill:var(--node-2)"/>
+        <circle class="node-circle" cx="330" cy="220" r="12" style="fill:var(--node-2)"/>
+      </svg>
+    </div>
+    <p style="font-family:'Inter',sans-serif; font-size:0.85rem; color:var(--ink-dim); text-align:center; margin-top:-10px;">
+      2 stânga + 6 dreapta = 8 vârfuri portocalii (o grupă) &nbsp;·&nbsp; 3 mijloc = vârfuri albastre (cealaltă grupă)
+    </p>
+
+    <div class="def">
+      <b>Tot bipartit — chiar dacă grupele sunt inegale (2, respectiv 6).</b><br><br>
+      Regula nu cere ca cele 2 grupe să aibă mărimi egale sau „simetrice". Cere doar: nicio muchie în interiorul aceleiași grupe.<br><br>
+      Aici: <b>grupa 1</b> = {2 stânga + 6 dreapta} = 8 vârfuri, <b>grupa 2</b> = {3 mijloc}. Fiindcă fiecare din cele 8 e legat de toate cele 3 din mijloc → e <b>K₈,₃</b>, cu 8 × 3 = <b>24 de muchii</b>.
+    </div>
+  </div>
+
+  <!-- SECTION 4: adjacency matrix game -->
+  <div class="section">
+    <span class="tag">Matrice</span>
+    <h2><span class="num">4</span>Matricea de adiacență</h2>
+    <p>E un tabel n×n cu 1 dacă două vârfuri sunt adiacente, 0 dacă nu. E mereu simetrică față de diagonala principală.</p>
+
+    <div class="graphbox">
+      <svg viewBox="0 0 280 140" width="280" height="140">
+        <line class="edge-line" x1="40" y1="100" x2="140" y2="30"/>
+        <line class="edge-line" x1="140" y1="30" x2="240" y2="100"/>
+        <line class="edge-line" x1="40" y1="100" x2="240" y2="100"/>
+        <circle class="node-circle" cx="40" cy="100" r="16"/>
+        <text class="node-label" x="40" y="104" text-anchor="middle">A</text>
+        <circle class="node-circle" cx="140" cy="30" r="16"/>
+        <text class="node-label" x="140" y="34" text-anchor="middle">B</text>
+        <circle class="node-circle" cx="240" cy="100" r="16"/>
+        <text class="node-label" x="240" y="104" text-anchor="middle">C</text>
+      </svg>
+    </div>
+
+    <p style="font-size:0.9rem; font-family:'Inter',sans-serif;">Completează matricea de adiacență (triunghi — restul se deduce prin simetrie):</p>
+    <div class="fillgame">
+      <table style="border-collapse:collapse; font-family:'JetBrains Mono',monospace; margin:0 auto;">
+        <tr>
+          <td></td>
+          <td style="padding:6px; text-align:center; font-weight:700;">A</td>
+          <td style="padding:6px; text-align:center; font-weight:700;">B</td>
+          <td style="padding:6px; text-align:center; font-weight:700;">C</td>
+        </tr>
+        <tr>
+          <td style="padding:6px; font-weight:700;">A</td>
+          <td style="padding:6px; text-align:center;">0</td>
+          <td style="padding:6px;"><input class="fillbox" data-ans="1" maxlength="1" style="width:36px;"></td>
+          <td style="padding:6px;"><input class="fillbox" data-ans="1" maxlength="1" style="width:36px;"></td>
+        </tr>
+        <tr>
+          <td style="padding:6px; font-weight:700;">B</td>
+          <td style="padding:6px; text-align:center; color:var(--ink-dim);">1</td>
+          <td style="padding:6px; text-align:center;">0</td>
+          <td style="padding:6px;"><input class="fillbox" data-ans="1" maxlength="1" style="width:36px;"></td>
+        </tr>
+        <tr>
+          <td style="padding:6px; font-weight:700;">C</td>
+          <td style="padding:6px; text-align:center; color:var(--ink-dim);">1</td>
+          <td style="padding:6px; text-align:center; color:var(--ink-dim);">1</td>
+          <td style="padding:6px; text-align:center;">0</td>
+        </tr>
+      </table>
+      <div style="text-align:center; margin-top:12px;">
+        <button class="check" data-checkgroup="matrix1" data-qid="q4">Verifică</button>
+      </div>
+      <div class="feedback" id="fb-matrix1" style="text-align:center;"></div>
+    </div>
+  </div>
+
+  <!-- SECTION 5: Konigsberg mini challenge -->
+  <div class="section">
+    <span class="tag">Provocare</span>
+    <h2><span class="num">5</span>Podurile din Königsberg</h2>
+    <p>Problema care a dat naștere teoriei grafurilor (Euler, 1735): poți traversa toate cele 7 poduri, fiecare o singură dată, și să te întorci de unde ai plecat?</p>
+    <div class="quiz" data-qid="q5">
+      <div class="q">Euler a demonstrat că acest lucru e posibil doar dacă fiecare vârf are grad...</div>
+      <div class="opts">
+        <button class="opt" data-correct="false">impar</button>
+        <button class="opt" data-correct="true">par</button>
+        <button class="opt" data-correct="false">exact 2</button>
+      </div>
+      <div class="feedback"></div>
+    </div>
+
+    <h3 style="font-family:'Inter',sans-serif; font-size:0.95rem; margin-top:26px; margin-bottom:6px;">Graful celor 4 zone și 7 poduri</h3>
+    <p>4 zone ale orașului (le numim A, B, C, D), legate prin 7 poduri: A–C (2 poduri), B–C (2 poduri), A–D (1 pod), B–D (1 pod), C–D (1 pod).</p>
+
+    <div class="graphbox">
+      <svg viewBox="0 0 340 280" width="340" height="280">
+        <!-- A-C double edge (two curves bulging apart) -->
+        <path class="edge-line" d="M 70 190 Q 132 129 170 50" fill="none"/>
+        <path class="edge-line" d="M 70 190 Q 108 111 170 50" fill="none"/>
+        <!-- B-C double edge -->
+        <path class="edge-line" d="M 270 190 Q 232 129 170 50" fill="none"/>
+        <path class="edge-line" d="M 270 190 Q 208 111 170 50" fill="none"/>
+        <!-- A-D single -->
+        <line class="edge-line" x1="70" y1="190" x2="170" y2="230"/>
+        <!-- B-D single -->
+        <line class="edge-line" x1="270" y1="190" x2="170" y2="230"/>
+        <!-- C-D single -->
+        <line class="edge-line" x1="170" y1="50" x2="170" y2="230"/>
+        <!-- nodes (drawn after edges so they sit on top) -->
+        <circle class="node-circle" cx="70" cy="190" r="19"/>
+        <text class="node-label" x="70" y="195" text-anchor="middle">A</text>
+        <circle class="node-circle" cx="270" cy="190" r="19"/>
+        <text class="node-label" x="270" y="195" text-anchor="middle">B</text>
+        <circle class="node-circle" cx="170" cy="50" r="19"/>
+        <text class="node-label" x="170" y="55" text-anchor="middle">C</text>
+        <circle class="node-circle" cx="170" cy="230" r="19"/>
+        <text class="node-label" x="170" y="235" text-anchor="middle">D</text>
+      </svg>
+    </div>
+
+    <table style="width:100%; border-collapse:collapse; font-family:'Inter',sans-serif; font-size:0.9rem; margin:14px 0;">
+      <tr style="border-bottom:1px solid var(--line);">
+        <td style="padding:6px 4px; font-weight:700;">Zonă</td>
+        <td style="padding:6px 4px; font-weight:700;">Poduri conectate</td>
+        <td style="padding:6px 4px; font-weight:700;">Grad</td>
+      </tr>
+      <tr style="border-bottom:1px solid var(--line);"><td style="padding:6px 4px;">A</td><td style="padding:6px 4px;">2×(A-C) + 1×(A-D)</td><td style="padding:6px 4px; color:var(--bad); font-weight:700;">3 — impar</td></tr>
+      <tr style="border-bottom:1px solid var(--line);"><td style="padding:6px 4px;">B</td><td style="padding:6px 4px;">2×(B-C) + 1×(B-D)</td><td style="padding:6px 4px; color:var(--bad); font-weight:700;">3 — impar</td></tr>
+      <tr style="border-bottom:1px solid var(--line);"><td style="padding:6px 4px;">C</td><td style="padding:6px 4px;">2×(A-C) + 2×(B-C) + 1×(C-D)</td><td style="padding:6px 4px; color:var(--bad); font-weight:700;">5 — impar</td></tr>
+      <tr><td style="padding:6px 4px;">D</td><td style="padding:6px 4px;">1×(A-D) + 1×(B-D) + 1×(C-D)</td><td style="padding:6px 4px; color:var(--bad); font-weight:700;">3 — impar</td></tr>
+    </table>
+
+    <div class="def">
+      <b>De ce e imposibil:</b> de fiecare dată când <i>treci printr-o</i> zonă (nu pleci, nu termini acolo), consumi 2 poduri — unul pe care intri, unul pe care ieși. Dacă o zonă are grad par, podurile se „perechează" perfect. Dacă are grad <b>impar</b>, rămâne mereu un pod neperechiat, deci acea zonă poate fi doar <i>punct de start sau final</i> al traseului — niciodată doar „trecută prin".<br><br>
+      Ca să faci un <b>traseu circular</b> (pleci și te întorci în același loc, folosind fiecare pod o dată) — numit <b>ciclu eulerian</b> — <i>fiecare</i> zonă trebuie să aibă grad par, fiindcă inclusiv zona de plecare e „trecută prin" când te întorci.<br><br>
+      La Königsberg toate cele 4 zone (A, B, C, D) au grad impar → <b>e imposibil</b>.
+    </div>
+
+    <div class="def" style="border-left-color:var(--node-2);">
+      <b>Atenție să nu confunzi:</b> regula „numărul de vârfuri cu grad impar e mereu par" tot se respectă aici (4 vârfuri impare, iar 4 e par) — asta nu se încalcă niciodată, în niciun graf. Dar condiția pentru ciclul eulerian e mult mai strictă: nu ajunge ca numărul de vârfuri impare să fie par, trebuie să fie <b>exact 0</b>. La Königsberg sunt 4, nu 0 — de asta e imposibil.
+    </div>
+
+    <p style="font-size:0.85rem; color:var(--ink-dim); margin-top:10px;">Vom detalia ciclul eulerian în capitolul despre lanțuri și cicluri.</p>
+  </div>
+
+  <div class="footer-note">Progresul tău se salvează automat ca să-l pot vedea și eu. Spune-mi când termini și trecem la Capitolul 2 — Lanțuri, cicluri, componente.</div>
+
+</div>
+
+<script>
+(function(){
+  let db = null;
+  let studentId = null;
+  const results = {};
+
+  function slugify(s){
+    return (s||'anonim').trim().toLowerCase().replace(/[^a-z0-9]+/g,'-').replace(/(^-|-$)/g,'') || 'anonim';
+  }
+
+  async function initCapabilities(){
+    try{
+      if(window.claude && window.claude.use){
+        db = await window.claude.use('db');
+      }
+    }catch(e){ db = null; }
+  }
+
+  async function saveProgress(){
+    const nameEl = document.getElementById('studentName');
+    const name = nameEl.value.trim();
+    try{ localStorage.setItem('graf_student_name', name); }catch(e){}
+    studentId = slugify(name);
+    if(!db) return;
+    try{
+      await db.doc('answers/' + studentId).set({
+        name: name || '(anonim)',
+        results: results,
+        updatedAt: new Date().toISOString()
+      });
+      const msg = document.getElementById('savedMsg');
+      msg.classList.add('show');
+      setTimeout(()=>msg.classList.remove('show'), 1500);
+    }catch(e){ /* silent */ }
+  }
+
+  function updateProgress(){
+    const total = 6;
+    const done = Object.values(results).filter(r=>r===true).length;
+    document.getElementById('pbarFill').style.width = (done/total*100)+'%';
+    document.getElementById('pbarLabel').textContent = done + ' / ' + total + ' exerciții rezolvate corect';
+  }
+
+  function recordResult(qid, correct){
+    results[qid] = correct;
+    updateProgress();
+    saveProgress();
+  }
+
+  // multiple choice quizzes
+  document.querySelectorAll('.quiz[data-qid]').forEach(function(quiz){
+    const qid = quiz.dataset.qid;
+    const opts = quiz.querySelectorAll('.opt');
+    const fb = quiz.querySelector('.feedback');
+    opts.forEach(function(btn){
+      btn.addEventListener('click', function(){
+        const correct = btn.dataset.correct === 'true';
+        opts.forEach(o=>o.disabled = true);
+        if(correct){
+          btn.classList.add('correct');
+          fb.textContent = '✓ Corect!';
+          fb.style.color = 'var(--good)';
+        } else {
+          btn.classList.add('wrong');
+          quiz.querySelector('.opt[data-correct="true"]').classList.add('correct');
+          fb.textContent = '✗ Nu chiar — am marcat răspunsul corect cu verde.';
+          fb.style.color = 'var(--bad)';
+        }
+        fb.classList.add('show');
+        recordResult(qid, correct);
+      });
+    });
+  });
+
+  // fill-in checks
+  document.querySelectorAll('button.check').forEach(function(btn){
+    btn.addEventListener('click', function(){
+      const group = btn.dataset.checkgroup;
+      const qid = btn.dataset.qid;
+      const container = btn.closest('.fillgame');
+      const boxes = container.querySelectorAll('input.fillbox');
+      let allCorrect = true;
+      boxes.forEach(function(box){
+        const ans = (box.dataset.ans||'').trim();
+        const val = box.value.trim();
+        box.classList.remove('correct','wrong');
+        if(val === ans){
+          box.classList.add('correct');
+        } else {
+          box.classList.add('wrong');
+          allCorrect = false;
+        }
+      });
+      const fb = document.getElementById('fb-'+group);
+      if(fb){
+        fb.textContent = allCorrect ? '✓ Perfect, toate corecte!' : '✗ Mai verifică celulele roșii.';
+        fb.style.color = allCorrect ? 'var(--good)' : 'var(--bad)';
+        fb.classList.add('show');
+      }
+      recordResult(qid, allCorrect);
+    });
+  });
+
+  // restore name
+  try{
+    const saved = localStorage.getItem('graf_student_name');
+    if(saved) document.getElementById('studentName').value = saved;
+  }catch(e){}
+  document.getElementById('studentName').addEventListener('change', saveProgress);
+  document.getElementById('studentName').addEventListener('blur', saveProgress);
+
+  initCapabilities();
+})();
+</script>

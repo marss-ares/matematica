@@ -1,0 +1,228 @@
+<title>Exercițiu: excentricitate</title>
+<meta name="description" content="Exerciții cu matrice 5×5, 6×6 și 7×7: distanțe și excentricitate prin metoda valurilor.">
+<style>
+:root{
+  --bg:#f6f5f1;
+  --surface:#ffffff;
+  --surface-2:#eeece4;
+  --ink:#1c2321;
+  --ink-dim:#5b6460;
+  --line:#d9d5c9;
+  --accent:#8a3b2e;
+  --accent-ink:#ffffff;
+  --node:#2c4a52;
+  --node-2:#c98a3c;
+  --good:#2f6b4f;
+  --bad:#a13a3a;
+  --radius:14px;
+  color-scheme: light;
+}
+@media (prefers-color-scheme: dark){
+  :root:not([data-theme="light"]){
+    --bg:#181a17; --surface:#222521; --surface-2:#2b2e29;
+    --ink:#eeece6; --ink-dim:#a8ada4; --line:#3a3d37;
+    --accent:#e08b6f; --accent-ink:#1c1310;
+    --node:#7fb3bd; --node-2:#e6b16a; --good:#7fc79c; --bad:#e08585;
+    color-scheme: dark;
+  }
+}
+:root[data-theme="dark"]{
+  --bg:#181a17; --surface:#222521; --surface-2:#2b2e29;
+  --ink:#eeece6; --ink-dim:#a8ada4; --line:#3a3d37;
+  --accent:#e08b6f; --accent-ink:#1c1310;
+  --node:#7fb3bd; --node-2:#e6b16a; --good:#7fc79c; --bad:#e08585;
+  color-scheme: dark;
+}
+*{box-sizing:border-box;}
+body{background:var(--bg); color:var(--ink); font-family:'Source Serif 4',Georgia,serif; padding-inline:16px; padding-block:32px;}
+.wrap{max-width:720px; margin:0 auto;}
+h1{font-family:'Fraunces',Georgia,serif; font-weight:600; font-size:clamp(1.5rem,5vw,2.1rem); margin:0 0 4px; text-wrap:balance;}
+.subtitle{font-family:'Inter',system-ui,sans-serif; color:var(--ink-dim); font-size:0.92rem; margin-bottom:22px;}
+svg{max-width:100%; height:auto;}
+.graphbox{display:flex; justify-content:center; margin:14px 0; overflow-x:auto;}
+.node-circle{fill:var(--node); stroke:var(--bg); stroke-width:3;}
+.node-label{font-family:'Inter',sans-serif; font-size:13px; font-weight:700; fill:var(--accent-ink);}
+.edge-line{stroke:var(--ink-dim); stroke-width:2;}
+
+.progressbar{position:sticky; top:env(safe-area-inset-top,0px); background:var(--bg); padding-block:10px 4px; z-index:5; margin-bottom:10px;}
+.pbar-track{height:6px; background:var(--surface-2); border-radius:999px; overflow:hidden;}
+.pbar-fill{height:100%; background:var(--accent); width:0%; transition:width .3s;}
+.pbar-label{font-family:'Inter',sans-serif; font-size:0.72rem; color:var(--ink-dim); margin-top:4px;}
+
+.identity-box{
+  font-family:'Inter',sans-serif; background:var(--surface-2); border-radius:10px;
+  padding:14px 16px; margin-bottom:20px; display:flex; gap:10px; align-items:center; flex-wrap:wrap;
+}
+.identity-box input{
+  flex:1; min-width:140px; padding:8px 10px; border-radius:7px;
+  border:1px solid var(--line); background:var(--surface); color:var(--ink); font-family:inherit; font-size:0.9rem;
+}
+
+.qcard{
+  background:var(--surface); border:1px solid var(--line); border-radius:var(--radius);
+  padding:20px; margin-bottom:16px; font-family:'Inter',system-ui,sans-serif;
+}
+.qnum{font-size:0.72rem; text-transform:uppercase; letter-spacing:0.06em; color:var(--ink-dim); margin-bottom:6px;}
+.qtext{font-family:'Source Serif 4',Georgia,serif; font-size:1.05rem; margin-bottom:14px; line-height:1.5;}
+.opts{display:flex; flex-direction:column; gap:8px;}
+.opt{
+  text-align:left; border:1px solid var(--line); background:var(--surface); color:var(--ink);
+  padding:10px 14px; border-radius:8px; cursor:pointer; font-family:inherit; font-size:0.92rem;
+  transition:background .15s, border-color .15s;
+}
+.opt:hover{border-color:var(--accent);}
+.opt.correct{background:color-mix(in srgb, var(--good) 22%, var(--surface)); border-color:var(--good); color:var(--good);}
+.opt.wrong{background:color-mix(in srgb, var(--bad) 22%, var(--surface)); border-color:var(--bad); color:var(--bad);}
+.opt:disabled{cursor:default;}
+.fillrow{display:flex; align-items:center; gap:8px; flex-wrap:wrap;}
+input.fillbox{
+  width:64px; padding:7px 8px; border-radius:6px; border:1px solid var(--line);
+  background:var(--surface); color:var(--ink); font-family:'JetBrains Mono',monospace; text-align:center; font-size:0.95rem;
+}
+button.check{
+  font-family:'Inter',sans-serif; font-weight:600; font-size:0.85rem;
+  background:var(--accent); color:var(--accent-ink); border:none; padding:9px 18px; border-radius:8px; cursor:pointer; margin-top:10px;
+}
+button.check:hover{opacity:0.9;}
+button.check:disabled{opacity:0.5; cursor:default;}
+.feedback{margin-top:10px; font-size:0.88rem; display:none;}
+.feedback.show{display:block;}
+
+.resultbox{
+  background:var(--surface); border:2px solid var(--accent); border-radius:var(--radius);
+  padding:28px 24px; text-align:center; font-family:'Inter',sans-serif; display:none;
+}
+.resultbox.show{display:block;}
+.resultbox .score{font-family:'Fraunces',Georgia,serif; font-size:2.6rem; font-weight:700; color:var(--accent); margin-bottom:6px;}
+.resultbox .msg{font-size:0.95rem; color:var(--ink-dim); margin-bottom:4px;}
+
+table.mx{border-collapse:collapse;font-family:'JetBrains Mono',monospace;font-size:0.95rem;}
+table.mx td{padding:5px 9px;text-align:center;}
+table.mx td.h{font-weight:700;}
+table.mx tr.readrow td{background:color-mix(in srgb, var(--node-2) 22%, transparent);}
+table.mx td.hit{background:color-mix(in srgb, var(--node-2) 55%, transparent);font-weight:700;}
+.wavebadge{display:inline-block;min-width:18px;font-size:0.72rem;color:var(--accent);font-weight:700;}
+.ex-row{display:flex;flex-wrap:wrap;gap:18px;align-items:flex-start;justify-content:center;}
+.stepnote{font-family:'Inter',sans-serif;font-size:0.9rem;background:var(--surface-2);border-radius:8px;padding:10px 12px;margin-top:10px;min-height:1.4em;}
+.btnrow{display:flex;gap:8px;flex-wrap:wrap;margin-top:10px;}
+button.ghost{font-family:'Inter',sans-serif;font-weight:600;font-size:0.85rem;background:var(--surface);color:var(--ink);border:1px solid var(--line);padding:9px 14px;border-radius:8px;cursor:pointer;}
+.distgrid{display:flex;flex-wrap:wrap;gap:10px;align-items:center;font-family:'Inter',sans-serif;margin-top:8px;}
+.distgrid label{display:flex;gap:6px;align-items:center;}
+</style>
+
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Fraunces:wght@500;600;700&family=Source+Serif+4:wght@400;500&family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@500;700&display=swap">
+
+<div class="wrap">
+  <h1>Exercițiu — excentricitatea din matrice</h1>
+  <div class="subtitle">3 matrice: 5×5, 6×6, 7×7 · calculezi distanțele de la <b>a</b> și e(a) · butonul „Pasul următor” îți arată valurile</div>
+
+  <div class="identity-box">
+    <span style="font-size:0.85rem;">Numele tău:</span>
+    <input type="text" id="studentName" placeholder="ex: Victor" autocomplete="off">
+  </div>
+
+  <div class="qcard" style="font-family:'Inter',sans-serif;">
+    <b>Rețeta valurilor:</b> 0 pe a → pe rândul lui a, coloanele cu 1 primesc 1 → pe rândurile celor cu 1, coloanele cu 1 încă nenumerotate primesc 2 → ... → <b>ultimul număr pus = e(a)</b>. Un vârf care are deja număr nu se mai schimbă.
+  </div>
+
+  <div id="exercises"></div>
+</div>
+<script>
+const EX = [{"n": 5, "edges": [["a", "b"], ["a", "c"], ["b", "d"], ["c", "d"], ["d", "e"]], "trap": "a→b→d→c e un ocol; spre c ai muchie directă."}, {"n": 6, "edges": [["a", "b"], ["b", "c"], ["c", "d"], ["d", "e"], ["e", "f"], ["f", "a"], ["b", "e"]], "trap": "a→b→c→d→e→f are 5 muchii, dar a–f e legat direct."}, {"n": 7, "edges": [["a", "b"], ["a", "c"], ["a", "g"], ["b", "d"], ["c", "e"], ["d", "f"], ["e", "f"], ["f", "g"]], "trap": "a→b→d→f→g are 4 muchii, dar a–g e legat direct, iar f e la doar 2 pași prin g."}];
+(function(){
+  let db = null;
+  const results = {};
+  function slug(s){ return (s||'anonim').trim().toLowerCase().replace(/[^a-z0-9]+/g,'-').replace(/(^-|-$)/g,'')||'anonim'; }
+  async function save(){
+    const name = document.getElementById('studentName').value.trim();
+    try{ localStorage.setItem('graf_student_name', name); }catch(e){}
+    if(!db) return;
+    try{ await db.doc('practice/' + slug(name) + '-excentricitate').set({name:name||'(anonim)', results:results, updatedAt:new Date().toISOString()}); }catch(e){}
+  }
+  function el(tag, attrs, text){ const e=document.createElement(tag); for(const k in (attrs||{})) e.setAttribute(k, attrs[k]); if(text!==undefined) e.textContent=text; return e; }
+  const SVGNS='http://www.w3.org/2000/svg';
+  function sv(tag, attrs){ const e=document.createElementNS(SVGNS, tag); for(const k in attrs) e.setAttribute(k, attrs[k]); return e; }
+
+  EX.forEach(function(ex, idx){
+    const L = 'abcdefg'.slice(0, ex.n).split('');
+    const A = L.map(()=>L.map(()=>0));
+    ex.edges.forEach(([u,v])=>{ const i=L.indexOf(u), j=L.indexOf(v); A[i][j]=1; A[j][i]=1; });
+    // BFS waves from a
+    const dist = {a:0}; const waves=[['a']];
+    while(true){
+      const next=[];
+      waves[waves.length-1].forEach(u=>{ const i=L.indexOf(u); L.forEach((v,j)=>{ if(A[i][j] && dist[v]===undefined){ dist[v]=waves.length; next.push(v);} }); });
+      if(!next.length) break; waves.push(next);
+    }
+    const ecc = waves.length-1;
+
+    const card = el('div', {class:'qcard'});
+    card.appendChild(el('div', {class:'qnum'}, 'Exercițiul ' + (idx+1) + ' · matrice ' + ex.n + '×' + ex.n));
+    const row = el('div', {class:'ex-row'});
+    // matrix
+    const tbl = el('table', {class:'mx'});
+    const hr = el('tr'); hr.appendChild(el('td')); L.forEach(c=>{ const td=el('td',{class:'h'}); td.appendChild(document.createTextNode(c)); const b=el('span',{class:'wavebadge','data-col':c}); td.appendChild(el('br')); td.appendChild(b); hr.appendChild(td); }); tbl.appendChild(hr);
+    const rowEls = {};
+    L.forEach((r,i)=>{ const tr=el('tr'); tr.appendChild(el('td',{class:'h'}, r)); L.forEach((c,j)=>{ tr.appendChild(el('td',{'data-r':r,'data-c':c}, String(A[i][j]))); }); tbl.appendChild(tr); rowEls[r]=tr; });
+    row.appendChild(tbl);
+    // graph (circle layout), hidden until asked
+    const W=260,H=240,cx=130,cy=120,R=90;
+    const svg = sv('svg',{viewBox:`0 0 ${W} ${H}`,width:W,height:H});
+    const P={}; L.forEach((v,k)=>{ const t=-Math.PI/2+2*Math.PI*k/L.length; P[v]=[cx+R*Math.cos(t), cy+R*Math.sin(t)]; });
+    ex.edges.forEach(([u,v])=>{ svg.appendChild(sv('line',{class:'edge-line',x1:P[u][0],y1:P[u][1],x2:P[v][0],y2:P[v][1]})); });
+    const nodeEls={};
+    L.forEach(v=>{ const c=sv('circle',{class:'node-circle',cx:P[v][0],cy:P[v][1],r:15}); svg.appendChild(c); nodeEls[v]=c; const t=sv('text',{class:'node-label',x:P[v][0],y:P[v][1]+4,'text-anchor':'middle'}); t.textContent=v; svg.appendChild(t); });
+    const gwrap = el('div'); gwrap.appendChild(svg); gwrap.hidden = true;
+    row.appendChild(gwrap);
+    card.appendChild(row);
+
+    // inputs
+    const grid = el('div',{class:'distgrid'});
+    const inputs = {};
+    L.slice(1).forEach(v=>{ const lab=el('label'); lab.appendChild(document.createTextNode('d(a,'+v+') =')); const inp=el('input',{class:'fillbox',id:'ex'+idx+'-'+v,inputmode:'numeric',maxlength:'2'}); inputs[v]=inp; lab.appendChild(inp); grid.appendChild(lab); });
+    const labE=el('label'); labE.appendChild(document.createTextNode('e(a) =')); const inpE=el('input',{class:'fillbox',id:'ex'+idx+'-e',inputmode:'numeric',maxlength:'2'}); labE.appendChild(inpE); grid.appendChild(labE);
+    card.appendChild(grid);
+
+    const btns = el('div',{class:'btnrow'});
+    const bCheck = el('button',{class:'check'},'Verifică');
+    const bStep = el('button',{class:'ghost'},'Pasul următor (valuri)');
+    const bGraph = el('button',{class:'ghost'},'Arată desenul');
+    btns.appendChild(bCheck); btns.appendChild(bStep); btns.appendChild(bGraph);
+    card.appendChild(btns);
+    const note = el('div',{class:'stepnote'},'Începe cu rândul lui a. Dacă te blochezi, apasă „Pasul următor”.');
+    card.appendChild(note);
+    const fb = el('div',{class:'feedback'}); card.appendChild(fb);
+
+    const COLORS=['var(--accent)','var(--node-2)','var(--good)','var(--node)','var(--bad)'];
+    let step = -1;
+    function clearHl(){ tbl.querySelectorAll('tr.readrow').forEach(t=>t.classList.remove('readrow')); tbl.querySelectorAll('td.hit').forEach(t=>t.classList.remove('hit')); }
+    function mark(v,w){ tbl.querySelector('[data-col="'+v+'"]').textContent=w; nodeEls[v].style.fill = COLORS[Math.min(w,COLORS.length-1)]; }
+    bStep.addEventListener('click', function(){
+      if(step >= waves.length) return;
+      step++;
+      clearHl();
+      if(step===0){ mark('a',0); note.textContent='Valul 0: a primește 0.'; return; }
+      if(step===waves.length){ note.textContent='Toate vârfurile au număr. Cel mai mare număr pus e '+ecc+', deci e(a) = '+ecc+'. ' + ex.trap; bStep.disabled=true; return; }
+      const from = waves[step-1], got = waves[step];
+      from.forEach(u=>{ rowEls[u].classList.add('readrow'); L.forEach(c=>{ const td=rowEls[u].querySelector('[data-c="'+c+'"]'); if(td.textContent==='1' && got.includes(c)) td.classList.add('hit'); }); });
+      got.forEach(v=>mark(v,step));
+      note.textContent = 'Valul '+step+': citești rândul/rândurile '+from.join(', ')+'. Coloanele cu 1 care nu au încă număr: '+got.join(', ')+' → primesc '+step+'.';
+    });
+    bGraph.addEventListener('click', function(){ gwrap.hidden = !gwrap.hidden; bGraph.textContent = gwrap.hidden ? 'Arată desenul' : 'Ascunde desenul'; });
+    bCheck.addEventListener('click', function(){
+      let ok=true;
+      L.slice(1).forEach(v=>{ const good = inputs[v].value.trim()===String(dist[v]); inputs[v].style.borderColor = good?'var(--good)':'var(--bad)'; if(!good) ok=false; });
+      const goodE = inpE.value.trim()===String(ecc); inpE.style.borderColor = goodE?'var(--good)':'var(--bad)'; if(!goodE) ok=false;
+      fb.textContent = ok ? '✓ Totul corect!' : '✗ Căsuțele roșii sunt greșite. Apasă „Pasul următor” ca să vezi valurile.';
+      fb.style.color = ok ? 'var(--good)' : 'var(--bad)'; fb.classList.add('show');
+      const answers={}; L.slice(1).forEach(v=>answers[v]=inputs[v].value.trim()); answers.e=inpE.value.trim();
+      results['ex'+(idx+1)] = {ok:ok, answers:answers};
+      save();
+    });
+    document.getElementById('exercises').appendChild(card);
+  });
+  try{ const s=localStorage.getItem('graf_student_name'); if(s) document.getElementById('studentName').value=s; }catch(e){}
+  document.getElementById('studentName').addEventListener('change', save);
+  (async function(){ try{ if(window.claude && window.claude.use) db = await window.claude.use('db'); }catch(e){} })();
+})();
+</script>

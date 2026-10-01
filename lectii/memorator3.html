@@ -1,0 +1,427 @@
+<title>Memorator: mulțimi stabile</title>
+<meta name="description" content="Indicii de memorare și 4 jocuri pentru Capitolul 3: cartonașe, potrivire, bifează ce este pe graf și întrebări cu indicii.">
+<style>
+:root{
+  --bg:#f6f5f1;
+  --surface:#ffffff;
+  --surface-2:#eeece4;
+  --ink:#1c2321;
+  --ink-dim:#5b6460;
+  --line:#d9d5c9;
+  --accent:#8a3b2e;
+  --accent-ink:#ffffff;
+  --node:#2c4a52;
+  --node-2:#c98a3c;
+  --good:#2f6b4f;
+  --bad:#a13a3a;
+  --radius:14px;
+  color-scheme: light;
+}
+@media (prefers-color-scheme: dark){
+  :root:not([data-theme="light"]){
+    --bg:#181a17; --surface:#222521; --surface-2:#2b2e29;
+    --ink:#eeece6; --ink-dim:#a8ada4; --line:#3a3d37;
+    --accent:#e08b6f; --accent-ink:#1c1310;
+    --node:#7fb3bd; --node-2:#e6b16a; --good:#7fc79c; --bad:#e08585;
+    color-scheme: dark;
+  }
+}
+:root[data-theme="dark"]{
+  --bg:#181a17; --surface:#222521; --surface-2:#2b2e29;
+  --ink:#eeece6; --ink-dim:#a8ada4; --line:#3a3d37;
+  --accent:#e08b6f; --accent-ink:#1c1310;
+  --node:#7fb3bd; --node-2:#e6b16a; --good:#7fc79c; --bad:#e08585;
+  color-scheme: dark;
+}
+*{box-sizing:border-box;}
+body{background:var(--bg); color:var(--ink); font-family:'Source Serif 4',Georgia,serif; padding-inline:16px; padding-block:32px;}
+.wrap{max-width:720px; margin:0 auto;}
+h1{font-family:'Fraunces',Georgia,serif; font-weight:600; font-size:clamp(1.5rem,5vw,2.1rem); margin:0 0 4px; text-wrap:balance;}
+.subtitle{font-family:'Inter',system-ui,sans-serif; color:var(--ink-dim); font-size:0.92rem; margin-bottom:22px;}
+svg{max-width:100%; height:auto;}
+.graphbox{display:flex; justify-content:center; margin:14px 0; overflow-x:auto;}
+.node-circle{fill:var(--node); stroke:var(--bg); stroke-width:3;}
+.node-label{font-family:'Inter',sans-serif; font-size:13px; font-weight:700; fill:var(--accent-ink);}
+.edge-line{stroke:var(--ink-dim); stroke-width:2;}
+
+.progressbar{position:sticky; top:env(safe-area-inset-top,0px); background:var(--bg); padding-block:10px 4px; z-index:5; margin-bottom:10px;}
+.pbar-track{height:6px; background:var(--surface-2); border-radius:999px; overflow:hidden;}
+.pbar-fill{height:100%; background:var(--accent); width:0%; transition:width .3s;}
+.pbar-label{font-family:'Inter',sans-serif; font-size:0.72rem; color:var(--ink-dim); margin-top:4px;}
+
+.identity-box{
+  font-family:'Inter',sans-serif; background:var(--surface-2); border-radius:10px;
+  padding:14px 16px; margin-bottom:20px; display:flex; gap:10px; align-items:center; flex-wrap:wrap;
+}
+.identity-box input{
+  flex:1; min-width:140px; padding:8px 10px; border-radius:7px;
+  border:1px solid var(--line); background:var(--surface); color:var(--ink); font-family:inherit; font-size:0.9rem;
+}
+
+.qcard{
+  background:var(--surface); border:1px solid var(--line); border-radius:var(--radius);
+  padding:20px; margin-bottom:16px; font-family:'Inter',system-ui,sans-serif;
+}
+.qnum{font-size:0.72rem; text-transform:uppercase; letter-spacing:0.06em; color:var(--ink-dim); margin-bottom:6px;}
+.qtext{font-family:'Source Serif 4',Georgia,serif; font-size:1.05rem; margin-bottom:14px; line-height:1.5;}
+.opts{display:flex; flex-direction:column; gap:8px;}
+.opt{
+  text-align:left; border:1px solid var(--line); background:var(--surface); color:var(--ink);
+  padding:10px 14px; border-radius:8px; cursor:pointer; font-family:inherit; font-size:0.92rem;
+  transition:background .15s, border-color .15s;
+}
+.opt:hover{border-color:var(--accent);}
+.opt.correct{background:color-mix(in srgb, var(--good) 22%, var(--surface)); border-color:var(--good); color:var(--good);}
+.opt.wrong{background:color-mix(in srgb, var(--bad) 22%, var(--surface)); border-color:var(--bad); color:var(--bad);}
+.opt:disabled{cursor:default;}
+.fillrow{display:flex; align-items:center; gap:8px; flex-wrap:wrap;}
+input.fillbox{
+  width:64px; padding:7px 8px; border-radius:6px; border:1px solid var(--line);
+  background:var(--surface); color:var(--ink); font-family:'JetBrains Mono',monospace; text-align:center; font-size:0.95rem;
+}
+button.check{
+  font-family:'Inter',sans-serif; font-weight:600; font-size:0.85rem;
+  background:var(--accent); color:var(--accent-ink); border:none; padding:9px 18px; border-radius:8px; cursor:pointer; margin-top:10px;
+}
+button.check:hover{opacity:0.9;}
+button.check:disabled{opacity:0.5; cursor:default;}
+.feedback{margin-top:10px; font-size:0.88rem; display:none;}
+.feedback.show{display:block;}
+
+.resultbox{
+  background:var(--surface); border:2px solid var(--accent); border-radius:var(--radius);
+  padding:28px 24px; text-align:center; font-family:'Inter',sans-serif; display:none;
+}
+.resultbox.show{display:block;}
+.resultbox .score{font-family:'Fraunces',Georgia,serif; font-size:2.6rem; font-weight:700; color:var(--accent); margin-bottom:6px;}
+.resultbox .msg{font-size:0.95rem; color:var(--ink-dim); margin-bottom:4px;}
+
+:root{--c-purple:#6b4fa0;--c-pink:#b0417a;--c-teal:#1f7a7a;--c-blue:#2f5f9e;}
+@media (prefers-color-scheme: dark){:root:not([data-theme="light"]){--c-purple:#b9a3e6;--c-pink:#ec9cc4;--c-teal:#79cccc;--c-blue:#9dbdf0;}}
+:root[data-theme="dark"]{--c-purple:#b9a3e6;--c-pink:#ec9cc4;--c-teal:#79cccc;--c-blue:#9dbdf0;}
+.wrap{max-width:900px;}
+.section{background:var(--surface);border:1px solid var(--line);border-radius:14px;padding:22px;margin-bottom:22px;}
+.section h2{font-family:'Fraunces',Georgia,serif;font-weight:600;font-size:1.35rem;margin:0 0 10px;display:flex;gap:10px;align-items:center;text-wrap:balance;}
+.section h2 .num{font-family:'Inter',sans-serif;font-size:0.75rem;font-weight:700;background:var(--accent);color:var(--accent-ink);border-radius:999px;width:26px;height:26px;display:inline-flex;align-items:center;justify-content:center;flex:none;}
+.section p{line-height:1.6;margin:0 0 12px;}
+.toc{display:flex;flex-wrap:wrap;gap:6px;margin-bottom:18px;font-family:'Inter',sans-serif;font-size:0.82rem;}
+.toc a{color:var(--ink);text-decoration:none;background:var(--surface);border:1px solid var(--line);border-radius:999px;padding:4px 10px;}
+.tip{font-family:'Inter',sans-serif;background:var(--surface-2);border-radius:10px;padding:12px 14px;margin:10px 0;line-height:1.55;font-size:0.92rem;border-left:4px solid var(--c,var(--accent));}
+.tip h4{margin:0 0 4px;font-size:0.95rem;}
+.tip .big{font-family:'JetBrains Mono',monospace;font-weight:700;font-size:1.05rem;}
+.tablewrap{overflow-x:auto;}
+table.lv{width:100%;border-collapse:collapse;font-family:'Inter',sans-serif;font-size:0.86rem;}
+table.lv th,table.lv td{text-align:left;padding:7px 8px;border-bottom:1px solid var(--line);vertical-align:top;}
+table.lv th{font-size:0.72rem;text-transform:uppercase;letter-spacing:0.05em;color:var(--ink-dim);}
+.dot{display:inline-block;width:10px;height:10px;border-radius:999px;margin-right:6px;vertical-align:0;background:var(--c);}
+.tbtn{font-family:'Inter',sans-serif;font-weight:600;font-size:0.86rem;background:var(--surface);color:var(--ink);border:1px solid var(--line);padding:8px 13px;border-radius:8px;cursor:pointer;}
+.tbtn.primary{background:var(--accent);color:var(--accent-ink);border-color:var(--accent);}
+.tbtn:disabled{opacity:0.45;cursor:default;}
+.tbtn:focus-visible,.card:focus-visible,.mitem:focus-visible{outline:2px solid var(--accent);outline-offset:2px;}
+.row{display:flex;gap:8px;flex-wrap:wrap;align-items:center;}
+.card{perspective:1000px;height:220px;cursor:pointer;margin:10px 0;border:none;background:none;width:100%;padding:0;}
+.card .in{position:relative;width:100%;height:100%;transition:transform .45s;transform-style:preserve-3d;}
+.card.flip .in{transform:rotateY(180deg);}
+.card .f,.card .b{position:absolute;inset:0;backface-visibility:hidden;-webkit-backface-visibility:hidden;border-radius:14px;border:1px solid var(--line);display:flex;flex-direction:column;align-items:center;justify-content:center;padding:18px;text-align:center;font-family:'Inter',sans-serif;}
+.card .f{background:var(--surface-2);font-family:'Fraunces',Georgia,serif;font-size:1.5rem;font-weight:600;color:var(--ink);}
+.card .b{background:var(--surface);transform:rotateY(180deg);font-size:0.98rem;line-height:1.5;color:var(--ink);}
+.card .b .hintc{margin-top:10px;font-size:0.84rem;color:var(--ink-dim);}
+.card small{font-family:'Inter',sans-serif;font-size:0.75rem;color:var(--ink-dim);font-weight:500;margin-top:10px;}
+@media (prefers-reduced-motion: reduce){.card .in{transition:none;}}
+.stat{font-family:'Inter',sans-serif;font-size:0.85rem;color:var(--ink-dim);}
+.mgrid{display:grid;grid-template-columns:1fr 1.6fr;gap:10px;}
+@media (max-width:620px){.mgrid{grid-template-columns:1fr;}}
+.mcol{display:flex;flex-direction:column;gap:8px;}
+.mitem{font-family:'Inter',sans-serif;font-size:0.88rem;text-align:left;border:1px solid var(--line);background:var(--surface);color:var(--ink);padding:10px 12px;border-radius:9px;cursor:pointer;line-height:1.4;}
+.mitem.sel{border-color:var(--accent);background:color-mix(in srgb,var(--accent) 12%,var(--surface));}
+.mitem.done{border-color:var(--good);background:color-mix(in srgb,var(--good) 14%,var(--surface));color:var(--good);cursor:default;}
+.mitem.shake{border-color:var(--bad);background:color-mix(in srgb,var(--bad) 14%,var(--surface));}
+.gbox{display:flex;justify-content:center;}
+.gbox svg{max-width:100%;height:auto;user-select:none;-webkit-user-select:none;}
+.checks{display:flex;flex-direction:column;gap:6px;font-family:'Inter',sans-serif;font-size:0.92rem;margin:10px 0;}
+.checks label{display:flex;gap:8px;align-items:center;padding:7px 10px;border:1px solid var(--line);border-radius:8px;background:var(--surface);cursor:pointer;}
+.checks label.ok{border-color:var(--good);background:color-mix(in srgb,var(--good) 14%,var(--surface));}
+.checks label.miss{border-color:var(--node-2);background:color-mix(in srgb,var(--node-2) 16%,var(--surface));}
+.checks label.bad{border-color:var(--bad);background:color-mix(in srgb,var(--bad) 14%,var(--surface));}
+.note{font-family:'Inter',sans-serif;font-size:0.9rem;background:var(--surface-2);border-radius:8px;padding:10px 14px;line-height:1.5;min-height:1.5em;}
+.qwrap{font-family:'Inter',sans-serif;}
+.qtext{font-family:'Fraunces',Georgia,serif;font-size:1.12rem;margin:8px 0 12px;line-height:1.45;}
+.hintbox{font-family:'Inter',sans-serif;font-size:0.88rem;background:color-mix(in srgb,var(--node-2) 14%,var(--surface));border:1px solid color-mix(in srgb,var(--node-2) 45%,transparent);border-radius:8px;padding:9px 12px;margin-top:8px;}
+.bar{height:6px;background:var(--surface-2);border-radius:999px;overflow:hidden;margin:6px 0 12px;}
+.bar > div{height:100%;background:var(--accent);width:0;transition:width .3s;}
+</style>
+
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Fraunces:wght@500;600;700&family=Source+Serif+4:wght@400;500&family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@500;700&display=swap">
+
+<div class="wrap">
+  <h1>Memorator: mulțimi stabile</h1>
+  <div class="subtitle">Capitolul 3 · întâi indiciile, apoi 4 jocuri de memorare</div>
+
+  <div class="identity-box">
+    <span style="font-size:0.85rem;">Numele tău:</span>
+    <input type="text" id="studentName" placeholder="ex: Victor" autocomplete="off">
+  </div>
+
+  <nav class="toc" aria-label="Cuprins"><a href="#ind">Indicii</a><a href="#cards">1. Cartonașe</a><a href="#match">2. Potrivire</a><a href="#tick">3. Bifează ce este</a><a href="#quiz">4. Întrebări cu indiciu</a></nav>
+
+  <div class="section" id="ind">
+    <h2><span class="num">★</span>Indicii ca să le memorezi</h2>
+
+    <div class="tip" style="--c:var(--accent)"><h4>1. Harta orașului: toate noțiunile ca niveluri de joc</h4>
+      Vârfurile sunt <b>case</b>, iar muchiile sunt <b>drumuri</b>. Fiecare noțiune e un nivel cu o singură regulă:</div>
+    <div class="tablewrap"><table class="lv">
+      <tr><th>Nivel</th><th>Imaginea</th><th>Alegi</th><th>Regula într-o frază</th><th>Vrei</th><th>Notație</th></tr>
+      <tr><td><span class="dot" style="--c:var(--good)"></span><b>Stabilă interior</b></td><td>🧟 zombi pașnici</td><td>case</td><td>aleșii <b>nu</b> sunt vecini între ei</td><td>cât mai <b>mulți</b></td><td>α₀</td></tr>
+      <tr><td><span class="dot" style="--c:var(--node-2)"></span><b>Stabilă exterior</b></td><td>🚒 pompieri</td><td>case</td><td>fiecare casă <b>fără</b> stație are o stație vecină</td><td>cât mai <b>puțini</b></td><td>–</td></tr>
+      <tr><td><span class="dot" style="--c:var(--c-purple)"></span><b>Nucleu</b></td><td>🚒🧟 amândouă</td><td>case</td><td>stații <b>nevecine</b> între ele, dar care acoperă tot</td><td>–</td><td>–</td></tr>
+      <tr><td><span class="dot" style="--c:var(--c-blue)"></span><b>Acoperire de vârfuri</b></td><td>👮 paznici</td><td>case</td><td>fiecare <b>drum</b> are un paznic la un capăt</td><td>cât mai <b>puțini</b></td><td>β₀</td></tr>
+      <tr><td><span class="dot" style="--c:var(--c-pink)"></span><b>Clică</b></td><td>👯 gașca</td><td>case</td><td>toți sunt vecini <b>cu toți</b></td><td>cât mai <b>mulți</b></td><td>φ</td></tr>
+      <tr><td><span class="dot" style="--c:var(--c-teal)"></span><b>Cuplaj</b></td><td>💃 perechi de dans</td><td>drumuri</td><td>nicio casă în <b>două</b> perechi</td><td>cât mai <b>multe</b></td><td>α₁</td></tr>
+      <tr><td><span class="dot" style="--c:var(--accent)"></span><b>Acoperire de muchii</b></td><td>🔦 lanterne</td><td>drumuri</td><td>fiecare <b>casă</b> atinge un drum luminat</td><td>cât mai <b>puține</b></td><td>β₁</td></tr>
+    </table></div>
+
+    <div class="tip" style="--c:var(--c-blue)"><h4>2. Literele: α și β</h4>
+      <span class="big">α</span> = <b>A</b>leg cât mai <b>mulți</b> · <span class="big">β</span> = <b>B</b>ani puțini, adică cât mai <b>puțini</b>.<br>
+      Merge la perechile α₀/β₀ și α₁/β₁. Clica are litera ei, <b>φ</b>, de la „<b>f</b>amilie”: toți se cunosc cu toți.</div>
+
+    <div class="tip" style="--c:var(--c-teal)"><h4>3. Indicele: 0 sau 1</h4>
+      <span class="big">0</span> e rotund ca un <b>punct</b>, deci alegi <b>vârfuri</b>. <span class="big">1</span> e drept ca o <b>linie</b>, deci alegi <b>muchii</b>.<br>
+      α₀ = vârfuri, mulți · β₀ = vârfuri, puțini · α₁ = muchii, multe · β₁ = muchii, puține.</div>
+
+    <div class="tip" style="--c:var(--node-2)"><h4>4. Maximală vs. maximă (și minimală vs. minimă)</h4>
+      <b>-ală</b> = „nu mai încape nimic”, ca un <b>raft plin</b>, care poate fi mic.<br>
+      <b>-ă</b> = <b>campionul</b>, cea mai mare (sau mică) din tot graful.<br>
+      Cuvântul <b>mai scurt</b> (maximă) e cel <b>mai tare</b>. Orice campion are raftul plin, dar nu orice raft plin e campion.</div>
+
+    <div class="tip" style="--c:var(--good)"><h4>5. Interior vs. exterior</h4>
+      <b>IN</b>terior → te uiți <b>ÎN</b>ăuntru, între aleși: acolo e <b>liniște</b>, nicio muchie.<br>
+      <b>EX</b>terior → te uiți în <b>EX</b>terior, la neluați: fiecare trebuie <b>să atingă</b> un ales.</div>
+
+    <div class="tip" style="--c:var(--c-purple)"><h4>6. Cele 3 formule, cu povestea lor</h4>
+      <span class="big">α₀ + β₀ = n</span>: casele <b>fără</b> paznic sunt automat zombi pașnici (dacă două ar fi vecine, drumul dintre ele ar rămâne nepăzit).<br>
+      <span class="big">α₁ + β₁ = n</span> (Gallai, doar fără vârfuri izolate): perechile de dans și lanternele împart împreună toate casele.<br>
+      <span class="big">φ(G) = α₀(Ḡ)</span>: complementarul întoarce totul pe dos, „toți legați” devine „nimeni legat”.</div>
+
+    <div class="tip" style="--c:var(--bad)"><h4>7. Capcane frecvente</h4>
+      • Stabila exterior minimă <b>nu are simbol</b> în curs (în alte cărți apare γ).<br>
+      • Cuplaj perfect doar dacă <b>n e par</b>, și atunci are <b>n / 2</b> muchii.<br>
+      • La cuplaj și la acoperirea de muchii alegi <b>muchii</b>, nu vârfuri.<br>
+      • Muchiile dintre aleși și neluați <b>nu contează</b> la stabila interior.</div>
+  </div>
+
+  <div class="section" id="cards">
+    <h2><span class="num">1</span>Cartonașe</h2>
+    <p>Pe față e noțiunea. Încearcă să spui definiția cu voce tare, apoi apasă pe cartonaș ca să-l întorci. Dacă apeși „Nu știu încă”, cartonașul se întoarce mai târziu în pachet.</p>
+    <div class="row" style="justify-content:space-between;"><span class="stat" id="fcStat"></span><label class="stat"><input type="checkbox" id="fcRev"> invers (definiția pe față)</label></div>
+    <div class="bar"><div id="fcBar"></div></div>
+    <button class="card" id="fc" aria-live="polite"><div class="in"><div class="f" id="fcF"></div><div class="b" id="fcB"></div></div></button>
+    <div class="row"><button class="tbtn" id="fcNo">Nu știu încă</button><button class="tbtn primary" id="fcYes">Știu ✓</button><button class="tbtn" id="fcShuffle">Amestecă din nou</button></div>
+  </div>
+
+  <div class="section" id="match">
+    <h2><span class="num">2</span>Potrivire</h2>
+    <p>Apasă pe o noțiune din stânga, apoi pe definiția ei din dreapta. Sunt câte 5 perechi pe rundă.</p>
+    <div class="stat" id="mStat"></div>
+    <div class="mgrid" style="margin-top:8px;"><div class="mcol" id="mL"></div><div class="mcol" id="mR"></div></div>
+    <div class="row" style="margin-top:10px;"><button class="tbtn primary" id="mNew">Rundă nouă</button></div>
+  </div>
+
+  <div class="section" id="tick">
+    <h2><span class="num">3</span>Bifează tot ce este</h2>
+    <p>Graful e cel din curs. Colorat e o mulțime de vârfuri sau de muchii. Bifează <b>toate</b> noțiunile care i se potrivesc (pot fi mai multe) și apasă „Verifică”.</p>
+    <div class="stat" id="tStat"></div>
+    <div class="gbox" id="tG"></div>
+    <div class="qtext" id="tQ" style="text-align:center;"></div>
+    <div class="checks" id="tC"></div>
+    <div class="row"><button class="tbtn primary" id="tCheck">Verifică</button><button class="tbtn" id="tNext">Următoarea →</button></div>
+    <div class="note" id="tN" style="margin-top:10px;"></div>
+  </div>
+
+  <div class="section" id="quiz">
+    <h2><span class="num">4</span>Întrebări cu indiciu</h2>
+    <p>Dacă nu știi, apasă întâi „Indiciu”. Indiciul e unul din trucurile de sus, nu răspunsul.</p>
+    <div class="stat" id="qStat"></div>
+    <div class="bar"><div id="qBar"></div></div>
+    <div class="qwrap"><div class="qtext" id="qQ"></div><div class="opts" id="qO"></div>
+      <div class="row" style="margin-top:10px;"><button class="tbtn" id="qHint">Indiciu</button><button class="tbtn primary" id="qNext" disabled>Următoarea →</button></div>
+      <div class="hintbox" id="qH" hidden></div><div class="feedback" id="qF"></div></div>
+  </div>
+</div>
+<script>
+(function(){
+  // ---------------- data ----------------
+  const CARDS = [
+    ['Stabilă interior', 'Mulțime de vârfuri în care <b>niciun</b> ales nu e legat de alt ales.', '🧟 zombi pașnici · vrei cât mai mulți · α₀'],
+    ['Maximală', 'Nu mai poți <b>adăuga</b> niciun vârf fără să strici regula.', 'raftul e plin (dar poate fi mic)'],
+    ['Maximă', 'Are <b>cel mai mare</b> număr de elemente din tot graful.', 'campionul · cuvântul mai scurt = mai tare'],
+    ['Stabilă exterior', 'Fiecare vârf <b>neales</b> are cel puțin un vecin <b>ales</b>.', '🚒 pompieri · vrei cât mai puțini'],
+    ['Minimală', 'Nu mai poți <b>scoate</b> niciun element fără să strici regula.', 'fiecare stație e necesară'],
+    ['Minimă', 'Are <b>cel mai mic</b> număr de elemente din tot graful.', 'campionul la „cât mai puțin”'],
+    ['Nucleu', 'Mulțime care e <b>și</b> stabilă interior, <b>și</b> stabilă exterior.', 'stații nevecine între ele, care acoperă tot'],
+    ['Acoperire de vârfuri', 'Mulțime de vârfuri astfel încât <b>fiecare muchie</b> are cel puțin un capăt ales.', '👮 paznici pe drumuri · β₀'],
+    ['Clică', 'Mulțime de vârfuri în care <b>oricare doi</b> sunt legați.', '👯 gașca · φ („familie”)'],
+    ['Cuplaj', 'Mulțime de <b>muchii</b> fără capete comune.', '💃 perechi de dans · α₁'],
+    ['Cuplaj perfect', 'Cuplaj care atinge <b>toate</b> vârfurile. Are n / 2 muchii.', 'doar dacă n e par'],
+    ['Acoperire de muchii', 'Mulțime de <b>muchii</b> astfel încât fiecare vârf e atins de una.', '🔦 lanterne · β₁'],
+    ['α₀(G)', 'Mărimea mulțimii <b>stabile interior maxime</b>.', 'α = Aleg mulți · 0 = punct = vârfuri'],
+    ['β₀(G)', 'Mărimea <b>acoperirii de vârfuri minime</b>.', 'β = Bani puțini · 0 = vârfuri'],
+    ['α₁(G)', 'Numărul de muchii din <b>cuplajul maxim</b>.', 'α = mulți · 1 = linie = muchii'],
+    ['β₁(G)', 'Numărul de muchii din <b>acoperirea de muchii minimă</b>.', 'β = puțini · 1 = muchii'],
+    ['φ(G)', 'Mărimea <b>clicii maxime</b> (densitatea grafului).', 'φ = familie, toți se cunosc'],
+    ['α₀ + β₀ = ?', '<b>n</b>, adică numărul de vârfuri. Merge mereu.', 'casele fără paznic = zombi pașnici'],
+    ['α₁ + β₁ = ?', '<b>n</b>, dacă graful nu are vârfuri izolate (Gallai).', 'dans + lanterne'],
+    ['φ(G) = ?', '<b>α₀(Ḡ)</b>: clica din G e stabilă interior în complementar.', 'complementarul întoarce totul'],
+  ];
+  const MATCH = CARDS.slice(0, 12).map(([t,d])=>[t, d.replace(/<[^>]+>/g,'')]);
+
+  // course graph G
+  const P = {1:[400,55],2:[510,130],3:[510,270],4:[320,310],5:[205,365],6:[110,270],7:[195,175],8:[330,190],9:[235,55]};
+  const E = [[1,2],[1,8],[2,8],[9,8],[3,8],[7,8],[4,8],[6,7],[5,6],[4,5]];
+  const ids = Object.keys(P).map(Number); const n = ids.length;
+  const A = new Map(ids.map(i=>[i,new Set()])); E.forEach(([a,b])=>{ A.get(a).add(b); A.get(b).add(a); });
+  const adj = (a,b)=>A.get(a).has(b);
+  const isInd = S => S.every((a,i)=>S.slice(i+1).every(b=>!adj(a,b)));
+  const isDom = S => { const s=new Set(S); return ids.every(v=>s.has(v)||[...A.get(v)].some(w=>s.has(w))); };
+  const isCov = S => { const s=new Set(S); return E.every(([a,b])=>s.has(a)||s.has(b)); };
+  const isCli = S => S.length>0 && S.every((a,i)=>S.slice(i+1).every(b=>adj(a,b)));
+  const isMat = X => { const seen=new Set(); for(const [a,b] of X){ if(seen.has(a)||seen.has(b)) return false; seen.add(a); seen.add(b);} return true; };
+  const isEcov = X => { const s=new Set(X.flat()); return ids.every(v=>s.has(v)); };
+  const TICKS = [
+    {v:[6,8]}, {v:[1,3,5,7,9]}, {v:[8]}, {v:[2,5,6,8]}, {v:[1,2,8]}, {v:[1,3,4,6,9]}, {v:[5,6,8]}, {v:[3,9]},
+    {e:[[1,2],[3,8],[4,5],[6,7]]}, {e:[[9,8],[3,8],[1,2],[4,5],[6,7]]}, {e:[[1,8],[2,8]]}, {e:[[2,8],[5,6]]}
+  ];
+  const VOPTS = [['ind','Stabilă interior','--good'],['dom','Stabilă exterior','--node-2'],['ker','Nucleu','--c-purple'],['cov','Acoperire de vârfuri','--c-blue'],['cli','Clică','--c-pink']];
+  const EOPTS = [['mat','Cuplaj','--c-teal'],['perf','Cuplaj perfect','--c-teal'],['ecov','Acoperire de muchii','--accent']];
+  function truth(t){
+    if(t.v){ const S=t.v; const r={ind:isInd(S), dom:isDom(S), cov:isCov(S), cli:isCli(S)}; r.ker=r.ind&&r.dom; return r; }
+    const X=t.e; const m=isMat(X); return {mat:m, perf:m && new Set(X.flat()).size===n, ecov:isEcov(X)};
+  }
+
+  const Q = [
+    ['„Alegi cât mai mulți oameni care NU se cunosc între ei.” Ce cauți?', ['stabilă interior maximă','clică maximă','cuplaj maxim'], 0, 'Nimeni legat de nimeni = liniște înăuntru = 🧟.'],
+    ['„Alegi cât mai mulți oameni care se cunosc TOȚI între ei.” Ce cauți?', ['stabilă interior maximă','clică maximă','nucleu'], 1, 'Toți cu toți = gașca 👯, litera φ.'],
+    ['„Pui cât mai puțini paznici în intersecții, ca fiecare stradă să aibă paznic la un capăt.”', ['acoperire de vârfuri minimă','stabilă exterior minimă','acoperire de muchii minimă'], 0, 'Paznicii stau în case (vârfuri) și păzesc drumuri (muchii) → 👮.'],
+    ['„Pui cât mai puține stații, ca fiecare sat FĂRĂ stație să fie vecin cu o stație.”', ['acoperire de vârfuri minimă','stabilă exterior minimă','nucleu'], 1, 'Neluații trebuie să atingă un ales = te uiți în EXterior → 🚒.'],
+    ['„Formezi cât mai multe perechi de dans, iar nimeni nu dansează în două perechi.”', ['acoperire de muchii minimă','cuplaj maxim','clică maximă'], 1, 'Perechi = muchii fără capete comune → 💃, α₁.'],
+    ['„Aprinzi cât mai puține drumuri, ca fiecare casă să atingă un drum luminat.”', ['cuplaj maxim','acoperire de muchii minimă','acoperire de vârfuri minimă'], 1, 'Alegi drumuri (muchii) și fiecare casă trebuie atinsă → 🔦, β₁.'],
+    ['Ce înseamnă indicele 1 din α₁ și β₁?', ['alegi vârfuri','alegi muchii','graful e conex'], 1, '1 e drept ca o linie.'],
+    ['Cât face α₀ + β₀?', ['n','m','2m'], 0, 'Casele fără paznic sunt zombi pașnici. Împreună fac toate casele.'],
+    ['Un graf fără vârfuri izolate are n = 12 și α₁ = 5. Cât este β₁?', ['5','7','17'], 1, 'Gallai: α₁ + β₁ = n.'],
+    ['Un graf are n = 9 și β₀ = 3. Cât este α₀?', ['3','6','12'], 1, 'α₀ + β₀ = n, deci α₀ = n − β₀.'],
+    ['φ(G) = 4. Cât este α₀(Ḡ)?', ['4','n − 4','nu se poate ști'], 0, 'Complementarul întoarce „toți legați” în „nimeni legat”.'],
+    ['Un graf cu 10 vârfuri are cuplaj perfect. Câte muchii are acest cuplaj?', ['10','5','20'], 1, 'Fiecare muchie ia 2 vârfuri și toate trebuie atinse.'],
+    ['Poate un graf cu 7 vârfuri să aibă cuplaj perfect?', ['Da','Nu'], 1, 'Perechile iau câte 2 vârfuri. Ce se întâmplă cu un număr impar?'],
+    ['„Nu mai poți adăuga niciun vârf fără să strici regula.” Cum se numește?', ['maximă','maximală'], 1, '-ală = raftul e plin, chiar dacă e mic.'],
+    ['„Cea mai mare din tot graful.” Cum se numește?', ['maximă','maximală'], 0, 'Cuvântul mai scurt = campionul.'],
+    ['Nucleul este o mulțime care e...', ['stabilă interior și stabilă exterior','clică și cuplaj','acoperire de vârfuri și stabilă interior'], 0, '🚒🧟: stații nevecine care acoperă tot.'],
+    ['Ce simbol are stabila exterior minimă în cursul tău?', ['β₀','γ','nu are simbol'], 2, 'E una din capcanele din lista de indicii.'],
+    ['La stabila interior, contează muchiile dintre un ales și un neales?', ['Da','Nu'], 1, 'Te uiți doar ÎNăuntru, între aleși.'],
+  ];
+
+  // ---------------- saving ----------------
+  let db=null; const results={cards:{}, match:0, tick:{}, quiz:{}};
+  function slug(s){ return (s||'anonim').trim().toLowerCase().replace(/[^a-z0-9]+/g,'-').replace(/(^-|-$)/g,'')||'anonim'; }
+  let saveT=null;
+  function save(){ clearTimeout(saveT); saveT=setTimeout(async function(){ const name=document.getElementById('studentName').value.trim(); try{ localStorage.setItem('graf_student_name', name); }catch(e){}
+    if(!db) return; try{ await db.doc('lessons/' + slug(name) + '-memorator3').set({name:name||'(anonim)', results, updatedAt:new Date().toISOString()}); }catch(e){} }, 600); }
+  const shuffle = a => { a=a.slice(); for(let i=a.length-1;i>0;i--){ const j=Math.floor(Math.random()*(i+1)); [a[i],a[j]]=[a[j],a[i]]; } return a; };
+
+  // ---------------- 1. flashcards ----------------
+  const fc=document.getElementById('fc'), fcF=document.getElementById('fcF'), fcB=document.getElementById('fcB');
+  let deck=[], known=0, total=CARDS.length;
+  function fcDeal(){ deck = shuffle(CARDS.map((_,i)=>i)); known=0; fcShow(); }
+  function fcShow(){
+    fc.classList.remove('flip');
+    document.getElementById('fcStat').textContent = deck.length ? `Mai ai ${deck.length} cartonașe · știute: ${known} din ${total}` : `Gata! Le-ai știut pe toate ${total}.`;
+    document.getElementById('fcBar').style.width = (known/total*100)+'%';
+    if(!deck.length){ fcF.innerHTML='🎉 Pachet terminat'; fcB.innerHTML='Apasă „Amestecă din nou” ca să repeți.'; return; }
+    const [t,d,h] = CARDS[deck[0]]; const rev = document.getElementById('fcRev').checked;
+    const front = rev ? `<div style="font-family:Inter,sans-serif;font-size:1.02rem;font-weight:500;line-height:1.5">${d}</div><small>Ce noțiune e? Apasă ca să întorci.</small>` : `${t}<small>Spune definiția, apoi apasă ca să întorci.</small>`;
+    const back = rev ? `<div style="font-family:Fraunces,Georgia,serif;font-size:1.4rem;font-weight:600">${t}</div><div class="hintc">${h}</div>` : `<div>${d}</div><div class="hintc">Indiciu: ${h}</div>`;
+    fcF.innerHTML = front; fcB.innerHTML = back;
+  }
+  fc.addEventListener('click', ()=>fc.classList.toggle('flip'));
+  document.getElementById('fcYes').addEventListener('click', ()=>{ if(!deck.length) return; results.cards[CARDS[deck[0]][0]] = true; deck.shift(); known++; fcShow(); save(); });
+  document.getElementById('fcNo').addEventListener('click', ()=>{ if(!deck.length) return; const c=deck.shift(); results.cards[CARDS[c][0]] = false; deck.splice(Math.min(3, deck.length), 0, c); fcShow(); save(); });
+  document.getElementById('fcShuffle').addEventListener('click', fcDeal);
+  document.getElementById('fcRev').addEventListener('change', fcShow);
+  fcDeal();
+
+  // ---------------- 2. matching ----------------
+  const mL=document.getElementById('mL'), mR=document.getElementById('mR'); let mSel=null, mLeft=0, mErr=0, rounds=0;
+  function mRound(){
+    const pairs = shuffle(MATCH).slice(0,5); mLeft=5; mErr=0; mSel=null; mL.textContent=''; mR.textContent='';
+    shuffle(pairs).forEach(([t])=>{ const b=document.createElement('button'); b.className='mitem'; b.textContent=t; b.dataset.k=t; mL.appendChild(b); });
+    shuffle(pairs).forEach(([t,d])=>{ const b=document.createElement('button'); b.className='mitem'; b.textContent=d; b.dataset.k=t; mR.appendChild(b); });
+    document.getElementById('mStat').textContent = 'Perechi rămase: 5';
+  }
+  mL.addEventListener('click', e=>{ const b=e.target.closest('.mitem'); if(!b||b.classList.contains('done')) return; mL.querySelectorAll('.sel').forEach(x=>x.classList.remove('sel')); b.classList.add('sel'); mSel=b; });
+  mR.addEventListener('click', e=>{ const b=e.target.closest('.mitem'); if(!b||b.classList.contains('done')||!mSel) return;
+    if(b.dataset.k===mSel.dataset.k){ b.classList.add('done'); mSel.classList.add('done'); mSel.classList.remove('sel'); mSel=null; mLeft--;
+      document.getElementById('mStat').textContent = mLeft ? `Perechi rămase: ${mLeft}` : `Rundă terminată cu ${mErr} greșeli. ${mErr===0?'Perfect!':'Mai încearcă o rundă.'}`;
+      if(!mLeft){ rounds++; results.match = rounds; save(); } }
+    else { mErr++; b.classList.add('shake'); setTimeout(()=>b.classList.remove('shake'), 500); } });
+  document.getElementById('mNew').addEventListener('click', mRound);
+  mRound();
+
+  // ---------------- 3. tick all that apply ----------------
+  const NS='http://www.w3.org/2000/svg'; const mk=(t,a)=>{ const e=document.createElementNS(NS,t); for(const k in a) e.setAttribute(k,a[k]); return e; };
+  let ti=0, tDone=false; const order = shuffle(TICKS.map((_,i)=>i));
+  function drawG(t){
+    const host=document.getElementById('tG'); host.textContent='';
+    const svg=mk('svg',{viewBox:'0 0 620 420',width:620,height:420,role:'img','aria-label':'graful G din curs'}); host.appendChild(svg);
+    const hv = new Set(t.v||[]), he = new Set((t.e||[]).map(([a,b])=>Math.min(a,b)+'-'+Math.max(a,b)));
+    E.forEach(([a,b])=>{ const on = he.has(Math.min(a,b)+'-'+Math.max(a,b)); svg.appendChild(mk('line',{class:'edge-line',x1:P[a][0],y1:P[a][1],x2:P[b][0],y2:P[b][1],style: on?'stroke:var(--accent);stroke-width:8':'stroke-width:3'})); });
+    ids.forEach(i=>{ svg.appendChild(mk('circle',{class:'node-circle',cx:P[i][0],cy:P[i][1],r:19,style: hv.has(i)?'fill:var(--accent);stroke:var(--ink);stroke-width:3':''})); const tx=mk('text',{class:'node-label',x:P[i][0],y:P[i][1]+5,'text-anchor':'middle',style:'font-size:15px'}); tx.textContent=i; svg.appendChild(tx); });
+  }
+  function tShow(){
+    tDone=false; const t=TICKS[order[ti]]; drawG(t);
+    document.getElementById('tStat').textContent = `Mulțimea ${ti+1} din ${TICKS.length}`;
+    document.getElementById('tQ').innerHTML = t.v ? `Vârfurile colorate: <b>{${t.v.join(', ')}}</b>` : `Muchiile colorate: <b>${t.e.map(e=>e.join('–')).join(', ')}</b>`;
+    const opts = t.v ? VOPTS : EOPTS; const C=document.getElementById('tC'); C.textContent='';
+    opts.forEach(([k,label,col])=>{ const l=document.createElement('label'); l.innerHTML=`<input type="checkbox" value="${k}"> <span class="dot" style="--c:var(${col})"></span>${label}`; C.appendChild(l); });
+    const nn=document.createElement('label'); nn.innerHTML='<input type="checkbox" value="none"> Nimic din listă'; C.appendChild(nn);
+    document.getElementById('tN').textContent = 'Bifează tot ce se potrivește.';
+  }
+  document.getElementById('tCheck').addEventListener('click', ()=>{
+    if(tDone) return; tDone=true;
+    const t=TICKS[order[ti]], tr=truth(t), opts=t.v?VOPTS:EOPTS, anyTrue = opts.some(([k])=>tr[k]);
+    let ok=true;
+    document.querySelectorAll('#tC label').forEach(l=>{ const inp=l.querySelector('input'), k=inp.value, want = k==='none' ? !anyTrue : !!tr[k];
+      if(inp.checked && want) l.classList.add('ok'); else if(!inp.checked && want){ l.classList.add('miss'); ok=false; } else if(inp.checked && !want){ l.classList.add('bad'); ok=false; } });
+    const list = opts.filter(([k])=>tr[k]).map(([,l])=>l);
+    document.getElementById('tN').innerHTML = (ok ? '<b style="color:var(--good)">✓ Perfect!</b> ' : '<b style="color:var(--bad)">✗ Nu chiar.</b> Verde = corect bifat, portocaliu = trebuia bifat, roșu = bifat greșit. ') + 'Răspuns: <b>' + (list.length ? list.join(', ') : 'nimic din listă') + '</b>.' + (t.v && t.v.length===1 ? ' <br>Un singur vârf e mereu și stabilă interior, și clică: nu are cu cine să fie comparat.' : '') + (t.e && !tr.mat ? ' <br>Muchiile alese au un capăt comun, deci nu e cuplaj.' : '');
+    results.tick[(t.v?'V':'E')+ti] = ok; save();
+  });
+  document.getElementById('tNext').addEventListener('click', ()=>{ ti=(ti+1)%TICKS.length; tShow(); });
+  tShow();
+
+  // ---------------- 4. quiz with hints ----------------
+  const qOrder = shuffle(Q.map((_,i)=>i)); let qi=0, qScore=0, qAnswered=false;
+  function qShow(){
+    qAnswered=false; const [text,opts,,hint] = Q[qOrder[qi]];
+    document.getElementById('qStat').textContent = `Întrebarea ${qi+1} din ${Q.length} · corecte: ${qScore}`;
+    document.getElementById('qBar').style.width = (qi/Q.length*100)+'%';
+    document.getElementById('qQ').textContent = text;
+    const O=document.getElementById('qO'); O.textContent='';
+    opts.forEach((o,k)=>{ const b=document.createElement('button'); b.className='opt'; b.textContent=o; b.dataset.k=k; O.appendChild(b); });
+    const H=document.getElementById('qH'); H.hidden=true; H.textContent='Indiciu: ' + hint;
+    document.getElementById('qF').className='feedback'; document.getElementById('qNext').disabled=true;
+  }
+  document.getElementById('qO').addEventListener('click', e=>{ const b=e.target.closest('.opt'); if(!b||qAnswered) return; qAnswered=true;
+    const [,,right,hint]=Q[qOrder[qi]]; const ok = +b.dataset.k===right;
+    document.querySelectorAll('#qO .opt').forEach(x=>{ x.disabled=true; if(+x.dataset.k===right) x.classList.add('correct'); });
+    if(!ok) b.classList.add('wrong'); else qScore++;
+    const F=document.getElementById('qF'); F.textContent = ok ? '✓ Corect!' : '✗ Nu chiar. Răspunsul corect e marcat cu verde. Indiciu: ' + hint; F.style.color = ok?'var(--good)':'var(--bad)'; F.classList.add('show');
+    results.quiz['q'+qOrder[qi]] = ok; save();
+    const nx=document.getElementById('qNext'); nx.disabled=false; if(qi===Q.length-1){ nx.textContent='Ia-o de la capăt'; document.getElementById('qStat').textContent = `Gata! Scor: ${qScore} din ${Q.length}`; document.getElementById('qBar').style.width='100%'; }
+  });
+  document.getElementById('qHint').addEventListener('click', ()=>{ document.getElementById('qH').hidden=false; });
+  document.getElementById('qNext').addEventListener('click', ()=>{ if(qi===Q.length-1){ qi=0; qScore=0; document.getElementById('qNext').textContent='Următoarea →'; } else qi++; qShow(); });
+  qShow();
+
+  try{ const s=localStorage.getItem('graf_student_name'); if(s) document.getElementById('studentName').value=s; }catch(e){}
+  document.getElementById('studentName').addEventListener('change', save);
+  (async function(){ try{ if(window.claude && window.claude.use) db = await window.claude.use('db'); }catch(e){} })();
+})();
+</script>

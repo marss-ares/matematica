@@ -1,0 +1,643 @@
+<title>Tabla de grafuri</title>
+<meta name="description" content="Tablă pe care desenezi grafuri: pui vârfuri, tragi muchii, le muți, iar pagina calculează grade, matrice, conexitate și centru.">
+<style>
+:root{
+  --bg:#f6f5f1;
+  --surface:#ffffff;
+  --surface-2:#eeece4;
+  --ink:#1c2321;
+  --ink-dim:#5b6460;
+  --line:#d9d5c9;
+  --accent:#8a3b2e;
+  --accent-ink:#ffffff;
+  --node:#2c4a52;
+  --node-2:#c98a3c;
+  --good:#2f6b4f;
+  --bad:#a13a3a;
+  --radius:14px;
+  color-scheme: light;
+}
+@media (prefers-color-scheme: dark){
+  :root:not([data-theme="light"]){
+    --bg:#181a17; --surface:#222521; --surface-2:#2b2e29;
+    --ink:#eeece6; --ink-dim:#a8ada4; --line:#3a3d37;
+    --accent:#e08b6f; --accent-ink:#1c1310;
+    --node:#7fb3bd; --node-2:#e6b16a; --good:#7fc79c; --bad:#e08585;
+    color-scheme: dark;
+  }
+}
+:root[data-theme="dark"]{
+  --bg:#181a17; --surface:#222521; --surface-2:#2b2e29;
+  --ink:#eeece6; --ink-dim:#a8ada4; --line:#3a3d37;
+  --accent:#e08b6f; --accent-ink:#1c1310;
+  --node:#7fb3bd; --node-2:#e6b16a; --good:#7fc79c; --bad:#e08585;
+  color-scheme: dark;
+}
+*{box-sizing:border-box;}
+body{background:var(--bg); color:var(--ink); font-family:'Source Serif 4',Georgia,serif; padding-inline:16px; padding-block:32px;}
+.wrap{max-width:720px; margin:0 auto;}
+h1{font-family:'Fraunces',Georgia,serif; font-weight:600; font-size:clamp(1.5rem,5vw,2.1rem); margin:0 0 4px; text-wrap:balance;}
+.subtitle{font-family:'Inter',system-ui,sans-serif; color:var(--ink-dim); font-size:0.92rem; margin-bottom:22px;}
+svg{max-width:100%; height:auto;}
+.graphbox{display:flex; justify-content:center; margin:14px 0; overflow-x:auto;}
+.node-circle{fill:var(--node); stroke:var(--bg); stroke-width:3;}
+.node-label{font-family:'Inter',sans-serif; font-size:13px; font-weight:700; fill:var(--accent-ink);}
+.edge-line{stroke:var(--ink-dim); stroke-width:2;}
+
+.progressbar{position:sticky; top:env(safe-area-inset-top,0px); background:var(--bg); padding-block:10px 4px; z-index:5; margin-bottom:10px;}
+.pbar-track{height:6px; background:var(--surface-2); border-radius:999px; overflow:hidden;}
+.pbar-fill{height:100%; background:var(--accent); width:0%; transition:width .3s;}
+.pbar-label{font-family:'Inter',sans-serif; font-size:0.72rem; color:var(--ink-dim); margin-top:4px;}
+
+.identity-box{
+  font-family:'Inter',sans-serif; background:var(--surface-2); border-radius:10px;
+  padding:14px 16px; margin-bottom:20px; display:flex; gap:10px; align-items:center; flex-wrap:wrap;
+}
+.identity-box input{
+  flex:1; min-width:140px; padding:8px 10px; border-radius:7px;
+  border:1px solid var(--line); background:var(--surface); color:var(--ink); font-family:inherit; font-size:0.9rem;
+}
+
+.qcard{
+  background:var(--surface); border:1px solid var(--line); border-radius:var(--radius);
+  padding:20px; margin-bottom:16px; font-family:'Inter',system-ui,sans-serif;
+}
+.qnum{font-size:0.72rem; text-transform:uppercase; letter-spacing:0.06em; color:var(--ink-dim); margin-bottom:6px;}
+.qtext{font-family:'Source Serif 4',Georgia,serif; font-size:1.05rem; margin-bottom:14px; line-height:1.5;}
+.opts{display:flex; flex-direction:column; gap:8px;}
+.opt{
+  text-align:left; border:1px solid var(--line); background:var(--surface); color:var(--ink);
+  padding:10px 14px; border-radius:8px; cursor:pointer; font-family:inherit; font-size:0.92rem;
+  transition:background .15s, border-color .15s;
+}
+.opt:hover{border-color:var(--accent);}
+.opt.correct{background:color-mix(in srgb, var(--good) 22%, var(--surface)); border-color:var(--good); color:var(--good);}
+.opt.wrong{background:color-mix(in srgb, var(--bad) 22%, var(--surface)); border-color:var(--bad); color:var(--bad);}
+.opt:disabled{cursor:default;}
+.fillrow{display:flex; align-items:center; gap:8px; flex-wrap:wrap;}
+input.fillbox{
+  width:64px; padding:7px 8px; border-radius:6px; border:1px solid var(--line);
+  background:var(--surface); color:var(--ink); font-family:'JetBrains Mono',monospace; text-align:center; font-size:0.95rem;
+}
+button.check{
+  font-family:'Inter',sans-serif; font-weight:600; font-size:0.85rem;
+  background:var(--accent); color:var(--accent-ink); border:none; padding:9px 18px; border-radius:8px; cursor:pointer; margin-top:10px;
+}
+button.check:hover{opacity:0.9;}
+button.check:disabled{opacity:0.5; cursor:default;}
+.feedback{margin-top:10px; font-size:0.88rem; display:none;}
+.feedback.show{display:block;}
+
+.resultbox{
+  background:var(--surface); border:2px solid var(--accent); border-radius:var(--radius);
+  padding:28px 24px; text-align:center; font-family:'Inter',sans-serif; display:none;
+}
+.resultbox.show{display:block;}
+.resultbox .score{font-family:'Fraunces',Georgia,serif; font-size:2.6rem; font-weight:700; color:var(--accent); margin-bottom:6px;}
+.resultbox .msg{font-size:0.95rem; color:var(--ink-dim); margin-bottom:4px;}
+
+.wrap{max-width:1100px;}
+.toolbar{display:flex;flex-wrap:wrap;gap:8px;align-items:center;margin-bottom:10px;font-family:'Inter',sans-serif;}
+.tbtn{font-family:'Inter',sans-serif;font-weight:600;font-size:0.88rem;background:var(--surface);color:var(--ink);border:1px solid var(--line);padding:9px 14px;border-radius:8px;cursor:pointer;}
+.tbtn.on{background:var(--accent);color:var(--accent-ink);border-color:var(--accent);}
+.tbtn:focus-visible{outline:2px solid var(--accent);outline-offset:2px;}
+.sep{width:1px;height:26px;background:var(--line);}
+.layout{display:grid;grid-template-columns:minmax(0,1fr) 320px;gap:16px;align-items:start;}
+@media (max-width:860px){.layout{grid-template-columns:1fr;}}
+.board{background:var(--surface);border:1px solid var(--line);border-radius:14px;overflow:hidden;touch-action:none;}
+.board svg{display:block;width:100%;height:auto;cursor:crosshair;}
+.hint{font-family:'Inter',sans-serif;font-size:0.85rem;color:var(--ink-dim);margin-top:8px;min-height:1.3em;}
+.panel{background:var(--surface);border:1px solid var(--line);border-radius:14px;padding:16px;font-family:'Inter',sans-serif;font-size:0.9rem;}
+.panel h3{font-family:'Inter',sans-serif;font-size:0.78rem;text-transform:uppercase;letter-spacing:0.06em;color:var(--ink-dim);margin:14px 0 6px;}
+.panel h3:first-child{margin-top:0;}
+.stat{display:flex;justify-content:space-between;padding:3px 0;border-bottom:1px dashed var(--line);font-variant-numeric:tabular-nums;}
+.pill{display:inline-block;padding:2px 9px;border-radius:999px;font-size:0.78rem;font-weight:700;}
+.pill.yes{background:color-mix(in srgb,var(--good) 20%,transparent);color:var(--good);}
+.pill.no{background:color-mix(in srgb,var(--bad) 20%,transparent);color:var(--bad);}
+.mxwrap{overflow-x:auto;}
+table.mx{border-collapse:collapse;font-family:'JetBrains Mono',monospace;font-size:0.8rem;}
+table.mx td{padding:2px 6px;text-align:center;}
+table.mx td.h{font-weight:700;color:var(--ink-dim);}
+table.mx td.one{font-weight:700;color:var(--accent);}
+.v-sel{stroke:var(--accent)!important;stroke-width:4!important;}
+.board, .board *{user-select:none;-webkit-user-select:none;-webkit-touch-callout:none;-webkit-tap-highlight-color:transparent;}
+body.dragging{user-select:none;-webkit-user-select:none;}
+.mxgrid{border-collapse:collapse;font-family:'JetBrains Mono',monospace;}
+.mxgrid td{padding:2px;text-align:center;}
+.mxgrid td.h{font-weight:700;color:var(--ink-dim);padding:2px 6px;}
+.mxcell{width:34px;height:34px;border:1px solid var(--line);border-radius:6px;background:var(--surface);color:var(--ink-dim);font-family:'JetBrains Mono',monospace;font-size:0.95rem;cursor:pointer;user-select:none;-webkit-user-select:none;}
+.mxcell.on{background:var(--accent);color:var(--accent-ink);border-color:var(--accent);font-weight:700;}
+.mxcell:disabled{background:var(--surface-2);cursor:default;}
+.mxtext{width:100%;min-height:120px;font-family:'JetBrains Mono',monospace;font-size:0.9rem;padding:10px;border-radius:8px;border:1px solid var(--line);background:var(--surface);color:var(--ink);}
+.mxcols{display:grid;grid-template-columns:auto minmax(0,1fr);gap:24px;align-items:start;}
+@media (max-width:760px){.mxcols{grid-template-columns:1fr;}}
+.msg{font-family:'Inter',sans-serif;font-size:0.88rem;margin-top:8px;min-height:1.2em;}
+.cap3 .stat button{font-family:'Inter',sans-serif;font-size:0.75rem;font-weight:600;padding:2px 8px;border-radius:6px;border:1px solid var(--line);background:var(--surface);color:var(--ink);cursor:pointer;margin-left:6px;}
+.pk{padding:5px 0;border-bottom:1px dashed var(--line);line-height:1.5;}
+.pk b{display:inline-block;min-width:0;}
+.pk .sub{color:var(--ink-dim);font-size:0.8rem;}
+.chips{display:flex;flex-wrap:wrap;gap:6px;margin:4px 0 8px;}
+.chip{--c:var(--ink-dim);display:inline-flex;align-items:center;gap:5px;font-size:0.78rem;font-weight:700;padding:3px 10px;border-radius:999px;color:var(--c);background:color-mix(in srgb,var(--c) 16%,transparent);border:1px solid color-mix(in srgb,var(--c) 45%,transparent);}
+.chip::before{content:"";width:8px;height:8px;border-radius:999px;background:var(--c);}
+.chip .q{font-weight:500;opacity:0.85;}
+.chip.none{--c:var(--ink-dim);font-weight:600;}
+.edge-hit{stroke:transparent;stroke-width:18;cursor:pointer;}
+.wave{font-family:Inter,sans-serif;font-size:13px;font-weight:700;fill:var(--accent);pointer-events:none;}
+:root{--c-purple:#6b4fa0;--c-pink:#b0417a;--c-teal:#1f7a7a;--c-blue:#2f5f9e;}
+@media (prefers-color-scheme: dark){:root:not([data-theme="light"]){--c-purple:#b9a3e6;--c-pink:#ec9cc4;--c-teal:#79cccc;--c-blue:#9dbdf0;}}
+:root[data-theme="dark"]{--c-purple:#b9a3e6;--c-pink:#ec9cc4;--c-teal:#79cccc;--c-blue:#9dbdf0;}
+</style>
+
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Fraunces:wght@500;600;700&family=Source+Serif+4:wght@400;500&family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@500;700&display=swap">
+
+<div class="wrap">
+  <h1>Tabla de grafuri</h1>
+  <div class="subtitle">Desenezi ce vrei, iar în dreapta vezi imediat gradele, matricea, conexitatea și centrul.</div>
+
+  <div class="toolbar" role="toolbar" aria-label="Unelte">
+    <button class="tbtn on" data-mode="draw" title="Click pe gol = vârf nou. Click pe un vârf, apoi pe altul = muchie. Trage de un vârf = îl muți.">Desenează</button>
+    <button class="tbtn" data-mode="erase" title="Click pe un vârf sau pe o muchie = șterge.">Șterge</button>
+    <button class="tbtn" data-mode="waves" title="Click pe un vârf = distanțele de la el (valurile).">Valuri</button>
+    <button class="tbtn" data-mode="pick" title="Click pe vârfuri și pe muchii ca să faci o mulțime. În dreapta vezi ce fel de mulțime e.">Alege mulțime</button>
+    <span class="sep"></span>
+    <button class="tbtn" id="bipBtn" aria-pressed="false" title="Colorează vârfurile în 2 culori (grupele X₁ și X₂)">Culori bipartit</button>
+    <span class="sep"></span>
+    <button class="tbtn" id="compBtn" title="Înlocuiește graful cu complementarul lui: muchiile existente dispar, cele lipsă apar.">Complementar</button>
+    <button class="tbtn" id="undo">↶ Înapoi</button>
+    <button class="tbtn" id="clear">Golește tabla</button>
+    <span class="sep"></span>
+    <label style="font-size:0.85rem;">Exemplu:
+      <select id="preset" class="tbtn" style="padding:7px 8px;">
+        <option value="">alege…</option>
+        <option value="tri">Triunghi + coadă</option>
+        <option value="sq">Pătrat 2-3-4-5 (test cap. 2)</option>
+        <option value="k4">K₄ complet</option>
+        <option value="k23">K₂,₃ bipartit</option>
+        <option value="kon">Podurile din Königsberg (fără muchii duble)</option>
+        <option value="c3">Graful G din capitolul 3</option>
+      </select>
+    </label>
+  </div>
+
+  <div class="layout">
+    <div>
+      <div class="board"><svg id="svg" viewBox="0 0 800 520" aria-label="Tabla de desen"></svg></div>
+      <div class="hint" id="hint"></div>
+    </div>
+    <aside class="panel" id="panel" aria-live="polite"></aside>
+  </div>
+
+  <div class="qcard" style="font-family:'Inter',sans-serif;margin-top:16px;">
+    <h3 style="font-family:'Inter',sans-serif;font-size:1rem;margin:0 0 10px;">Construiește graful dintr-o matrice de adiacență</h3>
+    <div class="mxcols">
+      <div>
+        <label style="font-size:0.88rem;">Număr de vârfuri:
+          <select id="mxN" class="tbtn" style="padding:6px 8px;"><option value="2">2</option><option value="3">3</option><option value="4">4</option><option value="5" selected>5</option><option value="6">6</option><option value="7">7</option><option value="8">8</option><option value="9">9</option><option value="10">10</option></select>
+        </label>
+        <p style="font-size:0.85rem;color:var(--ink-dim);margin:8px 0;">Apasă pe o căsuță ca s-o faci 1 sau 0. Căsuța în oglindă se schimbă singură, pentru că matricea e simetrică.</p>
+        <div id="mxGridWrap" style="overflow-x:auto;"></div>
+        <div class="btnrow" style="display:flex;gap:8px;flex-wrap:wrap;margin-top:10px;">
+          <button class="tbtn on" id="mxBuildGrid">Desenează din tabel</button>
+          <button class="tbtn" id="mxFromBoard">Copiază de pe tablă</button>
+        </div>
+      </div>
+      <div>
+        <label for="mxText" style="font-size:0.88rem;">Sau lipește matricea ca text (poate avea și rândul/coloana cu numere):</label>
+        <textarea id="mxText" class="mxtext" spellcheck="false" placeholder="0 1 1 0 0&#10;1 0 0 1 0&#10;1 0 0 1 0&#10;0 1 1 0 1&#10;0 0 0 1 0"></textarea>
+        <div style="margin-top:8px;"><button class="tbtn on" id="mxBuildText">Desenează din text</button></div>
+      </div>
+    </div>
+    <div class="msg" id="mxMsg" aria-live="polite"></div>
+  </div>
+
+  <div class="qcard" style="font-family:'Inter',sans-serif;margin-top:16px;">
+    <b>Cum lucrezi:</b><br>
+    • <b>Desenează:</b> click pe un loc gol pune un vârf. Click pe un vârf, apoi pe alt vârf, face muchie între ele (dacă muchia există deja, o scoate). Tragi de un vârf ca să-l muți.<br>
+    • <b>Șterge:</b> click pe un vârf (dispare cu muchiile lui) sau pe o muchie.<br>
+    • <b>Valuri:</b> click pe un vârf și vezi distanța de la el la toate celelalte, plus excentricitatea lui.<br>
+    • <b>Alege mulțime:</b> apeși pe vârfuri și pe muchii. În dreapta, la „Capitolul 3”, vezi dacă selecția e stabilă, nucleu, acoperire, clică sau cuplaj (și dacă e maximală/maximă, minimală/minimă). Butoanele „arată” îți pun un exemplu optim.<br>
+    • <b>Complementar:</b> inversează muchiile. Alege o clică, apasă Complementar și vezi că devine stabilă interior.<br>
+    • <b>Culori bipartit:</b> colorează vârfurile în 2 culori. Dacă nu se poate, arată cu roșu ciclul impar care strică totul.<br>
+    Desenul rămâne salvat în browserul tău și când revii pe pagină.
+  </div>
+</div>
+
+<script>
+(function(){
+  const NS = 'http://www.w3.org/2000/svg';
+  const svg = document.getElementById('svg');
+  const panel = document.getElementById('panel');
+  const hint = document.getElementById('hint');
+  let G = {V:[], E:[]};           // V: {id,x,y}, E: [idA,idB]
+  let mode = 'draw', sel = null, waveFrom = null, bipOn = false;
+  let pickV = new Set(), pickE = new Set();
+  const ek = (a,b) => Math.min(a,b) + '-' + Math.max(a,b);
+  const hist = [];
+
+  function load(){ try{ const s = localStorage.getItem('tabla_grafuri'); if(s){ const g = JSON.parse(s); if(g && Array.isArray(g.V) && Array.isArray(g.E)) G = g; } }catch(e){} }
+  function persist(){ try{ localStorage.setItem('tabla_grafuri', JSON.stringify(G)); }catch(e){} }
+  function snap(){ hist.push(JSON.stringify(G)); if(hist.length > 100) hist.shift(); }
+  function nextId(){ const used = new Set(G.V.map(v=>v.id)); let i = 1; while(used.has(i)) i++; return i; }
+  function hasEdge(a,b){ return G.E.findIndex(e => (e[0]===a&&e[1]===b)||(e[0]===b&&e[1]===a)); }
+  function vById(id){ return G.V.find(v=>v.id===id); }
+  function pt(evt){ const p = svg.createSVGPoint(); p.x = evt.clientX; p.y = evt.clientY; const q = p.matrixTransform(svg.getScreenCTM().inverse()); return {x: Math.max(20, Math.min(780, q.x)), y: Math.max(20, Math.min(500, q.y))}; }
+  function mk(tag, attrs){ const e = document.createElementNS(NS, tag); for(const k in attrs) e.setAttribute(k, attrs[k]); return e; }
+
+  // ---------- graph math ----------
+  function adj(){ const A = new Map(G.V.map(v=>[v.id, []])); G.E.forEach(([a,b])=>{ A.get(a).push(b); A.get(b).push(a); }); return A; }
+  function bfs(A, s){ const d = new Map([[s,0]]); const q=[s]; while(q.length){ const u=q.shift(); A.get(u).forEach(w=>{ if(!d.has(w)){ d.set(w, d.get(u)+1); q.push(w);} }); } return d; }
+  function analyze(){
+    const A = adj(), ids = G.V.map(v=>v.id).sort((a,b)=>a-b);
+    const n = ids.length, m = G.E.length;
+    const deg = new Map(ids.map(i=>[i, A.get(i).length]));
+    // components
+    const seen = new Set(); let k = 0;
+    ids.forEach(i=>{ if(!seen.has(i)){ k++; bfs(A,i).forEach((_,v)=>seen.add(v)); } });
+    // bipartite
+    const col = new Map(), par = new Map(); let bip = true, oddCycle = null, badEdge = null;
+    ids.forEach(s=>{ if(col.has(s)) return; col.set(s,0); par.set(s,null); const q=[s]; while(q.length){ const u=q.shift(); A.get(u).forEach(w=>{ if(!col.has(w)){ col.set(w,1-col.get(u)); par.set(w,u); q.push(w);} else if(col.get(w)===col.get(u) && bip){ bip=false; badEdge=[u,w];
+      const up = x=>{ const p=[x]; while(par.get(x)!==null){ x=par.get(x); p.push(x);} return p; };
+      const pu = up(u), pw = up(w); const setW = new Set(pw); const lca = pu.find(x=>setW.has(x));
+      oddCycle = pu.slice(0, pu.indexOf(lca)+1).concat(pw.slice(0, pw.indexOf(lca)).reverse()); } }); } });
+    // eccentricities
+    let ecc = null, D=null, r=null, center=[];
+    if(n>0 && k===1){ ecc = new Map(ids.map(i=>{ const d=bfs(A,i); return [i, Math.max(...d.values())]; })); D = Math.max(...ecc.values()); r = Math.min(...ecc.values()); center = ids.filter(i=>ecc.get(i)===r); }
+    const odd = ids.filter(i=>deg.get(i)%2===1).length;
+    return {A, ids, n, m, deg, k, bip, col, ecc, D, r, center, odd, oddCycle, badEdge};
+  }
+
+  // ---------- chapter 3 ----------
+  function maxIndep(ids, adjSet){
+    let best = [];
+    (function rec(c, cur){
+      if(cur.length + c.length <= best.length) return;
+      if(!c.length){ best = cur.slice(); return; }
+      const v = c[0], rest = c.slice(1);
+      const nb = rest.filter(w=>adjSet(v,w));
+      rec(rest.filter(w=>!adjSet(v,w)), cur.concat([v]));
+      if(nb.length) rec(rest, cur);
+    })(ids.slice(), []);
+    return best;
+  }
+  function maxMatching(ids, A){
+    let best = [];
+    (function rec(free, cur){
+      if(cur.length + Math.floor(free.length/2) <= best.length) return;
+      if(cur.length > best.length) best = cur.slice();
+      if(free.length < 2) return;
+      const v = free[0], rest = free.slice(1);
+      A.get(v).forEach(w=>{ if(rest.includes(w)) rec(rest.filter(x=>x!==w), cur.concat([[v,w]])); });
+      rec(rest, cur);
+    })(ids.slice(), []);
+    return best;
+  }
+  function combos(arr, k, fn){ const c=[]; (function go(i){ if(c.length===k){ return fn(c.slice()); } for(let j=i;j<arr.length;j++){ c.push(arr[j]); if(go(j+1)) return true; c.pop(); } return false; })(0); }
+  function cap3(R){
+    const ids = R.ids, n = R.n;
+    if(!n) return null;
+    if(n > 18) return {tooBig:true};
+    const adj = (a,b) => R.A.get(a).includes(b);
+    const ind = maxIndep(ids, adj);
+    const cli = maxIndep(ids, (a,b)=> a!==b && !adj(a,b));
+    const cover = ids.filter(v=>!ind.includes(v));
+    let dom = null;
+    for(let k=1;k<=n && !dom;k++) combos(ids, k, c=>{ const s=new Set(c); if(ids.every(v=>s.has(v)||R.A.get(v).some(w=>s.has(w)))){ dom=c; return true; } return false; });
+    const mat = maxMatching(ids, R.A);
+    const isolated = ids.some(v=>R.A.get(v).length===0);
+    let ecov = null;
+    if(!isolated){ const used = new Set(mat.flat()); ecov = mat.map(e=>e.slice()); ids.forEach(v=>{ if(!used.has(v)){ ecov.push([v, R.A.get(v)[0]]); used.add(v); } }); }
+    return {ind, cli, cover, dom, mat, ecov, isolated};
+  }
+  function checkPick(R, C){
+    const S = [...pickV].filter(v=>R.A.has(v)).sort((a,b)=>a-b);
+    const s = new Set(S), out = R.ids.filter(v=>!s.has(v));
+    const adj = (a,b) => R.A.get(a).includes(b);
+    const isInd = X => X.every((a,i)=>X.slice(i+1).every(b=>!adj(a,b)));
+    const isDom = X => { const t=new Set(X); return R.ids.every(v=>t.has(v)||R.A.get(v).some(w=>t.has(w))); };
+    const isCov = X => { const t=new Set(X); return G.E.every(([a,b])=>t.has(a)||t.has(b)); };
+    const isCli = X => X.every((a,i)=>X.slice(i+1).every(b=>adj(a,b)));
+    const r = {S};
+    r.ind = isInd(S); r.indMaximal = r.ind && out.every(v=>!isInd(S.concat([v]))); r.indMax = r.ind && C && S.length===C.ind.length;
+    r.dom = isDom(S); r.domMinimal = r.dom && S.every(v=>!isDom(S.filter(x=>x!==v))); r.domMin = r.dom && C && C.dom && S.length===C.dom.length;
+    r.kernel = r.ind && r.dom;
+    r.cov = isCov(S); r.covMinimal = r.cov && S.every(v=>!isCov(S.filter(x=>x!==v))); r.covMin = r.cov && C && S.length===C.cover.length;
+    r.cli = isCli(S); r.cliMaximal = r.cli && out.every(v=>!isCli(S.concat([v]))); r.cliMax = r.cli && C && S.length===C.cli.length;
+    const E = [...pickE].map(k=>k.split('-').map(Number)).filter(([a,b])=>hasEdge(a,b)>=0);
+    r.E = E;
+    const deg = new Map(); E.forEach(([a,b])=>{ deg.set(a,(deg.get(a)||0)+1); deg.set(b,(deg.get(b)||0)+1); });
+    const isMat = X => { const seen=new Set(); for(const [a,b] of X){ if(seen.has(a)||seen.has(b)) return false; seen.add(a); seen.add(b);} return true; };
+    const isEcov = X => { const t=new Set(X.flat()); return R.ids.every(v=>t.has(v)); };
+    r.mat = isMat(E); const used = new Set(E.flat());
+    r.matMaximal = r.mat && G.E.every(([a,b])=> hasPick(a,b) || used.has(a) || used.has(b));
+    r.matMax = r.mat && C && E.length===C.mat.length; r.perfect = r.mat && used.size===R.n;
+    r.ecov = isEcov(E); r.ecovMinimal = r.ecov && E.every((e,i)=>!isEcov(E.filter((_,j)=>j!==i))); r.ecovMin = r.ecov && C && C.ecov && E.length===C.ecov.length;
+    return r;
+  }
+  function hasPick(a,b){ return pickE.has(ek(a,b)); }
+
+  // ---------- render ----------
+  function render(){
+    const R = analyze();
+    svg.textContent = '';
+    const waves = (mode==='waves' && waveFrom!==null && vById(waveFrom)) ? bfs(R.A, waveFrom) : null;
+    pickV = new Set([...pickV].filter(v=>R.A.has(v)));
+    pickE = new Set([...pickE].filter(k=>{ const [a,b]=k.split('-').map(Number); return hasEdge(a,b)>=0; }));
+    G.E.forEach(([a,b], idx)=>{
+      const A = vById(a), B = vById(b); if(!A||!B) return;
+      const bad = bipOn && R.badEdge && ((R.badEdge[0]===a&&R.badEdge[1]===b)||(R.badEdge[0]===b&&R.badEdge[1]===a));
+      const onCyc = bipOn && R.oddCycle && R.oddCycle.some((x,i)=>{ const y = R.oddCycle[(i+1)%R.oddCycle.length]; return (x===a&&y===b)||(x===b&&y===a); });
+      const picked = pickE.has(ek(a,b));
+      svg.appendChild(mk('line', {class:'edge-line', x1:A.x, y1:A.y, x2:B.x, y2:B.y, style: onCyc ? 'stroke:var(--bad);stroke-width:5' + (bad?';stroke-dasharray:10 6':'') : picked ? 'stroke:var(--accent);stroke-width:8' : 'stroke-width:3'}));
+      const hit = mk('line', {class:'edge-hit', x1:A.x, y1:A.y, x2:B.x, y2:B.y, 'data-edge':idx});
+      svg.appendChild(hit);
+    });
+    const palette = ['var(--accent)','var(--node-2)','var(--good)','var(--node)','var(--bad)'];
+    G.V.forEach(v=>{
+      const g = mk('g', {'data-v':v.id, style:'cursor:grab'});
+      let fill = '';
+      if(waves && waves.has(v.id)) fill = 'fill:' + palette[Math.min(waves.get(v.id), palette.length-1)];
+      else if(bipOn && R.bip) fill = 'fill:' + (R.col.get(v.id)===0 ? 'var(--node-2)' : 'var(--good)');
+      else if(bipOn && R.oddCycle && R.oddCycle.includes(v.id)) fill = 'fill:var(--bad)';
+      else if(pickV.has(v.id)) fill = 'fill:var(--accent);stroke:var(--ink);stroke-width:3';
+      const c = mk('circle', {class:'node-circle' + (sel===v.id?' v-sel':''), cx:v.x, cy:v.y, r:20, style:fill});
+      const t = mk('text', {class:'node-label', x:v.x, y:v.y+5, 'text-anchor':'middle', style:'font-size:15px;pointer-events:none'});
+      t.textContent = v.id;
+      g.appendChild(c); g.appendChild(t); svg.appendChild(g);
+      if(waves){ const w = mk('text', {class:'wave', x:v.x, y:v.y-28, 'text-anchor':'middle'}); w.textContent = waves.has(v.id) ? waves.get(v.id) : '∞'; svg.appendChild(w); }
+      else { const d = mk('text', {class:'wave', x:v.x+26, y:v.y-18, style:'fill:var(--ink-dim);font-size:12px'}); d.textContent = 'd=' + R.deg.get(v.id); svg.appendChild(d); }
+    });
+    if(G.V.length===0){ const t = mk('text', {x:400, y:260, 'text-anchor':'middle', style:'font-family:Inter,sans-serif;font-size:18px;fill:var(--ink-dim)'}); t.textContent = 'Click oriunde ca să pui primul vârf'; svg.appendChild(t); }
+    renderPanel(R, waves);
+    persist();
+  }
+
+  function yn(b){ return `<span class="pill ${b?'yes':'no'}">${b?'da':'nu'}</span>`; }
+  const CH = (label, color, q) => `<span class="chip" style="--c:var(${color})">${label}${q ? ' <span class="q">' + q + '</span>' : ''}</span>`;
+  function graphChips(R, C){
+    if(!R.n) return '';
+    const n=R.n, m=R.m, degs=R.ids.map(i=>R.deg.get(i)), maxd=Math.max(...degs);
+    const out=[];
+    out.push(R.k===1 ? CH('conex','--good') : CH('neconex','--bad', R.k + ' componente'));
+    if(m===0) out.push(CH('graf vid','--ink-dim','O' + sub(n)));
+    if(n>1 && m===n*(n-1)/2) out.push(CH('graf complet','--c-pink','K' + sub(n)));
+    const tree = R.k===1 && m===n-1;
+    if(tree && n>1) out.push(CH('arbore','--good','conex, fără cicluri'));
+    if(tree && n>=2 && maxd<=2) out.push(CH('lanț','--c-teal'));
+    if(tree && n>=4 && maxd===n-1) out.push(CH('stea','--c-teal','K' + sub('1,'+(n-1))));
+    if(R.k===1 && n>=3 && degs.every(d=>d===2)) out.push(CH('ciclu','--c-teal','C' + sub(n)));
+    if(m>0){
+      if(R.bip){
+        const a = R.ids.filter(i=>R.col.get(i)===0).length, b = n-a;
+        if(R.k===1 && a && b && m===a*b) out.push(CH('bipartit complet','--node-2','K' + sub(Math.min(a,b)+','+Math.max(a,b))));
+        else out.push(CH('bipartit','--node-2'));
+      } else out.push(CH('nu e bipartit','--ink-dim','are ciclu impar'));
+    }
+    if(R.k===1 && m>0 && degs.every(d=>d%2===0)) out.push(CH('are ciclu eulerian','--c-purple','toate gradele pare'));
+    if(C && !C.tooBig && m>0 && C.mat.length*2===n) out.push(CH('are cuplaj perfect','--c-blue'));
+    return '<h3>Ce este graful</h3><div class="chips">' + out.join('') + '</div>';
+  }
+  function sub(x){ const map={'0':'₀','1':'₁','2':'₂','3':'₃','4':'₄','5':'₅','6':'₆','7':'₇','8':'₈','9':'₉',',':','}; return String(x).split('').map(c=>map[c]||c).join(''); }
+  function renderPanel(R, waves){
+    const C = cap3(R);
+    let h = graphChips(R, C) + '<h3>Numere</h3>';
+    h += `<div class="stat"><span>Vârfuri n</span><b>${R.n}</b></div>`;
+    h += `<div class="stat"><span>Muchii m</span><b>${R.m}</b></div>`;
+    h += `<div class="stat"><span>Componente k</span><b>${R.k}</b></div>`;
+    h += `<div class="stat"><span>Conex</span>${R.n? yn(R.k===1) : '–'}</div>`;
+    h += `<div class="stat"><span>Bipartit</span>${R.n? yn(R.bip) : '–'}</div>`;
+    if(R.n){
+      if(R.bip){ const X1 = R.ids.filter(i=>R.col.get(i)===0), X2 = R.ids.filter(i=>R.col.get(i)===1);
+        h += `<div style="margin-top:4px;">X₁ = {${X1.join(', ')}}, X₂ = {${X2.join(', ')}}</div>`; }
+      else h += `<div style="margin-top:4px;">Ciclu impar: ${R.oddCycle.concat([R.oddCycle[0]]).join('–')} (lungime ${R.oddCycle.length})</div>`;
+    }
+    h += '<h3>Grade</h3>';
+    if(R.n){
+      const degs = R.ids.map(i=>R.deg.get(i));
+      h += `<div>${R.ids.map(i=>`d(${i})=${R.deg.get(i)}`).join(', ')}</div>`;
+      h += `<div class="stat"><span>Suma gradelor</span><b>${degs.reduce((a,b)=>a+b,0)} = 2·${R.m}</b></div>`;
+      h += `<div class="stat"><span>Vârfuri cu grad impar</span><b>${R.odd} (mereu par)</b></div>`;
+      const lo = R.n - R.k, hi = (R.n-R.k+1)*(R.n-R.k)/2;
+      h += `<div class="stat"><span>n − k ≤ m ≤ C²</span><b>${lo} ≤ ${R.m} ≤ ${hi}</b></div>`;
+    } else h += '<div>–</div>';
+    h += '<h3>Distanțe</h3>';
+    if(R.k===1 && R.n){
+      h += `<div>${R.ids.map(i=>`e(${i})=${R.ecc.get(i)}`).join(', ')}</div>`;
+      h += `<div class="stat"><span>Diametru D</span><b>${R.D}</b></div>`;
+      h += `<div class="stat"><span>Raza r</span><b>${R.r}</b></div>`;
+      h += `<div class="stat"><span>Centru</span><b>{${R.center.join(', ')}}</b></div>`;
+    } else if(R.n) h += '<div>Graful nu e conex, așa că excentricitatea nu e definită. Leagă bucățile între ele.</div>';
+    else h += '<div>–</div>';
+    if(waves){ const mx = Math.max(...waves.values()); h += `<div style="margin-top:6px;">Valuri din <b>${waveFrom}</b>: cel mai mare număr = <b>${mx}</b>${R.k===1?` = e(${waveFrom})`:''}</div>`; }
+    h += '<div class="cap3"><h3>Capitolul 3</h3>';
+    if(!C) h += '<div>–</div>';
+    else if(C.tooBig) h += '<div>Graful e prea mare pentru calcul (maxim 18 vârfuri).</div>';
+    else {
+      const set = X => '{' + X.slice().sort((a,b)=>a-b).join(', ') + '}';
+      const eset = X => X.map(e=>e.join('–')).join(', ');
+      h += `<div class="stat"><span>α₀ stabilă interior maximă</span><b>${C.ind.length}<button data-show="ind">arată</button></b></div>`;
+      h += `<div class="stat"><span>β₀ acoperire de vârfuri minimă</span><b>${C.cover.length}<button data-show="cover">arată</button></b></div>`;
+      h += `<div class="stat"><span>stabilă exterior minimă</span><b>${C.dom.length}<button data-show="dom">arată</button></b></div>`;
+      h += `<div class="stat"><span>φ clica maximă</span><b>${C.cli.length}<button data-show="cli">arată</button></b></div>`;
+      h += `<div class="stat"><span>α₁ cuplaj maxim</span><b>${C.mat.length}<button data-show="mat">arată</button></b></div>`;
+      h += `<div class="stat"><span>β₁ acoperire de muchii minimă</span><b>${C.ecov ? C.ecov.length + '<button data-show="ecov">arată</button>' : 'nu există'}</b></div>`;
+      h += `<div class="stat"><span>α₀ + β₀ = n</span><b>${C.ind.length} + ${C.cover.length} = ${R.n} ✓</b></div>`;
+      h += `<div class="stat"><span>α₁ + β₁ = n (Gallai)</span><b>${C.ecov ? `${C.mat.length} + ${C.ecov.length} = ${R.n} ✓` : 'are vârf izolat'}</b></div>`;
+      h += `<div class="stat"><span>Cuplaj perfect</span>${yn(C.mat.length*2===R.n)}</div>`;
+      if(pickV.size || pickE.size || mode==='pick'){
+        const P = checkPick(R, C);
+        const q = (a, na, b, nb) => [a ? na : '', b ? nb : ''].filter(Boolean).join(', ');
+        const vc = [], ec = [];
+        if(P.S.length){
+          if(P.ind) vc.push(CH('stabilă interior','--good', q(P.indMaximal,'maximală',P.indMax,'maximă')));
+          if(P.dom) vc.push(CH('stabilă exterior','--node-2', q(P.domMinimal,'minimală',P.domMin,'minimă')));
+          if(P.kernel) vc.push(CH('nucleu','--c-purple'));
+          if(P.cov) vc.push(CH('acoperire de vârfuri','--c-blue', q(P.covMinimal,'minimală',P.covMin,'minimă')));
+          if(P.cli) vc.push(CH('clică','--c-pink', q(P.cliMaximal,'maximală',P.cliMax,'maximă')));
+          if(!vc.length) vc.push('<span class="chip none">nimic special</span>');
+        }
+        if(P.E.length){
+          if(P.mat) ec.push(CH('cuplaj','--c-teal', [P.matMaximal?'maximal':'', P.matMax?'maxim':'', P.perfect?'perfect':''].filter(Boolean).join(', ')));
+          if(P.ecov) ec.push(CH('acoperire de muchii','--accent', q(P.ecovMinimal,'minimală',P.ecovMin,'minimă')));
+          if(!ec.length) ec.push('<span class="chip none">nimic special</span>');
+        }
+        if(vc.length || ec.length){
+          h += '<h3>Selecția ta este</h3>';
+          if(vc.length) h += '<div class="sub" style="font-size:0.8rem;color:var(--ink-dim)">Vârfurile ' + set(P.S) + ':</div><div class="chips">' + vc.join('') + '</div>';
+          if(ec.length) h += '<div class="sub" style="font-size:0.8rem;color:var(--ink-dim)">Muchiile ' + eset(P.E) + ':</div><div class="chips">' + ec.join('') + '</div>';
+        }
+        const t = (ok, name, subs) => `<div class="pk"><b>${name}</b> ${yn(ok)}${ok && subs ? ' <span class="sub">' + subs.map(([n,v])=>`${n}: ${v?'da':'nu'}`).join(' · ') + '</span>' : ''}</div>`;
+        h += '<h3>Mulțimea ta de vârfuri ' + (P.S.length ? set(P.S) : '{ }') + '</h3>';
+        if(P.S.length){
+          h += t(P.ind, 'Stabilă interior', [['maximală',P.indMaximal],['maximă',P.indMax]]);
+          h += t(P.dom, 'Stabilă exterior', [['minimală',P.domMinimal],['minimă',P.domMin]]);
+          h += t(P.kernel, 'Nucleu');
+          h += t(P.cov, 'Acoperire de vârfuri', [['minimală',P.covMinimal],['minimă',P.covMin]]);
+          h += t(P.cli, 'Clică', [['maximală',P.cliMaximal],['maximă',P.cliMax]]);
+        } else h += '<div class="sub">În modul „Alege mulțime”, apasă pe vârfuri.</div>';
+        h += '<h3>Mulțimea ta de muchii ' + (P.E.length ? eset(P.E) : '{ }') + '</h3>';
+        if(P.E.length){
+          h += t(P.mat, 'Cuplaj', [['maximal',P.matMaximal],['maxim',P.matMax],['perfect',P.perfect]]);
+          h += t(P.ecov, 'Acoperire de muchii', [['minimală',P.ecovMinimal],['minimă',P.ecovMin]]);
+        } else h += '<div class="sub">În modul „Alege mulțime”, apasă pe linii.</div>';
+        h += '<div style="margin-top:6px;"><button class="tbtn" data-show="none" style="font-size:0.8rem;padding:5px 10px;">Golește selecția</button></div>';
+      }
+    }
+    h += '</div>';
+    h += '<h3>Matricea de adiacență</h3>';
+    if(R.n && R.n <= 14){
+      h += '<div class="mxwrap"><table class="mx"><tr><td></td>' + R.ids.map(i=>`<td class="h">${i}</td>`).join('') + '</tr>';
+      R.ids.forEach(i=>{ h += `<tr><td class="h">${i}</td>` + R.ids.map(j=>{ const one = R.A.get(i).includes(j); return `<td class="${one?'one':''}">${one?1:0}</td>`; }).join('') + '</tr>'; });
+      h += '</table></div>';
+    } else if(R.n) h += '<div>Prea multe vârfuri ca să încapă (maxim 14).</div>';
+    else h += '<div>–</div>';
+    panel.innerHTML = h;
+  }
+
+  panel.addEventListener('click', function(e){
+    const b = e.target.closest('[data-show]'); if(!b) return;
+    const R = analyze(), C = cap3(R); if(!C || C.tooBig) return;
+    const what = b.dataset.show;
+    pickV = new Set(); pickE = new Set();
+    if(what==='ind') pickV = new Set(C.ind);
+    if(what==='cover') pickV = new Set(C.cover);
+    if(what==='dom') pickV = new Set(C.dom);
+    if(what==='cli') pickV = new Set(C.cli);
+    if(what==='mat') pickE = new Set(C.mat.map(([a,c])=>ek(a,c)));
+    if(what==='ecov' && C.ecov) pickE = new Set(C.ecov.map(([a,c])=>ek(a,c)));
+    if(what!=='none'){ mode='pick'; bipOn=false; document.getElementById('bipBtn').classList.remove('on'); document.querySelectorAll('[data-mode]').forEach(x=>x.classList.toggle('on', x.dataset.mode==='pick')); }
+    render(); setHint();
+  });
+  function setHint(){
+    hint.textContent = mode==='draw' ? (sel!==null ? `Vârful ${sel} e ales. Click pe alt vârf ca să faci muchie, sau pe el din nou ca să renunți.` : 'Click pe gol = vârf nou · click pe două vârfuri = muchie · trage = mută')
+      : mode==='erase' ? 'Click pe un vârf sau pe o muchie ca să le ștergi.'
+      : mode==='pick' ? 'Click pe vârfuri și pe linii ca să le alegi. În dreapta, la „Capitolul 3”, vezi ce fel de mulțime ai făcut.'
+      : 'Click pe un vârf: vezi distanța de la el la fiecare alt vârf (∞ = nu se poate ajunge).';
+  }
+
+  // ---------- interaction ----------
+  let drag = null;
+  svg.addEventListener('pointerdown', function(e){
+    e.preventDefault();
+    const p = pt(e);
+    const g = e.target.closest('g[data-v]');
+    const edge = e.target.getAttribute && e.target.getAttribute('data-edge');
+    if(g){
+      const id = +g.getAttribute('data-v');
+      if(mode==='draw'){ const v = vById(id); drag = {id, dx:p.x-v.x, dy:p.y-v.y, moved:false, start:p}; svg.setPointerCapture(e.pointerId); document.body.classList.add('dragging'); }
+      else if(mode==='erase'){ snap(); G.V = G.V.filter(v=>v.id!==id); G.E = G.E.filter(([a,b])=>a!==id&&b!==id); if(sel===id) sel=null; render(); }
+      else if(mode==='waves'){ waveFrom = (waveFrom===id) ? null : id; render(); }
+      else if(mode==='pick'){ pickV.has(id) ? pickV.delete(id) : pickV.add(id); render(); }
+      return;
+    }
+    if(edge!==null && edge!==undefined){
+      if(mode==='erase'){ snap(); G.E.splice(+edge,1); render(); }
+      if(mode==='pick'){ const [a,b] = G.E[+edge]; const k = ek(a,b); pickE.has(k) ? pickE.delete(k) : pickE.add(k); render(); }
+      return;
+    }
+    if(mode==='draw'){ snap(); G.V.push({id:nextId(), x:Math.round(p.x), y:Math.round(p.y)}); sel=null; render(); setHint(); }
+  });
+  svg.addEventListener('pointermove', function(e){
+    if(!drag) return;
+    const p = pt(e);
+    if(!drag.moved && Math.hypot(p.x-drag.start.x, p.y-drag.start.y) < 6) return;
+    if(!drag.moved){ snap(); drag.moved = true; }
+    const v = vById(drag.id); v.x = Math.round(p.x-drag.dx); v.y = Math.round(p.y-drag.dy); render();
+  });
+  function endDrag(){
+    if(!drag) return;
+    const d = drag; drag = null; document.body.classList.remove('dragging');
+    if(d.moved) return;
+    if(sel===null){ sel = d.id; }
+    else if(sel===d.id){ sel = null; }
+    else { snap(); const i = hasEdge(sel, d.id); if(i>=0) G.E.splice(i,1); else G.E.push([sel, d.id]); sel = null; }
+    render(); setHint();
+  }
+  svg.addEventListener('pointerup', endDrag);
+  svg.addEventListener('pointercancel', function(){ drag=null; document.body.classList.remove('dragging'); });
+  svg.addEventListener('selectstart', e=>e.preventDefault());
+
+  document.querySelectorAll('[data-mode]').forEach(b=>b.addEventListener('click', function(){
+    mode = b.dataset.mode; sel = null; if(mode!=='waves') waveFrom = null;
+    document.querySelectorAll('[data-mode]').forEach(x=>x.classList.toggle('on', x===b));
+    render(); setHint();
+  }));
+  document.getElementById('undo').addEventListener('click', function(){ if(hist.length){ G = JSON.parse(hist.pop()); sel=null; render(); setHint(); } });
+  document.getElementById('clear').addEventListener('click', function(){ if(!G.V.length) return; snap(); G = {V:[],E:[]}; sel=null; waveFrom=null; pickV=new Set(); pickE=new Set(); render(); setHint(); });
+  document.getElementById('compBtn').addEventListener('click', function(){
+    if(G.V.length < 2) return; snap();
+    const ids = G.V.map(v=>v.id).sort((a,b)=>a-b), E = [];
+    ids.forEach((a,i)=>ids.slice(i+1).forEach(b=>{ if(hasEdge(a,b)<0) E.push([a,b]); }));
+    G.E = E; pickE = new Set(); sel = null; render(); setHint();
+  });
+
+  const PRESETS = {
+    tri: {V:[[1,200,160],[2,200,360],[3,380,260],[4,540,260],[5,690,260]], E:[[1,2],[1,3],[2,3],[3,4],[4,5]]},
+    sq:  {V:[[1,120,260],[2,280,260],[3,420,140],[4,560,260],[5,420,380],[6,580,440]], E:[[1,2],[2,3],[3,4],[4,5],[5,2],[5,6]]},
+    k4:  {V:[[1,300,140],[2,500,140],[3,500,360],[4,300,360]], E:[[1,2],[1,3],[1,4],[2,3],[2,4],[3,4]]},
+    k23: {V:[[1,250,160],[2,250,360],[3,550,110],[4,550,260],[5,550,410]], E:[[1,3],[1,4],[1,5],[2,3],[2,4],[2,5]]},
+    kon: {V:[[1,400,90],[2,400,430],[3,300,260],[4,600,260]], E:[[1,3],[2,3],[1,4],[2,4],[3,4]]},
+    c3:  {V:[[1,480,70],[2,600,150],[3,600,300],[4,400,340],[5,280,440],[6,180,330],[7,270,210],[8,410,215],[9,310,70]], E:[[1,2],[1,8],[2,8],[9,8],[3,8],[7,8],[4,8],[6,7],[5,6],[4,5]]}
+  };
+  document.getElementById('preset').addEventListener('change', function(){
+    const p = PRESETS[this.value]; if(!p) return;
+    snap(); G = {V:p.V.map(([id,x,y])=>({id,x,y})), E:p.E.map(e=>e.slice())}; sel=null; waveFrom=null; pickV=new Set(); pickE=new Set(); this.value=''; render(); setHint();
+  });
+
+  const bipBtn = document.getElementById('bipBtn');
+  bipBtn.addEventListener('click', function(){ bipOn = !bipOn; bipBtn.classList.toggle('on', bipOn); bipBtn.setAttribute('aria-pressed', bipOn); render(); });
+
+  // ---------- matrix builder ----------
+  const mxN = document.getElementById('mxN'), mxWrap = document.getElementById('mxGridWrap'), mxMsg = document.getElementById('mxMsg');
+  let M = [];
+  function resizeM(n){ const old = M; M = Array.from({length:n}, (_,i)=>Array.from({length:n}, (_,j)=> (old[i] && old[i][j]) ? 1 : 0)); }
+  function drawGrid(){
+    const n = M.length; let h = '<table class="mxgrid"><tr><td></td>';
+    for(let j=0;j<n;j++) h += `<td class="h">${j+1}</td>`;
+    h += '</tr>';
+    for(let i=0;i<n;i++){ h += `<tr><td class="h">${i+1}</td>`; for(let j=0;j<n;j++){ h += i===j ? `<td><button class="mxcell" disabled aria-label="diagonala">0</button></td>` : `<td><button class="mxcell${M[i][j]?' on':''}" data-i="${i}" data-j="${j}" aria-label="rând ${i+1}, coloana ${j+1}">${M[i][j]}</button></td>`; } h += '</tr>'; }
+    mxWrap.innerHTML = h + '</table>';
+  }
+  mxWrap.addEventListener('click', function(e){ const b = e.target.closest('button[data-i]'); if(!b) return; const i=+b.dataset.i, j=+b.dataset.j; const v = M[i][j] ? 0 : 1; M[i][j]=v; M[j][i]=v; drawGrid(); });
+  mxN.addEventListener('change', function(){ resizeM(+mxN.value); drawGrid(); });
+  function buildFrom(Mat){
+    const n = Mat.length; snap();
+    const V = Array.from({length:n}, (_,k)=>{ const t = -Math.PI/2 + 2*Math.PI*k/n; return {id:k+1, x:Math.round(400+200*Math.cos(t)), y:Math.round(260+200*Math.sin(t))}; });
+    const E = []; for(let i=0;i<n;i++) for(let j=i+1;j<n;j++) if(Mat[i][j]) E.push([i+1,j+1]);
+    G = {V, E}; sel=null; waveFrom=null; pickV=new Set(); pickE=new Set(); render(); setHint();
+    document.querySelector('.board').scrollIntoView({behavior:'smooth', block:'center'});
+  }
+  document.getElementById('mxBuildGrid').addEventListener('click', function(){ buildFrom(M); mxMsg.style.color='var(--good)'; mxMsg.textContent = 'Graful a fost desenat din tabel: ' + M.length + ' vârfuri.'; });
+  document.getElementById('mxFromBoard').addEventListener('click', function(){
+    const ids = G.V.map(v=>v.id).sort((a,b)=>a-b);
+    if(!ids.length){ mxMsg.style.color='var(--bad)'; mxMsg.textContent='Tabla e goală.'; return; }
+    if(ids.length > 10){ mxMsg.style.color='var(--bad)'; mxMsg.textContent='Tabelul merge până la 10 vârfuri.'; return; }
+    M = ids.map(a=>ids.map(b=> hasEdge(a,b)>=0 ? 1 : 0)); mxN.value = String(ids.length); drawGrid();
+    mxMsg.style.color='var(--ink-dim)'; mxMsg.textContent = 'Am copiat matricea de pe tablă. Rândul k din tabel = al k-lea vârf ca număr (' + ids.join(', ') + ').';
+  });
+  function parseText(txt){
+    let rows = txt.split(/\n/).map(l=>l.trim()).filter(l=>l).map(l=>l.split(/[\s,;|]+/).filter(t=>t!=='').map(Number));
+    if(rows.some(r=>r.some(x=>Number.isNaN(x)))) throw 'Am găsit ceva care nu e număr. Folosește doar 0, 1 și spații.';
+    const R = rows.length;
+    if(R >= 2 && rows[0].length === R-1 && rows.slice(1).every(r=>r.length===R)) rows = rows.slice(1).map(r=>r.slice(1));
+    else if(rows.every(r=>r.length===R+1)) rows = rows.map(r=>r.slice(1));
+    const n = rows.length;
+    if(n < 1 || n > 20) throw 'Matricea trebuie să aibă între 1 și 20 de rânduri.';
+    if(rows.some(r=>r.length!==n)) throw 'Matricea nu e pătrată: fiecare rând trebuie să aibă ' + n + ' numere.';
+    const notes = [];
+    for(let i=0;i<n;i++) for(let j=0;j<n;j++){ if(rows[i][j]!==0 && rows[i][j]!==1) throw 'Pe rândul ' + (i+1) + ' apare ' + rows[i][j] + '. Aici merg doar 0 și 1 (graf simplu).'; }
+    for(let i=0;i<n;i++) if(rows[i][i]) notes.push('Pe diagonală la ' + (i+1) + ' era 1 (buclă); l-am ignorat.');
+    for(let i=0;i<n;i++) for(let j=i+1;j<n;j++) if(rows[i][j]!==rows[j][i]) notes.push('Nu e simetrică la (' + (i+1) + ',' + (j+1) + '); am pus muchia.');
+    return {Mat: rows.map((r,i)=>r.map((v,j)=> i===j ? 0 : (v || rows[j][i]) ? 1 : 0)), notes};
+  }
+  document.getElementById('mxBuildText').addEventListener('click', function(){
+    try{ const {Mat, notes} = parseText(document.getElementById('mxText').value);
+      buildFrom(Mat); if(Mat.length <= 10){ M = Mat.map(r=>r.slice()); mxN.value = String(Mat.length); drawGrid(); }
+      mxMsg.style.color = notes.length ? 'var(--node-2)' : 'var(--good)';
+      mxMsg.textContent = 'Graful a fost desenat din text: ' + Mat.length + ' vârfuri. ' + notes.slice(0,3).join(' ');
+    }catch(err){ mxMsg.style.color='var(--bad)'; mxMsg.textContent = typeof err === 'string' ? err : 'Nu am putut citi matricea.'; }
+  });
+  resizeM(5); drawGrid();
+
+  load(); render(); setHint();
+})();
+</script>

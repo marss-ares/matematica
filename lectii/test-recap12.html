@@ -1,0 +1,565 @@
+<title>Test: Recapitulare 1–2</title>
+<meta name="description" content="Test mixt din Capitolele 1 și 2.">
+<style>
+:root{
+  --bg:#f6f5f1;
+  --surface:#ffffff;
+  --surface-2:#eeece4;
+  --ink:#1c2321;
+  --ink-dim:#5b6460;
+  --line:#d9d5c9;
+  --accent:#8a3b2e;
+  --accent-ink:#ffffff;
+  --node:#2c4a52;
+  --node-2:#c98a3c;
+  --good:#2f6b4f;
+  --bad:#a13a3a;
+  --radius:14px;
+  color-scheme: light;
+}
+@media (prefers-color-scheme: dark){
+  :root:not([data-theme="light"]){
+    --bg:#181a17; --surface:#222521; --surface-2:#2b2e29;
+    --ink:#eeece6; --ink-dim:#a8ada4; --line:#3a3d37;
+    --accent:#e08b6f; --accent-ink:#1c1310;
+    --node:#7fb3bd; --node-2:#e6b16a; --good:#7fc79c; --bad:#e08585;
+    color-scheme: dark;
+  }
+}
+:root[data-theme="dark"]{
+  --bg:#181a17; --surface:#222521; --surface-2:#2b2e29;
+  --ink:#eeece6; --ink-dim:#a8ada4; --line:#3a3d37;
+  --accent:#e08b6f; --accent-ink:#1c1310;
+  --node:#7fb3bd; --node-2:#e6b16a; --good:#7fc79c; --bad:#e08585;
+  color-scheme: dark;
+}
+*{box-sizing:border-box;}
+body{background:var(--bg); color:var(--ink); font-family:'Source Serif 4',Georgia,serif; padding-inline:16px; padding-block:32px;}
+.wrap{max-width:720px; margin:0 auto;}
+h1{font-family:'Fraunces',Georgia,serif; font-weight:600; font-size:clamp(1.5rem,5vw,2.1rem); margin:0 0 4px; text-wrap:balance;}
+.subtitle{font-family:'Inter',system-ui,sans-serif; color:var(--ink-dim); font-size:0.92rem; margin-bottom:22px;}
+svg{max-width:100%; height:auto;}
+.graphbox{display:flex; justify-content:center; margin:14px 0; overflow-x:auto;}
+.node-circle{fill:var(--node); stroke:var(--bg); stroke-width:3;}
+.node-label{font-family:'Inter',sans-serif; font-size:13px; font-weight:700; fill:var(--accent-ink);}
+.edge-line{stroke:var(--ink-dim); stroke-width:2;}
+
+.progressbar{position:sticky; top:env(safe-area-inset-top,0px); background:var(--bg); padding-block:10px 4px; z-index:5; margin-bottom:10px;}
+.pbar-track{height:6px; background:var(--surface-2); border-radius:999px; overflow:hidden;}
+.pbar-fill{height:100%; background:var(--accent); width:0%; transition:width .3s;}
+.pbar-label{font-family:'Inter',sans-serif; font-size:0.72rem; color:var(--ink-dim); margin-top:4px;}
+
+.identity-box{
+  font-family:'Inter',sans-serif; background:var(--surface-2); border-radius:10px;
+  padding:14px 16px; margin-bottom:20px; display:flex; gap:10px; align-items:center; flex-wrap:wrap;
+}
+.identity-box input{
+  flex:1; min-width:140px; padding:8px 10px; border-radius:7px;
+  border:1px solid var(--line); background:var(--surface); color:var(--ink); font-family:inherit; font-size:0.9rem;
+}
+
+.qcard{
+  background:var(--surface); border:1px solid var(--line); border-radius:var(--radius);
+  padding:20px; margin-bottom:16px; font-family:'Inter',system-ui,sans-serif;
+}
+.qnum{font-size:0.72rem; text-transform:uppercase; letter-spacing:0.06em; color:var(--ink-dim); margin-bottom:6px;}
+.qtext{font-family:'Source Serif 4',Georgia,serif; font-size:1.05rem; margin-bottom:14px; line-height:1.5;}
+.opts{display:flex; flex-direction:column; gap:8px;}
+.opt{
+  text-align:left; border:1px solid var(--line); background:var(--surface); color:var(--ink);
+  padding:10px 14px; border-radius:8px; cursor:pointer; font-family:inherit; font-size:0.92rem;
+  transition:background .15s, border-color .15s;
+}
+.opt:hover{border-color:var(--accent);}
+.opt.correct{background:color-mix(in srgb, var(--good) 22%, var(--surface)); border-color:var(--good); color:var(--good);}
+.opt.wrong{background:color-mix(in srgb, var(--bad) 22%, var(--surface)); border-color:var(--bad); color:var(--bad);}
+.opt:disabled{cursor:default;}
+.fillrow{display:flex; align-items:center; gap:8px; flex-wrap:wrap;}
+input.fillbox{
+  width:64px; padding:7px 8px; border-radius:6px; border:1px solid var(--line);
+  background:var(--surface); color:var(--ink); font-family:'JetBrains Mono',monospace; text-align:center; font-size:0.95rem;
+}
+button.check{
+  font-family:'Inter',sans-serif; font-weight:600; font-size:0.85rem;
+  background:var(--accent); color:var(--accent-ink); border:none; padding:9px 18px; border-radius:8px; cursor:pointer; margin-top:10px;
+}
+button.check:hover{opacity:0.9;}
+button.check:disabled{opacity:0.5; cursor:default;}
+.feedback{margin-top:10px; font-size:0.88rem; display:none;}
+.feedback.show{display:block;}
+
+.resultbox{
+  background:var(--surface); border:2px solid var(--accent); border-radius:var(--radius);
+  padding:28px 24px; text-align:center; font-family:'Inter',sans-serif; display:none;
+}
+.resultbox.show{display:block;}
+.resultbox .score{font-family:'Fraunces',Georgia,serif; font-size:2.6rem; font-weight:700; color:var(--accent); margin-bottom:6px;}
+.resultbox .msg{font-size:0.95rem; color:var(--ink-dim); margin-bottom:4px;}
+.fb-explain{color:var(--ink); margin-top:6px; line-height:1.5;}
+</style>
+
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Fraunces:wght@500;600;700&family=Source+Serif+4:wght@400;500&family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@500;700&display=swap">
+
+<div class="wrap">
+  <h1>Test — Recapitulare capitolele 1 și 2</h1>
+  <div class="subtitle">12 întrebări · Capitolele 1 și 2 · „graful A” e desenat la fiecare întrebare care îl folosește</div>
+
+  <div class="progressbar">
+    <div class="pbar-track"><div class="pbar-fill" id="pbarFill"></div></div>
+    <div class="pbar-label" id="pbarLabel">0 / 12 răspunsuri date</div>
+  </div>
+
+  <div class="identity-box">
+    <span style="font-size:0.85rem;">Numele tău:</span>
+    <input type="text" id="studentName" placeholder="ex: Victor" autocomplete="off">
+  </div>
+
+  <div class="qcard" data-qid="t1" data-explain="Din 3 pleacă 3 muchii: spre 1, spre 2 și spre 4.">
+    <div class="qnum">Întrebarea 1</div>
+    <div class="qtext">Graful A: care e gradul vârfului 3, adică d(3)?</div>
+    <div class="graphbox"><svg viewBox="0 0 350 200" width="350" height="200">
+<line class="edge-line" x1="50" y1="50" x2="50" y2="150"/>
+<line class="edge-line" x1="50" y1="50" x2="140" y2="100"/>
+<line class="edge-line" x1="50" y1="150" x2="140" y2="100"/>
+<line class="edge-line" x1="140" y1="100" x2="230" y2="100"/>
+<line class="edge-line" x1="230" y1="100" x2="310" y2="100"/>
+<circle class="node-circle" cx="50" cy="50" r="15"/><text class="node-label" x="50" y="54" text-anchor="middle">1</text>
+<circle class="node-circle" cx="50" cy="150" r="15"/><text class="node-label" x="50" y="154" text-anchor="middle">2</text>
+<circle class="node-circle" cx="140" cy="100" r="15"/><text class="node-label" x="140" y="104" text-anchor="middle">3</text>
+<circle class="node-circle" cx="230" cy="100" r="15"/><text class="node-label" x="230" y="104" text-anchor="middle">4</text>
+<circle class="node-circle" cx="310" cy="100" r="15"/><text class="node-label" x="310" y="104" text-anchor="middle">5</text>
+</svg></div>
+    <div class="fillrow"><span>Răspuns:</span><input class="fillbox" id="in-t1" data-ans="3" maxlength="3" inputmode="numeric"></div>
+    <button class="check">Verifică</button>
+    <div class="feedback"></div>
+  </div>
+  <div class="qcard" data-qid="t2" data-explain="Graful are 5 muchii, deci suma gradelor = 2 · 5 = 10. Verificare: 2 + 2 + 3 + 2 + 1 = 10.">
+    <div class="qnum">Întrebarea 2</div>
+    <div class="qtext">Graful A: cât este suma gradelor tuturor vârfurilor?</div>
+    <div class="graphbox"><svg viewBox="0 0 350 200" width="350" height="200">
+<line class="edge-line" x1="50" y1="50" x2="50" y2="150"/>
+<line class="edge-line" x1="50" y1="50" x2="140" y2="100"/>
+<line class="edge-line" x1="50" y1="150" x2="140" y2="100"/>
+<line class="edge-line" x1="140" y1="100" x2="230" y2="100"/>
+<line class="edge-line" x1="230" y1="100" x2="310" y2="100"/>
+<circle class="node-circle" cx="50" cy="50" r="15"/><text class="node-label" x="50" y="54" text-anchor="middle">1</text>
+<circle class="node-circle" cx="50" cy="150" r="15"/><text class="node-label" x="50" y="154" text-anchor="middle">2</text>
+<circle class="node-circle" cx="140" cy="100" r="15"/><text class="node-label" x="140" y="104" text-anchor="middle">3</text>
+<circle class="node-circle" cx="230" cy="100" r="15"/><text class="node-label" x="230" y="104" text-anchor="middle">4</text>
+<circle class="node-circle" cx="310" cy="100" r="15"/><text class="node-label" x="310" y="104" text-anchor="middle">5</text>
+</svg></div>
+    <div class="fillrow"><span>Răspuns:</span><input class="fillbox" id="in-t2" data-ans="10" maxlength="3" inputmode="numeric"></div>
+    <button class="check">Verifică</button>
+    <div class="feedback"></div>
+  </div>
+  
+  <details class="qcard" style="font-family:'Inter',sans-serif;">
+    <summary style="cursor:pointer; font-weight:600;">De ce suma gradelor nu poate fi 11 (deschide după ce răspunzi la întrebarea 2)</summary>
+    <p style="margin-top:14px;">Fiecare muchie are <b>2 capete</b>, desenate mai jos ca punctele roșii mici. Gradul unui vârf = câte capete îl ating. Deci suma gradelor = numărul total de capete.</p>
+    <div class="graphbox"><svg viewBox="0 0 410 240" width="410" height="240">
+<line class="edge-line" x1="60" y1="70" x2="60" y2="190"/>
+<circle cx="60" cy="94" r="4" style="fill:var(--accent)"/>
+<circle cx="60" cy="166" r="4" style="fill:var(--accent)"/>
+<line class="edge-line" x1="60" y1="70" x2="160" y2="130"/>
+<circle cx="81" cy="82" r="4" style="fill:var(--accent)"/>
+<circle cx="139" cy="118" r="4" style="fill:var(--accent)"/>
+<line class="edge-line" x1="60" y1="190" x2="160" y2="130"/>
+<circle cx="81" cy="178" r="4" style="fill:var(--accent)"/>
+<circle cx="139" cy="142" r="4" style="fill:var(--accent)"/>
+<line class="edge-line" x1="160" y1="130" x2="260" y2="130"/>
+<circle cx="184" cy="130" r="4" style="fill:var(--accent)"/>
+<circle cx="236" cy="130" r="4" style="fill:var(--accent)"/>
+<line class="edge-line" x1="260" y1="130" x2="350" y2="130"/>
+<circle cx="284" cy="130" r="4" style="fill:var(--accent)"/>
+<circle cx="326" cy="130" r="4" style="fill:var(--accent)"/>
+
+<circle class="node-circle" cx="60" cy="70" r="15"/><text class="node-label" x="60" y="74" text-anchor="middle">1</text>
+<text x="60" y="46" text-anchor="middle" style="font-family:Inter,sans-serif;font-size:13px;font-weight:700;fill:var(--accent)">d=2</text>
+<circle class="node-circle" cx="60" cy="190" r="15"/><text class="node-label" x="60" y="194" text-anchor="middle">2</text>
+<text x="60" y="224" text-anchor="middle" style="font-family:Inter,sans-serif;font-size:13px;font-weight:700;fill:var(--accent)">d=2</text>
+<circle class="node-circle" cx="160" cy="130" r="15"/><text class="node-label" x="160" y="134" text-anchor="middle">3</text>
+<text x="160" y="106" text-anchor="middle" style="font-family:Inter,sans-serif;font-size:13px;font-weight:700;fill:var(--accent)">d=3</text>
+<circle class="node-circle" cx="260" cy="130" r="15"/><text class="node-label" x="260" y="134" text-anchor="middle">4</text>
+<text x="260" y="106" text-anchor="middle" style="font-family:Inter,sans-serif;font-size:13px;font-weight:700;fill:var(--accent)">d=2</text>
+<circle class="node-circle" cx="350" cy="130" r="15"/><text class="node-label" x="350" y="134" text-anchor="middle">5</text>
+<text x="350" y="106" text-anchor="middle" style="font-family:Inter,sans-serif;font-size:13px;font-weight:700;fill:var(--accent)">d=1</text>
+</svg></div>
+    <p style="text-align:center;">5 muchii × 2 capete = <b>10 capete</b> = 2 + 2 + 3 + 2 + 1 = <b>10</b></p>
+
+    <p><b>Încercare 1:</b> vreau suma 11, așa că îi dau vârfului 5 încă o muchie, spre 1. Dar muchia nouă (portocaliu) are și ea 2 capete: crește gradul lui 5 <b>și</b> gradul lui 1.</p>
+    <div class="graphbox"><svg viewBox="0 0 410 240" width="410" height="240">
+<line class="edge-line" x1="60" y1="70" x2="60" y2="190"/>
+<circle cx="60" cy="94" r="4" style="fill:var(--accent)"/>
+<circle cx="60" cy="166" r="4" style="fill:var(--accent)"/>
+<line class="edge-line" x1="60" y1="70" x2="160" y2="130"/>
+<circle cx="81" cy="82" r="4" style="fill:var(--accent)"/>
+<circle cx="139" cy="118" r="4" style="fill:var(--accent)"/>
+<line class="edge-line" x1="60" y1="190" x2="160" y2="130"/>
+<circle cx="81" cy="178" r="4" style="fill:var(--accent)"/>
+<circle cx="139" cy="142" r="4" style="fill:var(--accent)"/>
+<line class="edge-line" x1="160" y1="130" x2="260" y2="130"/>
+<circle cx="184" cy="130" r="4" style="fill:var(--accent)"/>
+<circle cx="236" cy="130" r="4" style="fill:var(--accent)"/>
+<line class="edge-line" x1="260" y1="130" x2="350" y2="130"/>
+<circle cx="284" cy="130" r="4" style="fill:var(--accent)"/>
+<circle cx="326" cy="130" r="4" style="fill:var(--accent)"/>
+<path d="M 350 130 Q 230 0 60 70" fill="none" style="stroke:var(--node-2);stroke-width:3"/>
+<circle cx="328" cy="108" r="4" style="fill:var(--accent)"/>
+<circle cx="90" cy="59" r="4" style="fill:var(--accent)"/>
+
+<circle class="node-circle" cx="60" cy="70" r="15"/><text class="node-label" x="60" y="74" text-anchor="middle">1</text>
+<text x="60" y="46" text-anchor="middle" style="font-family:Inter,sans-serif;font-size:13px;font-weight:700;fill:var(--accent)">d=3</text>
+<circle class="node-circle" cx="60" cy="190" r="15"/><text class="node-label" x="60" y="194" text-anchor="middle">2</text>
+<text x="60" y="224" text-anchor="middle" style="font-family:Inter,sans-serif;font-size:13px;font-weight:700;fill:var(--accent)">d=2</text>
+<circle class="node-circle" cx="160" cy="130" r="15"/><text class="node-label" x="160" y="134" text-anchor="middle">3</text>
+<text x="160" y="106" text-anchor="middle" style="font-family:Inter,sans-serif;font-size:13px;font-weight:700;fill:var(--accent)">d=3</text>
+<circle class="node-circle" cx="260" cy="130" r="15"/><text class="node-label" x="260" y="134" text-anchor="middle">4</text>
+<text x="260" y="106" text-anchor="middle" style="font-family:Inter,sans-serif;font-size:13px;font-weight:700;fill:var(--accent)">d=2</text>
+<circle class="node-circle" cx="350" cy="130" r="15"/><text class="node-label" x="350" y="134" text-anchor="middle">5</text>
+<text x="350" y="106" text-anchor="middle" style="font-family:Inter,sans-serif;font-size:13px;font-weight:700;fill:var(--accent)">d=2</text>
+</svg></div>
+    <p style="text-align:center;">Suma sare de la 10 direct la <b>12</b>, nu la 11. Orice muchie adaugi, suma crește cu 2.</p>
+
+    <p><b>Încercare 2:</b> ca să ajung la 11, ar trebui să cresc doar gradul lui 5, cu o muchie care nu merge nicăieri (linia punctată).</p>
+    <div class="graphbox"><svg viewBox="0 0 410 240" width="410" height="240">
+<line class="edge-line" x1="60" y1="70" x2="60" y2="190"/>
+<circle cx="60" cy="94" r="4" style="fill:var(--accent)"/>
+<circle cx="60" cy="166" r="4" style="fill:var(--accent)"/>
+<line class="edge-line" x1="60" y1="70" x2="160" y2="130"/>
+<circle cx="81" cy="82" r="4" style="fill:var(--accent)"/>
+<circle cx="139" cy="118" r="4" style="fill:var(--accent)"/>
+<line class="edge-line" x1="60" y1="190" x2="160" y2="130"/>
+<circle cx="81" cy="178" r="4" style="fill:var(--accent)"/>
+<circle cx="139" cy="142" r="4" style="fill:var(--accent)"/>
+<line class="edge-line" x1="160" y1="130" x2="260" y2="130"/>
+<circle cx="184" cy="130" r="4" style="fill:var(--accent)"/>
+<circle cx="236" cy="130" r="4" style="fill:var(--accent)"/>
+<line class="edge-line" x1="260" y1="130" x2="350" y2="130"/>
+<circle cx="284" cy="130" r="4" style="fill:var(--accent)"/>
+<circle cx="326" cy="130" r="4" style="fill:var(--accent)"/>
+<line x1="350" y1="130" x2="395" y2="200" style="stroke:var(--bad);stroke-width:3;stroke-dasharray:6 5"/><text x="395" y="222" text-anchor="middle" style="font-family:Inter,sans-serif;font-size:22px;font-weight:700;fill:var(--bad)">✗</text>
+<circle class="node-circle" cx="60" cy="70" r="15"/><text class="node-label" x="60" y="74" text-anchor="middle">1</text>
+<text x="60" y="46" text-anchor="middle" style="font-family:Inter,sans-serif;font-size:13px;font-weight:700;fill:var(--accent)">d=2</text>
+<circle class="node-circle" cx="60" cy="190" r="15"/><text class="node-label" x="60" y="194" text-anchor="middle">2</text>
+<text x="60" y="224" text-anchor="middle" style="font-family:Inter,sans-serif;font-size:13px;font-weight:700;fill:var(--accent)">d=2</text>
+<circle class="node-circle" cx="160" cy="130" r="15"/><text class="node-label" x="160" y="134" text-anchor="middle">3</text>
+<text x="160" y="106" text-anchor="middle" style="font-family:Inter,sans-serif;font-size:13px;font-weight:700;fill:var(--accent)">d=3</text>
+<circle class="node-circle" cx="260" cy="130" r="15"/><text class="node-label" x="260" y="134" text-anchor="middle">4</text>
+<text x="260" y="106" text-anchor="middle" style="font-family:Inter,sans-serif;font-size:13px;font-weight:700;fill:var(--accent)">d=2</text>
+<circle class="node-circle" cx="350" cy="130" r="15"/><text class="node-label" x="350" y="134" text-anchor="middle">5</text>
+<text x="350" y="106" text-anchor="middle" style="font-family:Inter,sans-serif;font-size:13px;font-weight:700;fill:var(--accent)">d=2?</text>
+</svg></div>
+    <p style="text-align:center;">O muchie cu un singur capăt <b>nu există</b>. Pentru 11 ți-ar trebui 5 muchii și jumătate, adică 11 / 2 = 5,5.</p>
+
+    <div class="resultbox show" style="text-align:left; border-width:1px; padding:16px 18px;">
+      <b>Concluzie:</b> suma gradelor e mereu 2 · m, deci mereu <b>pară</b>. Dacă cineva îți dă grade care adunate fac un număr impar (11, 15, ...), un asemenea graf <b>nu poate exista</b>. Exact asta verifici la întrebările 3 și 4.
+    </div>
+  </details>
+
+  <div class="qcard" data-qid="t3" data-explain="Gradele impare: 3, 3, 3, 1, adică 4 vârfuri. 4 e număr par, deci trece testul. Verificare: suma = 14, pară.">
+    <div class="qnum">Întrebarea 3</div>
+    <div class="qtext">Poate exista un graf cu gradele 2, 2, 3, 3, 3, 1?</div>
+    
+    <div class="opts"><button class="opt" data-correct="true">Da, trece testul</button>
+<button class="opt" data-correct="false">Nu, e imposibil</button></div>
+    <div class="feedback"></div>
+  </div>
+  <div class="qcard" data-qid="t4" data-explain="Gradele impare: 3, 3, 1, 1, 1, adică 5 vârfuri. 5 e impar, deci e imposibil. Verificare: suma = 15, impară, nu poate fi 2 · m.">
+    <div class="qnum">Întrebarea 4</div>
+    <div class="qtext">Poate exista un graf cu gradele 4, 3, 3, 2, 1, 1, 1?</div>
+    
+    <div class="opts"><button class="opt" data-correct="false">Da, trece testul</button>
+<button class="opt" data-correct="true">Nu, e imposibil</button></div>
+    <div class="feedback"></div>
+  </div>
+  <div class="qcard" data-qid="t5" data-explain="Vârfurile 1, 2, 3 formează un triunghi. Un triunghi nu se poate colora cu 2 culori fără ca 2 vârfuri legate să aibă aceeași culoare.">
+    <div class="qnum">Întrebarea 5</div>
+    <div class="qtext">Graful A este bipartit?</div>
+    <div class="graphbox"><svg viewBox="0 0 350 200" width="350" height="200">
+<line class="edge-line" x1="50" y1="50" x2="50" y2="150"/>
+<line class="edge-line" x1="50" y1="50" x2="140" y2="100"/>
+<line class="edge-line" x1="50" y1="150" x2="140" y2="100"/>
+<line class="edge-line" x1="140" y1="100" x2="230" y2="100"/>
+<line class="edge-line" x1="230" y1="100" x2="310" y2="100"/>
+<circle class="node-circle" cx="50" cy="50" r="15"/><text class="node-label" x="50" y="54" text-anchor="middle">1</text>
+<circle class="node-circle" cx="50" cy="150" r="15"/><text class="node-label" x="50" y="154" text-anchor="middle">2</text>
+<circle class="node-circle" cx="140" cy="100" r="15"/><text class="node-label" x="140" y="104" text-anchor="middle">3</text>
+<circle class="node-circle" cx="230" cy="100" r="15"/><text class="node-label" x="230" y="104" text-anchor="middle">4</text>
+<circle class="node-circle" cx="310" cy="100" r="15"/><text class="node-label" x="310" y="104" text-anchor="middle">5</text>
+</svg></div>
+    <div class="opts"><button class="opt" data-correct="false">Da</button>
+<button class="opt" data-correct="true">Nu</button></div>
+    <div class="feedback"></div>
+  </div>
+  <div class="qcard" data-qid="t6" data-explain="Matricea are 8 de 1. Fiecare muchie apare de 2 ori (simetric), deci m = 8 / 2 = 4. Muchiile: a–b, a–d, b–c, c–d, adică un pătrat.">
+    <div class="qnum">Întrebarea 6</div>
+    <div class="qtext">Câte muchii are graful dat prin această matrice de adiacență?</div>
+    <div class="graphbox"><table style="border-collapse:collapse;font-family:'JetBrains Mono',monospace;"><tr><td></td><td style="padding:4px 10px;font-weight:700;text-align:center;">a</td><td style="padding:4px 10px;font-weight:700;text-align:center;">b</td><td style="padding:4px 10px;font-weight:700;text-align:center;">c</td><td style="padding:4px 10px;font-weight:700;text-align:center;">d</td></tr><tr><td style="padding:4px 10px;font-weight:700;">a</td><td style="padding:4px 10px;text-align:center;">0</td><td style="padding:4px 10px;text-align:center;">1</td><td style="padding:4px 10px;text-align:center;">0</td><td style="padding:4px 10px;text-align:center;">1</td></tr><tr><td style="padding:4px 10px;font-weight:700;">b</td><td style="padding:4px 10px;text-align:center;">1</td><td style="padding:4px 10px;text-align:center;">0</td><td style="padding:4px 10px;text-align:center;">1</td><td style="padding:4px 10px;text-align:center;">0</td></tr><tr><td style="padding:4px 10px;font-weight:700;">c</td><td style="padding:4px 10px;text-align:center;">0</td><td style="padding:4px 10px;text-align:center;">1</td><td style="padding:4px 10px;text-align:center;">0</td><td style="padding:4px 10px;text-align:center;">1</td></tr><tr><td style="padding:4px 10px;font-weight:700;">d</td><td style="padding:4px 10px;text-align:center;">1</td><td style="padding:4px 10px;text-align:center;">0</td><td style="padding:4px 10px;text-align:center;">1</td><td style="padding:4px 10px;text-align:center;">0</td></tr></table></div>
+    <div class="fillrow"><span>Răspuns:</span><input class="fillbox" id="in-t6" data-ans="4" maxlength="3" inputmode="numeric"></div>
+    <button class="check">Verifică</button>
+    <div class="feedback"></div>
+  </div>
+  <div class="qcard" data-qid="t7" data-explain="Graful e pătratul a–b–c–d–a. d(a,b)=1, d(a,d)=1, d(a,c)=2. Cea mai mare = 2.">
+    <div class="qnum">Întrebarea 7</div>
+    <div class="qtext">Pentru graful din aceeași matrice: cât este excentricitatea e(a)?</div>
+    <div class="graphbox"><table style="border-collapse:collapse;font-family:'JetBrains Mono',monospace;"><tr><td></td><td style="padding:4px 10px;font-weight:700;text-align:center;">a</td><td style="padding:4px 10px;font-weight:700;text-align:center;">b</td><td style="padding:4px 10px;font-weight:700;text-align:center;">c</td><td style="padding:4px 10px;font-weight:700;text-align:center;">d</td></tr><tr><td style="padding:4px 10px;font-weight:700;">a</td><td style="padding:4px 10px;text-align:center;">0</td><td style="padding:4px 10px;text-align:center;">1</td><td style="padding:4px 10px;text-align:center;">0</td><td style="padding:4px 10px;text-align:center;">1</td></tr><tr><td style="padding:4px 10px;font-weight:700;">b</td><td style="padding:4px 10px;text-align:center;">1</td><td style="padding:4px 10px;text-align:center;">0</td><td style="padding:4px 10px;text-align:center;">1</td><td style="padding:4px 10px;text-align:center;">0</td></tr><tr><td style="padding:4px 10px;font-weight:700;">c</td><td style="padding:4px 10px;text-align:center;">0</td><td style="padding:4px 10px;text-align:center;">1</td><td style="padding:4px 10px;text-align:center;">0</td><td style="padding:4px 10px;text-align:center;">1</td></tr><tr><td style="padding:4px 10px;font-weight:700;">d</td><td style="padding:4px 10px;text-align:center;">1</td><td style="padding:4px 10px;text-align:center;">0</td><td style="padding:4px 10px;text-align:center;">1</td><td style="padding:4px 10px;text-align:center;">0</td></tr></table></div>
+    <div class="fillrow"><span>Răspuns:</span><input class="fillbox" id="in-t7" data-ans="2" maxlength="3" inputmode="numeric"></div>
+    <button class="check">Verifică</button>
+    <div class="feedback"></div>
+  </div>
+  
+  <details class="qcard" style="font-family:'Inter',sans-serif;">
+    <summary style="cursor:pointer; font-weight:600;">Cum găsești excentricitatea, pas cu pas (metoda valurilor)</summary>
+    <p style="margin-top:14px;"><b>e(a)</b> = cel mai scurt drum de la <b>a</b> până la vârful <b>cel mai îndepărtat</b> de a. Ca să nu te încurci cu ocolurile, numerotezi vârfurile în „valuri”, ca cercurile pe apă când arunci o piatră.</p>
+
+    <div style="border-top:1px solid var(--line); padding-top:14px; margin-top:14px;">
+      <div style="font-weight:700; margin-bottom:6px;"><span style="display:inline-flex;width:24px;height:24px;border-radius:999px;background:var(--accent);color:var(--accent-ink);align-items:center;justify-content:center;font-size:0.8rem;margin-right:8px;">1</span>Citești muchiile din matrice și desenezi graful</div>
+      <div class="graphbox"><table style="border-collapse:collapse;font-family:'JetBrains Mono',monospace;"><tr><td></td><td style="padding:4px 10px;font-weight:700;text-align:center;">a</td><td style="padding:4px 10px;font-weight:700;text-align:center;">b</td><td style="padding:4px 10px;font-weight:700;text-align:center;">c</td><td style="padding:4px 10px;font-weight:700;text-align:center;">d</td></tr><tr><td style="padding:4px 10px;font-weight:700;">a</td><td style="padding:4px 10px;text-align:center;">0</td><td style="padding:4px 10px;text-align:center;">1</td><td style="padding:4px 10px;text-align:center;">0</td><td style="padding:4px 10px;text-align:center;">1</td></tr><tr><td style="padding:4px 10px;font-weight:700;">b</td><td style="padding:4px 10px;text-align:center;">1</td><td style="padding:4px 10px;text-align:center;">0</td><td style="padding:4px 10px;text-align:center;">1</td><td style="padding:4px 10px;text-align:center;">0</td></tr><tr><td style="padding:4px 10px;font-weight:700;">c</td><td style="padding:4px 10px;text-align:center;">0</td><td style="padding:4px 10px;text-align:center;">1</td><td style="padding:4px 10px;text-align:center;">0</td><td style="padding:4px 10px;text-align:center;">1</td></tr><tr><td style="padding:4px 10px;font-weight:700;">d</td><td style="padding:4px 10px;text-align:center;">1</td><td style="padding:4px 10px;text-align:center;">0</td><td style="padding:4px 10px;text-align:center;">1</td><td style="padding:4px 10px;text-align:center;">0</td></tr></table></div><p>Muchiile (1-urile de deasupra diagonalei): a–b, a–d, b–c, c–d. Iese un pătrat.</p><div class="graphbox"><svg viewBox="0 0 260 220" width="260" height="220">
+<line class="edge-line" x1="60" y1="50" x2="200" y2="50"/>
+<line class="edge-line" x1="200" y1="50" x2="200" y2="170"/>
+<line class="edge-line" x1="200" y1="170" x2="60" y2="170"/>
+<line class="edge-line" x1="60" y1="170" x2="60" y2="50"/>
+<circle class="node-circle" cx="60" cy="50" r="17"/><text class="node-label" x="60" y="55" text-anchor="middle">a</text>
+<circle class="node-circle" cx="200" cy="50" r="17"/><text class="node-label" x="200" y="55" text-anchor="middle">b</text>
+<circle class="node-circle" cx="200" cy="170" r="17"/><text class="node-label" x="200" y="175" text-anchor="middle">c</text>
+<circle class="node-circle" cx="60" cy="170" r="17"/><text class="node-label" x="60" y="175" text-anchor="middle">d</text>
+</svg></div>
+    </div>
+
+    <div style="border-top:1px solid var(--line); padding-top:14px; margin-top:14px;">
+      <div style="font-weight:700; margin-bottom:6px;"><span style="display:inline-flex;width:24px;height:24px;border-radius:999px;background:var(--accent);color:var(--accent-ink);align-items:center;justify-content:center;font-size:0.8rem;margin-right:8px;">2</span>Valul 0: pui 0 pe vârful de pornire</div>
+      <div class="graphbox"><svg viewBox="0 0 260 220" width="260" height="220">
+<line class="edge-line" x1="60" y1="50" x2="200" y2="50"/>
+<line class="edge-line" x1="200" y1="50" x2="200" y2="170"/>
+<line class="edge-line" x1="200" y1="170" x2="60" y2="170"/>
+<line class="edge-line" x1="60" y1="170" x2="60" y2="50"/>
+<circle class="node-circle" cx="60" cy="50" r="17" style="fill:var(--accent)"/><text class="node-label" x="60" y="55" text-anchor="middle">a</text>
+<text x="60" y="22" text-anchor="middle" style="font-family:Inter,sans-serif;font-size:14px;font-weight:700;fill:var(--accent)">0</text>
+<circle class="node-circle" cx="200" cy="50" r="17"/><text class="node-label" x="200" y="55" text-anchor="middle">b</text>
+<circle class="node-circle" cx="200" cy="170" r="17"/><text class="node-label" x="200" y="175" text-anchor="middle">c</text>
+<circle class="node-circle" cx="60" cy="170" r="17"/><text class="node-label" x="60" y="175" text-anchor="middle">d</text>
+</svg></div><p>Pornești din <b>a</b>. Distanța de la a la a e 0.</p>
+    </div>
+
+    <div style="border-top:1px solid var(--line); padding-top:14px; margin-top:14px;">
+      <div style="font-weight:700; margin-bottom:6px;"><span style="display:inline-flex;width:24px;height:24px;border-radius:999px;background:var(--accent);color:var(--accent-ink);align-items:center;justify-content:center;font-size:0.8rem;margin-right:8px;">3</span>Valul 1: vecinii lui a primesc 1</div>
+      <div class="graphbox"><table style="border-collapse:collapse;font-family:'JetBrains Mono',monospace;"><tr><td></td><td style="padding:4px 10px;font-weight:700;text-align:center;">a</td><td style="padding:4px 10px;font-weight:700;text-align:center;">b</td><td style="padding:4px 10px;font-weight:700;text-align:center;">c</td><td style="padding:4px 10px;font-weight:700;text-align:center;">d</td></tr><tr><td style="padding:4px 10px;font-weight:700;">a</td><td style="padding:4px 10px;text-align:center;">0</td><td style="padding:4px 10px;text-align:center;background:color-mix(in srgb, var(--node-2) 35%, transparent);font-weight:700;">1</td><td style="padding:4px 10px;text-align:center;">0</td><td style="padding:4px 10px;text-align:center;background:color-mix(in srgb, var(--node-2) 35%, transparent);font-weight:700;">1</td></tr><tr><td style="padding:4px 10px;font-weight:700;">b</td><td style="padding:4px 10px;text-align:center;">1</td><td style="padding:4px 10px;text-align:center;">0</td><td style="padding:4px 10px;text-align:center;">1</td><td style="padding:4px 10px;text-align:center;">0</td></tr><tr><td style="padding:4px 10px;font-weight:700;">c</td><td style="padding:4px 10px;text-align:center;">0</td><td style="padding:4px 10px;text-align:center;">1</td><td style="padding:4px 10px;text-align:center;">0</td><td style="padding:4px 10px;text-align:center;">1</td></tr><tr><td style="padding:4px 10px;font-weight:700;">d</td><td style="padding:4px 10px;text-align:center;">1</td><td style="padding:4px 10px;text-align:center;">0</td><td style="padding:4px 10px;text-align:center;">1</td><td style="padding:4px 10px;text-align:center;">0</td></tr></table></div><p>Pe rândul lui <b>a</b> din matrice, 1-urile sunt la <b>b</b> și <b>d</b>. Ei sunt la 1 pas.</p><div class="graphbox"><svg viewBox="0 0 260 220" width="260" height="220">
+<line class="edge-line" style="stroke:var(--accent);stroke-width:4" x1="60" y1="50" x2="200" y2="50"/>
+<line class="edge-line" x1="200" y1="50" x2="200" y2="170"/>
+<line class="edge-line" x1="200" y1="170" x2="60" y2="170"/>
+<line class="edge-line" style="stroke:var(--accent);stroke-width:4" x1="60" y1="170" x2="60" y2="50"/>
+<circle class="node-circle" cx="60" cy="50" r="17" style="fill:var(--accent)"/><text class="node-label" x="60" y="55" text-anchor="middle">a</text>
+<text x="60" y="22" text-anchor="middle" style="font-family:Inter,sans-serif;font-size:14px;font-weight:700;fill:var(--accent)">0</text>
+<circle class="node-circle" cx="200" cy="50" r="17" style="fill:var(--node-2)"/><text class="node-label" x="200" y="55" text-anchor="middle">b</text>
+<text x="200" y="22" text-anchor="middle" style="font-family:Inter,sans-serif;font-size:14px;font-weight:700;fill:var(--node-2)">1</text>
+<circle class="node-circle" cx="200" cy="170" r="17"/><text class="node-label" x="200" y="175" text-anchor="middle">c</text>
+<circle class="node-circle" cx="60" cy="170" r="17" style="fill:var(--node-2)"/><text class="node-label" x="60" y="175" text-anchor="middle">d</text>
+<text x="60" y="208" text-anchor="middle" style="font-family:Inter,sans-serif;font-size:14px;font-weight:700;fill:var(--node-2)">1</text>
+</svg></div>
+    </div>
+
+    <div style="border-top:1px solid var(--line); padding-top:14px; margin-top:14px;">
+      <div style="font-weight:700; margin-bottom:6px;"><span style="display:inline-flex;width:24px;height:24px;border-radius:999px;background:var(--accent);color:var(--accent-ink);align-items:center;justify-content:center;font-size:0.8rem;margin-right:8px;">4</span>Valul 2: vecinii NEnumerotați ai lui b și d primesc 2</div>
+      <p>Vecinii lui b: a (are deja număr, îl sari) și <b>c</b>. Vecinii lui d: a (sari) și c (tocmai l-ai numerotat). Deci doar <b>c</b> primește 2.</p><div class="graphbox"><svg viewBox="0 0 260 220" width="260" height="220">
+<line class="edge-line" style="stroke:var(--accent);stroke-width:4" x1="60" y1="50" x2="200" y2="50"/>
+<line class="edge-line" style="stroke:var(--accent);stroke-width:4" x1="200" y1="50" x2="200" y2="170"/>
+<line class="edge-line" x1="200" y1="170" x2="60" y2="170"/>
+<line class="edge-line" x1="60" y1="170" x2="60" y2="50"/>
+<circle class="node-circle" cx="60" cy="50" r="17" style="fill:var(--accent)"/><text class="node-label" x="60" y="55" text-anchor="middle">a</text>
+<text x="60" y="22" text-anchor="middle" style="font-family:Inter,sans-serif;font-size:14px;font-weight:700;fill:var(--accent)">0</text>
+<circle class="node-circle" cx="200" cy="50" r="17" style="fill:var(--node-2)"/><text class="node-label" x="200" y="55" text-anchor="middle">b</text>
+<text x="200" y="22" text-anchor="middle" style="font-family:Inter,sans-serif;font-size:14px;font-weight:700;fill:var(--node-2)">1</text>
+<circle class="node-circle" cx="200" cy="170" r="17" style="fill:var(--good)"/><text class="node-label" x="200" y="175" text-anchor="middle">c</text>
+<text x="200" y="208" text-anchor="middle" style="font-family:Inter,sans-serif;font-size:14px;font-weight:700;fill:var(--good)">2</text>
+<circle class="node-circle" cx="60" cy="170" r="17" style="fill:var(--node-2)"/><text class="node-label" x="60" y="175" text-anchor="middle">d</text>
+<text x="60" y="208" text-anchor="middle" style="font-family:Inter,sans-serif;font-size:14px;font-weight:700;fill:var(--node-2)">1</text>
+</svg></div>
+    </div>
+
+    <div style="border-top:1px solid var(--line); padding-top:14px; margin-top:14px;">
+      <div style="font-weight:700; margin-bottom:6px;"><span style="display:inline-flex;width:24px;height:24px;border-radius:999px;background:var(--accent);color:var(--accent-ink);align-items:center;justify-content:center;font-size:0.8rem;margin-right:8px;">5</span>Te oprești când toate vârfurile au număr. Cel mai mare număr = excentricitatea</div>
+      <p>Numerele: a = 0, b = 1, d = 1, c = 2. Cel mai mare e <b>2</b>, deci <b>e(a) = 2</b>, iar vârful cel mai îndepărtat de a e <b>c</b>.</p>
+    </div>
+
+    <div class="resultbox show" style="text-align:left; border-width:1px; padding:16px 18px;">
+      <b>Rețeta de ținut minte:</b><br>
+      1. Pui <b>0</b> pe vârful tău.<br>
+      2. Vecinii lui primesc <b>1</b>.<br>
+      3. Vecinii fără număr ai celor cu 1 primesc <b>2</b>, apoi 3, și tot așa.<br>
+      4. Un vârf care are deja număr nu-l mai schimbi. Primul număr primit e mereu cel mai scurt drum, așa că ocolurile nu mai contează.<br>
+      5. <b>Ultimul număr pus = excentricitatea.</b>
+    </div>
+  </details>
+
+  <div class="qcard" data-qid="t8" data-explain="Cel mai scurt drum: 1→3→4→5, adică 3 muchii.">
+    <div class="qnum">Întrebarea 8</div>
+    <div class="qtext">Graful A: cât este distanța d(1, 5)?</div>
+    <div class="graphbox"><svg viewBox="0 0 350 200" width="350" height="200">
+<line class="edge-line" x1="50" y1="50" x2="50" y2="150"/>
+<line class="edge-line" x1="50" y1="50" x2="140" y2="100"/>
+<line class="edge-line" x1="50" y1="150" x2="140" y2="100"/>
+<line class="edge-line" x1="140" y1="100" x2="230" y2="100"/>
+<line class="edge-line" x1="230" y1="100" x2="310" y2="100"/>
+<circle class="node-circle" cx="50" cy="50" r="15"/><text class="node-label" x="50" y="54" text-anchor="middle">1</text>
+<circle class="node-circle" cx="50" cy="150" r="15"/><text class="node-label" x="50" y="154" text-anchor="middle">2</text>
+<circle class="node-circle" cx="140" cy="100" r="15"/><text class="node-label" x="140" y="104" text-anchor="middle">3</text>
+<circle class="node-circle" cx="230" cy="100" r="15"/><text class="node-label" x="230" y="104" text-anchor="middle">4</text>
+<circle class="node-circle" cx="310" cy="100" r="15"/><text class="node-label" x="310" y="104" text-anchor="middle">5</text>
+</svg></div>
+    <div class="fillrow"><span>Răspuns:</span><input class="fillbox" id="in-t8" data-ans="3" maxlength="3" inputmode="numeric"></div>
+    <button class="check">Verifică</button>
+    <div class="feedback"></div>
+  </div>
+  <div class="qcard" data-qid="t9" data-explain="Muchia (3,4) nu e în niciun ciclu. Rămân bucățile {1, 2, 3} și {4, 5}.">
+    <div class="qnum">Întrebarea 9</div>
+    <div class="qtext">Graful A: câte componente conexe rămân dacă ștergi muchia (3, 4)?</div>
+    <div class="graphbox"><svg viewBox="0 0 350 200" width="350" height="200">
+<line class="edge-line" x1="50" y1="50" x2="50" y2="150"/>
+<line class="edge-line" x1="50" y1="50" x2="140" y2="100"/>
+<line class="edge-line" x1="50" y1="150" x2="140" y2="100"/>
+<line class="edge-line" x1="140" y1="100" x2="230" y2="100"/>
+<line class="edge-line" x1="230" y1="100" x2="310" y2="100"/>
+<circle class="node-circle" cx="50" cy="50" r="15"/><text class="node-label" x="50" y="54" text-anchor="middle">1</text>
+<circle class="node-circle" cx="50" cy="150" r="15"/><text class="node-label" x="50" y="154" text-anchor="middle">2</text>
+<circle class="node-circle" cx="140" cy="100" r="15"/><text class="node-label" x="140" y="104" text-anchor="middle">3</text>
+<circle class="node-circle" cx="230" cy="100" r="15"/><text class="node-label" x="230" y="104" text-anchor="middle">4</text>
+<circle class="node-circle" cx="310" cy="100" r="15"/><text class="node-label" x="310" y="104" text-anchor="middle">5</text>
+</svg></div>
+    <div class="fillrow"><span>Răspuns:</span><input class="fillbox" id="in-t9" data-ans="2" maxlength="3" inputmode="numeric"></div>
+    <button class="check">Verifică</button>
+    <div class="feedback"></div>
+  </div>
+  <div class="qcard" data-qid="t10" data-explain="Muchia (1,2) face parte din triunghiul 1-2-3. Poți ocoli: 1→3→2.">
+    <div class="qnum">Întrebarea 10</div>
+    <div class="qtext">Graful A: dacă ștergi muchia (1, 2), graful:</div>
+    <div class="graphbox"><svg viewBox="0 0 350 200" width="350" height="200">
+<line class="edge-line" x1="50" y1="50" x2="50" y2="150"/>
+<line class="edge-line" x1="50" y1="50" x2="140" y2="100"/>
+<line class="edge-line" x1="50" y1="150" x2="140" y2="100"/>
+<line class="edge-line" x1="140" y1="100" x2="230" y2="100"/>
+<line class="edge-line" x1="230" y1="100" x2="310" y2="100"/>
+<circle class="node-circle" cx="50" cy="50" r="15"/><text class="node-label" x="50" y="54" text-anchor="middle">1</text>
+<circle class="node-circle" cx="50" cy="150" r="15"/><text class="node-label" x="50" y="154" text-anchor="middle">2</text>
+<circle class="node-circle" cx="140" cy="100" r="15"/><text class="node-label" x="140" y="104" text-anchor="middle">3</text>
+<circle class="node-circle" cx="230" cy="100" r="15"/><text class="node-label" x="230" y="104" text-anchor="middle">4</text>
+<circle class="node-circle" cx="310" cy="100" r="15"/><text class="node-label" x="310" y="104" text-anchor="middle">5</text>
+</svg></div>
+    <div class="opts"><button class="opt" data-correct="true">rămâne conex</button>
+<button class="opt" data-correct="false">devine neconex</button></div>
+    <div class="feedback"></div>
+  </div>
+  <div class="qcard" data-qid="t11" data-explain="e(1)=3, e(2)=3, e(3)=2, e(4)=2, e(5)=3. Cea mai mică excentricitate e 2 și o au vârfurile 3 și 4.">
+    <div class="qnum">Întrebarea 11</div>
+    <div class="qtext">Graful A: care este centrul grafului?</div>
+    <div class="graphbox"><svg viewBox="0 0 350 200" width="350" height="200">
+<line class="edge-line" x1="50" y1="50" x2="50" y2="150"/>
+<line class="edge-line" x1="50" y1="50" x2="140" y2="100"/>
+<line class="edge-line" x1="50" y1="150" x2="140" y2="100"/>
+<line class="edge-line" x1="140" y1="100" x2="230" y2="100"/>
+<line class="edge-line" x1="230" y1="100" x2="310" y2="100"/>
+<circle class="node-circle" cx="50" cy="50" r="15"/><text class="node-label" x="50" y="54" text-anchor="middle">1</text>
+<circle class="node-circle" cx="50" cy="150" r="15"/><text class="node-label" x="50" y="154" text-anchor="middle">2</text>
+<circle class="node-circle" cx="140" cy="100" r="15"/><text class="node-label" x="140" y="104" text-anchor="middle">3</text>
+<circle class="node-circle" cx="230" cy="100" r="15"/><text class="node-label" x="230" y="104" text-anchor="middle">4</text>
+<circle class="node-circle" cx="310" cy="100" r="15"/><text class="node-label" x="310" y="104" text-anchor="middle">5</text>
+</svg></div>
+    <div class="opts"><button class="opt" data-correct="false">{3}</button>
+<button class="opt" data-correct="true">{3, 4}</button>
+<button class="opt" data-correct="false">{1, 2, 5}</button></div>
+    <div class="feedback"></div>
+  </div>
+  <div class="qcard" data-qid="t12" data-explain="m = |X₁| · |X₂| = 3 · 4 = 12.">
+    <div class="qnum">Întrebarea 12</div>
+    <div class="qtext">Câte muchii are graful bipartit complet K₃,₄?</div>
+    
+    <div class="fillrow"><span>Răspuns:</span><input class="fillbox" id="in-t12" data-ans="12" maxlength="3" inputmode="numeric"></div>
+    <button class="check">Verifică</button>
+    <div class="feedback"></div>
+  </div>
+
+  <div class="resultbox" id="resultBox">
+    <div class="score" id="scoreText">0 / 12</div>
+    <div class="msg" id="scoreMsg"></div>
+  </div>
+</div>
+
+<script>
+(function(){
+  let db = null;
+  const results = {};
+  const total = 12;
+  function slugify(s){ return (s||'anonim').trim().toLowerCase().replace(/[^a-z0-9]+/g,'-').replace(/(^-|-$)/g,'') || 'anonim'; }
+  async function saveProgress(){
+    const name = document.getElementById('studentName').value.trim();
+    try{ localStorage.setItem('graf_student_name', name); }catch(e){}
+    if(!db) return;
+    try{
+      await db.doc('tests/' + slugify(name) + '-recap12').set({
+        name: name || '(anonim)', test: 'recap12', results: results,
+        score: Object.values(results).filter(r=>r===true).length, total: total,
+        updatedAt: new Date().toISOString()
+      });
+    }catch(e){}
+  }
+  function showFeedback(card, ok){
+    const fb = card.querySelector('.feedback');
+    fb.innerHTML = '';
+    const head = document.createElement('div');
+    head.textContent = ok ? '✓ Corect!' : '✗ Nu chiar.';
+    head.style.color = ok ? 'var(--good)' : 'var(--bad)';
+    head.style.fontWeight = '600';
+    const ex = document.createElement('div');
+    ex.className = 'fb-explain';
+    ex.textContent = card.dataset.explain;
+    fb.appendChild(head); fb.appendChild(ex);
+    fb.classList.add('show');
+  }
+  function record(qid, ok){
+    if(results[qid] !== undefined) return;
+    results[qid] = ok;
+    const answered = Object.keys(results).length;
+    document.getElementById('pbarFill').style.width = (answered/total*100)+'%';
+    document.getElementById('pbarLabel').textContent = answered + ' / ' + total + ' răspunsuri date';
+    saveProgress();
+    if(answered === total){
+      const score = Object.values(results).filter(r=>r===true).length;
+      document.getElementById('scoreText').textContent = score + ' / ' + total;
+      document.getElementById('scoreMsg').textContent =
+        score >= 11 ? 'Excelent! Capitolele 1 și 2 sunt stăpânite. Putem trece la Capitolul 3.' :
+        score >= 9 ? 'Bine! Mai clarificăm întrebările greșite și mergem mai departe.' :
+        'Hai să reluăm împreună întrebările greșite, pas cu pas.';
+      const box = document.getElementById('resultBox');
+      box.classList.add('show');
+      box.scrollIntoView({behavior:'smooth', block:'center'});
+    }
+  }
+  document.querySelectorAll('.qcard').forEach(function(card){
+    const qid = card.dataset.qid;
+    const opts = card.querySelectorAll('.opt');
+    opts.forEach(function(btn){
+      btn.addEventListener('click', function(){
+        if(results[qid] !== undefined) return;
+        const ok = btn.dataset.correct === 'true';
+        opts.forEach(o=>o.disabled=true);
+        btn.classList.add(ok ? 'correct' : 'wrong');
+        if(!ok) card.querySelector('.opt[data-correct="true"]').classList.add('correct');
+        showFeedback(card, ok); record(qid, ok);
+      });
+    });
+    const chk = card.querySelector('button.check');
+    if(chk){
+      const box = card.querySelector('input.fillbox');
+      chk.addEventListener('click', function(){
+        if(results[qid] !== undefined || box.value.trim()==='') return;
+        const ok = box.value.trim() === box.dataset.ans;
+        box.style.borderColor = ok ? 'var(--good)' : 'var(--bad)';
+        box.disabled = true; chk.disabled = true;
+        showFeedback(card, ok); record(qid, ok);
+      });
+    }
+  });
+  try{ const s = localStorage.getItem('graf_student_name'); if(s) document.getElementById('studentName').value = s; }catch(e){}
+  document.getElementById('studentName').addEventListener('change', saveProgress);
+  (async function(){ try{ if(window.claude && window.claude.use) db = await window.claude.use('db'); }catch(e){ db = null; } })();
+})();
+</script>
