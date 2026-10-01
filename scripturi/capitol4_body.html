@@ -88,6 +88,7 @@
       <div class="card"><b>Kruskal</b> — „cel mai ieftin drum din tot graful”<br>1. Sortezi muchiile crescător după cost.<br>2. Le iei pe rând: <b>o pui</b> dacă <b>nu formează ciclu</b>, altfel o sari.<br>3. Te oprești când ai <b>n − 1</b> muchii.<br><i>Pe parcurs ai o pădure care se unește.</i></div>
       <div class="card"><b>Prim</b> — „cresc un singur arbore”<br>1. Pornești dintr-un vârf oarecare.<br>2. Pui muchia cea mai ieftină care are <b>exact un capăt</b> în arborele de până acum.<br>3. Te oprești la <b>n − 1</b> muchii.<br><i>Pe parcurs ai mereu un singur arbore.</i></div>
     </div>
+    <div class="rule"><b>Regula de selecție (Kruskal), exact ca la curs:</b><br>1. Pui muchiile în ordine crescătoare a costului: 5, 5, 6, 7, 7, 8, 8, 9, 9, 11, 15.<br>2. Ia prima muchie (cea mai ieftină) și pune-o în mulțime.<br>3. Treci la următoarea: dacă <b>nu face ciclu</b> cu cele alese, o iei; dacă face ciclu, o <b>sari</b>.<br>4. Oprește-te când ai <b>n − 1 = 6</b> muchii.<br><br>Așa se ajunge la 5, 5, 6, 7, 7, apoi se sar 8, 8, 9 (fac cicluri) și se ia al doilea 9: 5 + 5 + 6 + 7 + 7 + 9 = <b>39</b>.</div>
     <p>Rulează pas cu pas pe graful din curs. Muchiile verzi sunt alese, cele roșii sunt respinse (ar forma ciclu), cele punctate sunt candidate la Prim.</p>
     <div class="swrow"><label for="alg">Algoritm:</label>
       <select id="alg"><option value="kruskal">Kruskal</option><option value="prim">Prim (din vârful 1)</option></select></div>
@@ -305,7 +306,13 @@
       const cost=[...tree].reduce((s,i)=>s+g.E[i][2],0), done=k===S.length;
       const inT=new Set(); if(sw.value==='prim'&&cur) inT.add(1); tree.forEach(i=>{inT.add(g.E[i][0]);inT.add(g.E[i][1]);});
       let log=S.slice(0,k).map((s,j)=>`<div class="${s.i===null?'':(s.ok?'ok':'no')}">${j+1}. ${s.txt}</div>`).join('');
-      panel.innerHTML=`<div class="sel">Pasul ${k} din ${S.length} · muchii alese: ${tree.size} · cost: ${cost}</div>`+
+      let chips='';
+      if(sw.value==='kruskal'){
+        const order=g.E.map((e,i)=>i).sort((a,b)=>g.E[a][2]-g.E[b][2]||a-b);
+        const st={}; S.slice(0,k).forEach(x=>{ st[x.i]=x.ok?'ok':'no'; });
+        chips='<div class="wline"><b>Muchiile în ordine crescătoare:</b><br>'+order.map(i=>{ const c=st[i]==='ok'?'var(--good)':st[i]==='no'?'var(--bad)':'var(--ink-dim)'; const mark=st[i]==='ok'?'✔ ':st[i]==='no'?'✗ ':''; return `<span style="display:inline-block;margin:2px 4px 2px 0;padding:1px 7px;border:1px solid ${c};color:${c};border-radius:999px;font-size:0.78rem">${mark}${ename(g.E[i].slice(0,2))}: ${g.E[i][2]}</span>`; }).join('')+'<span class="why">✔ luată · ✗ sărită (ciclu) · gri = încă neajunsă</span></div>';
+      }
+      panel.innerHTML=`<div class="sel">Pasul ${k} din ${S.length} · muchii alese: ${tree.size} · cost: ${cost}</div>`+chips+
         (done?`<div class="wline"><b>Gata!</b> ${tree.size} = n − 1 muchii. Costul APM = <b>${cost}</b>.</div>`:'')+`<div class="steplog">${log||'<div>Apasă „Pasul următor”.</div>'}</div>`;
       panel.appendChild(btns);
       drawBase(svg,g,i=>tree.has(i)?'stroke:var(--good);stroke-width:7':rej.has(i)&&cur&&cur.i===i?'stroke:var(--bad);stroke-width:6;stroke-dasharray:9 6':cand.has(i)?'stroke:var(--node-2);stroke-width:5;stroke-dasharray:3 6':'stroke-width:3',
